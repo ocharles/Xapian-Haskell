@@ -6,7 +6,7 @@ support.
 
 To get going, here's what you'll need to do:
 
-    g++ -shared cxapian.c -o libcxapian.so -lxapian
+    g++ -shared cxapian.cc -o libcxapian.so -lxapian
 
 Which will generate "libcxapian" (which may need a better name). You can then
 use this with Xapian.hs:

@@ -1,0 +1,42 @@
+Hi!
+
+This is my attempt at getting Xapian to be usable from Haskell. What I'm doing
+is writing a C wrapper to Xapian, and then exposing this in Haskell with the FFI
+support.
+
+To get going, here's what you'll need to do:
+
+    g++ -shared cxapian.c -o libcxapian.so -lxapian
+
+Which will generate "libcxapian" (which may need a better name). You can then
+use this with Xapian.hs:
+
+    ghci Xapian.hs -lcxapian -L.
+
+And away you go! I've added `testStuff` as some really basic test code. It will
+produce test.db in your current pwd. You can poke this with:
+
+    delve -a test.db
+
+
+
+ACHTUNG! WARNING! HERE BE GREMLINS!
+
+I'm currently learning Haskell, so I don't know the "right" way of doing some
+things, I just do enough to get a result for now. Feel free to rip it apart and
+change the API as much as you like. My C is even worse :) I don't really enjoy C
+programming so that could well be bug ridden (though I will say, the current C
+is even worse than what I'd normally write... anything for results at the
+moment!)
+
+TODO
+
+    - Stop passing around void* everywhere in cxapian and pass some actual typed
+      pointers
+
+    - cxapian needs to export delete functions, and the foreignPtr in Xapian.hs
+      needs to use this deletion stuff
+
+    - Add document probably shouldn't be calling flush
+
+    - ...lots more :)

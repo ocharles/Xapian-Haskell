@@ -34,6 +34,9 @@ TODO
     - Stop passing around void* everywhere in cxapian and pass some actual typed
       pointers
 
+    - We're are almost entirely trapped in the IO monad - should we be? Could
+      we move some stuff to the ST monad and act more pure?
+
     - cxapian needs to export delete functions, and the foreignPtr in Xapian.hs
       needs to use this deletion stuff
 

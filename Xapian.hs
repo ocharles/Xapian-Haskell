@@ -104,6 +104,11 @@ combineQueries (Query a) (Query b) operator = unsafePerformIO $
 a <|> b = combineQueries a b queryOpOr
   where queryOpOr = 0
 
+describeQuery (Query q) = unsafePerformIO $
+  withForeignPtr q $ \query ->
+  peekCString $ c_xapian_query_describe query
+
+
 -- Private stuff
 
 type XapianWritableDatabase = ()
@@ -152,3 +157,7 @@ foreign import ccall "cxapian.h xapian_query_combine"
                             Ptr XapianQuery ->
                             Ptr XapianQuery ->
                             IO (Ptr XapianQuery)
+
+foreign import ccall "cxapian.h xapian_query_describe"
+  c_xapian_query_describe :: Ptr XapianQuery ->
+                             CString

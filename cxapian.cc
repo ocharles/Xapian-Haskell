@@ -73,3 +73,8 @@ void *xapian_query_combine (int op, void *vqa, void *vqb) {
   Xapian::Query *queryB = (Xapian::Query*)vqb;
   return new Xapian::Query((Xapian::Query::op) op, *queryA, *queryB);
 }
+
+const char *xapian_query_describe (void *vqa) {
+  Xapian::Query *queryA = (Xapian::Query*)vqa;
+  return queryA->get_description().c_str();
+}

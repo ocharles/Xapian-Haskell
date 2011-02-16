@@ -22,6 +22,8 @@ extern "C" {
   extern void *xapian_query_new (const char* term);
 
   extern void *xapian_query_combine (int op, void *vqa, void *vqb);
+
+  extern const char *xapian_query_describe (void *vqa);
 }
 
 #endif

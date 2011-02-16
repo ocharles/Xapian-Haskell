@@ -17,6 +17,10 @@ struct _xapian_enquire {
   Xapian::Enquire* xapian_enquire;
 };
 
+struct _xapian_query {
+  Xapian::Query* xapian_query;
+};
+
 xapian_database_t *
 xapian_writable_db_new(const char *cFilename, int options,
                        const char **errorStr) {
@@ -104,17 +108,33 @@ xapian_enquire_new (xapian_database_t *database) {
   return enquire;
 }
 
-void *xapian_query_new (const char* term) {
-  return new Xapian::Query(std::string(term));
+xapian_query_t *
+xapian_query_new (const char* term) {
+  xapian_query_t *query = NULL;
+  query = (xapian_query_t *)malloc(sizeof(xapian_query_t));
+  if(query == NULL) {
+    return NULL;
+  }
+
+  query->xapian_query = new Xapian::Query(std::string(term));
+  return query;
 }
 
-void *xapian_query_combine (int op, void *vqa, void *vqb) {
-  Xapian::Query *queryA = (Xapian::Query*)vqa;
-  Xapian::Query *queryB = (Xapian::Query*)vqb;
-  return new Xapian::Query((Xapian::Query::op) op, *queryA, *queryB);
+xapian_query_t *
+xapian_query_combine (int op, xapian_query_t *qa, xapian_query_t *qb) {
+  xapian_query_t *query = NULL;
+  query = (xapian_query_t *)malloc(sizeof(xapian_query_t));
+  if(query == NULL) {
+    return NULL;
+  }
+
+  query->xapian_query = new Xapian::Query((Xapian::Query::op) op,
+                                          *(qa->xapian_query),
+                                          *(qb->xapian_query));
+  return query;
 }
 
-const char *xapian_query_describe (void *vqa) {
-  Xapian::Query *queryA = (Xapian::Query*)vqa;
-  return queryA->get_description().c_str();
+const char *
+xapian_query_describe (xapian_query_t *query) {
+  return query->xapian_query->get_description().c_str();
 }

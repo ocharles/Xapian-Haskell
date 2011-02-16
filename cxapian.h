@@ -4,6 +4,7 @@
 typedef struct _xapian_database xapian_database_t;
 typedef struct _xapian_document xapian_document_t;
 typedef struct _xapian_enquire xapian_enquire_t;
+typedef struct _xapian_query xapian_query_t;
 
 extern "C" {
 
@@ -31,11 +32,14 @@ extern "C" {
   xapian_enquire_t *
   xapian_enquire_new (xapian_database_t *database);
 
-  void *xapian_query_new (const char* term);
+  xapian_query_t *
+  xapian_query_new (const char* term);
 
-  void *xapian_query_combine (int op, void *vqa, void *vqb);
+  xapian_query_t *
+  xapian_query_combine (int op, xapian_query_t *vqa, xapian_query_t *vqb);
 
-  const char *xapian_query_describe (void *vqa);
+  const char *
+  xapian_query_describe (xapian_query_t *vqa);
 }
 
 #endif

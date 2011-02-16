@@ -15,6 +15,7 @@ extern "C" {
   extern void xapian_document_add_posting (void *doc, const char* posting,
                                            int pos);
 
+  extern void* xapian_database_new (const char *cFilename, const char **errorStr);
 }
 
 #endif

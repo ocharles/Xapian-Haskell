@@ -24,6 +24,9 @@ data Document = Document !(ForeignPtr XapianDocument)
 data WritableDatabase = WritableDatabase !(ForeignPtr XapianWritableDatabase)
                       deriving (Eq, Show)
 
+data Database = Database !(ForeignPtr XapianDatabase)
+                deriving (Eq, Show)
+
 newtype CreateDBOption = CreateDBOption { unCreateDBOption :: Int }
                          deriving (Show, Eq)
 
@@ -41,6 +44,16 @@ openWritableDatabase filename options =
               return (Left err)
       else do managed <- newForeignPtr finalizerFree dbHandle
               return (Right $ WritableDatabase managed)
+
+openDatabase filename =
+  useAsCString (pack filename) $ \cFilename ->
+  alloca $ \errorPtr -> do
+    dbHandle <- c_xapian_database_new cFilename errorPtr
+    if dbHandle == nullPtr
+      then do err <- peekCString =<< peek errorPtr
+              return (Left err)
+      else do managed <- newForeignPtr finalizerFree dbHandle
+              return (Right $ Database managed)
 
 addDocument (WritableDatabase db) (Document doc) = do
   withForeignPtr doc $ \docptr ->
@@ -67,6 +80,7 @@ addPosting (Document document) term pos =
 
 type XapianWritableDatabase = ()
 type XapianDocument = ()
+type XapianDatabase = ()
 
 foreign import ccall "cxapian.h xapian_writable_db_new"
   c_xapian_writable_db_new :: CString ->
@@ -78,6 +92,11 @@ foreign import ccall "cxapian.h xapian_writable_db_add_document"
   c_xapian_database_add_document :: Ptr XapianWritableDatabase ->
                                     Ptr XapianDocument ->
                                     IO ()
+
+foreign import ccall "cxapion.h xapian_database_new"
+  c_xapian_database_new :: CString ->
+                           Ptr CString ->
+                           IO (Ptr XapianDatabase)
 
 foreign import ccall "cxapian.h xapian_document_new"
   c_xapian_document_new :: IO (Ptr XapianDocument)

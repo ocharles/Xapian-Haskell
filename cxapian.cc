@@ -43,3 +43,18 @@ extern void xapian_document_add_posting (void *doc, const char* posting, int pos
   Xapian::Document *document = (Xapian::Document*)doc;
   document->add_posting(string(posting), pos);
 }
+
+void* xapian_database_new (const char *cFilename, const char **errorStr) {
+  using std::string;
+  using Xapian::Database;
+
+  string filename(cFilename);
+  try {
+    Database *database = new Database(filename);
+    return database;
+  }
+  catch (const Xapian::Error & error) {
+    *errorStr = error.get_msg().c_str();
+    return NULL;
+  }
+}

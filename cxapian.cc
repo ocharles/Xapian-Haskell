@@ -9,6 +9,10 @@ struct _xapian_database {
   Xapian::Database* xapian_database;
 };
 
+struct _xapian_document {
+  Xapian::Document* xapian_document;
+};
+
 xapian_database_t *
 xapian_writable_db_new(const char *cFilename, int options,
                        const char **errorStr) {
@@ -30,30 +34,38 @@ xapian_writable_db_new(const char *cFilename, int options,
   }
 }
 
-void xapian_writable_db_add_document(xapian_database_t *database,
-                                     void *vdocument) {
-  Xapian::Document *document = (Xapian::Document*)vdocument;
+void
+xapian_writable_db_add_document(xapian_database_t *database,
+                                xapian_document_t *document) {
   Xapian::WritableDatabase *wdb =
     static_cast <Xapian::WritableDatabase *> (database->xapian_database);
 
-  wdb->add_document(*document);
+  wdb->add_document(*(document->xapian_document));
   wdb->flush();
 }
 
-void* xapian_document_new() {
-  return new Xapian::Document();
+xapian_document_t *
+xapian_document_new() {
+  xapian_document_t *document = NULL;
+  document = (xapian_document_t *)malloc(sizeof(xapian_document_t));
+  if (document == NULL) {
+    return NULL;
+  }
+
+  document->xapian_document = new Xapian::Document();
+  return document;
 }
 
-void xapian_document_set_data (void *doc, const char* data)
+void
+xapian_document_set_data (xapian_document_t *doc, const char* data)
 {
-  Xapian::Document *document = (Xapian::Document*)doc;
-  document->set_data(std::string(data));
+  doc->xapian_document->set_data(std::string(data));
 }
 
-void xapian_document_add_posting (void *doc, const char* posting, int pos)
+void
+xapian_document_add_posting (xapian_document_t *doc, const char* posting, int pos)
 {
-  Xapian::Document *document = (Xapian::Document*)doc;
-  document->add_posting(std::string(posting), pos);
+  doc->xapian_document->add_posting(std::string(posting), pos);
 }
 
 xapian_database_t *

@@ -47,9 +47,7 @@ xapian_writable_db_add_document(xapian_database_t *database,
                                 xapian_document_t *document) {
   Xapian::WritableDatabase *wdb =
     static_cast <Xapian::WritableDatabase *> (database->xapian_database);
-
   wdb->add_document(*(document->xapian_document));
-  wdb->flush();
 }
 
 xapian_database_t *

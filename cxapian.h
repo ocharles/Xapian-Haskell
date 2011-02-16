@@ -1,29 +1,33 @@
 #ifndef XAPIAN_H
 #define XAPIAN_H
 
+typedef struct _xapian_database xapian_database_t;
+
 extern "C" {
 
-  extern void* xapian_writable_db_new (const char *filename, int action,
-                                       const char **error);
+  xapian_database_t *
+  xapian_writable_db_new (const char *filename, int action,
+                          const char **error);
 
-  extern void xapian_writable_db_add_document(void *database, void *document);
+  void xapian_writable_db_add_document(xapian_database_t *database, void *document);
 
-  extern void* xapian_document_new ();
+  void* xapian_document_new ();
 
-  extern void xapian_document_set_data (void *document, const char* data);
+  void xapian_document_set_data (void *document, const char* data);
 
-  extern void xapian_document_add_posting (void *doc, const char* posting,
-                                           int pos);
+  void xapian_document_add_posting (void *doc, const char* posting,
+                                    int pos);
 
-  extern void* xapian_database_new (const char *cFilename, const char **errorStr);
+  xapian_database_t *
+  xapian_database_new (const char *cFilename, const char **errorStr);
 
-  extern void *xapian_enquire_new (void *database);
+  void *xapian_enquire_new (xapian_database_t *database);
 
-  extern void *xapian_query_new (const char* term);
+  void *xapian_query_new (const char* term);
 
-  extern void *xapian_query_combine (int op, void *vqa, void *vqb);
+  void *xapian_query_combine (int op, void *vqa, void *vqb);
 
-  extern const char *xapian_query_describe (void *vqa);
+  const char *xapian_query_describe (void *vqa);
 }
 
 #endif

@@ -3,65 +3,81 @@
 #include "cxapian.h"
 #include <xapian.h>
 
-void* xapian_writable_db_new(const char *cFilename, int options,
-                             const char **errorStr) {
-  using std::string;
-  using Xapian::WritableDatabase;
+#include <stdlib.h>
 
-  string filename(cFilename);
+struct _xapian_database {
+  Xapian::Database* xapian_database;
+};
+
+xapian_database_t *
+xapian_writable_db_new(const char *cFilename, int options,
+                       const char **errorStr) {
+  xapian_database_t *db = NULL;
+  db = (xapian_database_t*) malloc(sizeof(xapian_database_t));
+  if (db == NULL) {
+    return NULL;
+  }
+
   try {
-    WritableDatabase *database = new WritableDatabase(filename, options);
-    return database;
+    std::string filename(cFilename);
+    db->xapian_database = new Xapian::WritableDatabase(filename, options);
+    return db;
   }
   catch (const Xapian::Error & error) {
     *errorStr = error.get_msg().c_str();
+    free(db);
     return NULL;
   }
 }
 
-extern void xapian_writable_db_add_document(void *vdatabase, void *vdocument) {
+void xapian_writable_db_add_document(xapian_database_t *database,
+                                     void *vdocument) {
   Xapian::Document *document = (Xapian::Document*)vdocument;
-  Xapian::WritableDatabase *database = (Xapian::WritableDatabase*)vdatabase;
-  database->add_document(*document);
-  database->flush();
+  Xapian::WritableDatabase *wdb =
+    static_cast <Xapian::WritableDatabase *> (database->xapian_database);
+
+  wdb->add_document(*document);
+  wdb->flush();
 }
 
 void* xapian_document_new() {
   return new Xapian::Document();
 }
 
-extern void xapian_document_set_data (void *doc, const char* data)
+void xapian_document_set_data (void *doc, const char* data)
 {
-  using std::string;
   Xapian::Document *document = (Xapian::Document*)doc;
-  document->set_data(string(data));
+  document->set_data(std::string(data));
 }
 
-extern void xapian_document_add_posting (void *doc, const char* posting, int pos)
+void xapian_document_add_posting (void *doc, const char* posting, int pos)
 {
-  using std::string;
   Xapian::Document *document = (Xapian::Document*)doc;
-  document->add_posting(string(posting), pos);
+  document->add_posting(std::string(posting), pos);
 }
 
-void* xapian_database_new (const char *cFilename, const char **errorStr) {
-  using std::string;
-  using Xapian::Database;
+xapian_database_t *
+xapian_database_new (const char *cFilename, const char **errorStr) {
+  xapian_database_t *db = NULL;
+  db = (xapian_database_t *) malloc(sizeof(xapian_database_t));
+  if (db == NULL) {
+    return NULL;
+  }
 
-  string filename(cFilename);
   try {
-    Database *database = new Database(filename);
-    return database;
+    std::string filename(cFilename);
+    db->xapian_database = new Xapian::Database(filename);
+    return db;
   }
   catch (const Xapian::Error & error) {
     *errorStr = error.get_msg().c_str();
+    free(db);
     return NULL;
   }
 }
 
-void *xapian_enquire_new (void *vdatabase) {
-  Xapian::Database *database = (Xapian::Database*)vdatabase;
-  return new Xapian::Enquire(*database);
+void *xapian_enquire_new (xapian_database_t *database) {
+  return new Xapian::Enquire(*(database->xapian_database));
 }
 
 void *xapian_query_new (const char* term) {

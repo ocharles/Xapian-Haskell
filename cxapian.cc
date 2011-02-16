@@ -58,3 +58,8 @@ void* xapian_database_new (const char *cFilename, const char **errorStr) {
     return NULL;
   }
 }
+
+void *xapian_enquire_new (void *vdatabase) {
+  Xapian::Database *database = (Xapian::Database*)vdatabase;
+  return new Xapian::Enquire(*database);
+}

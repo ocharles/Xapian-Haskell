@@ -16,6 +16,8 @@ extern "C" {
                                            int pos);
 
   extern void* xapian_database_new (const char *cFilename, const char **errorStr);
+
+  extern void *xapian_enquire_new (void *database);
 }
 
 #endif

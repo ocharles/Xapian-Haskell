@@ -27,6 +27,9 @@ data WritableDatabase = WritableDatabase !(ForeignPtr XapianWritableDatabase)
 data Database = Database !(ForeignPtr XapianDatabase)
                 deriving (Eq, Show)
 
+data Enquire = Enquire !(ForeignPtr XapianEnquire)
+               deriving (Eq, Show)
+
 newtype CreateDBOption = CreateDBOption { unCreateDBOption :: Int }
                          deriving (Show, Eq)
 
@@ -75,12 +78,18 @@ addPosting (Document document) term pos =
   withForeignPtr document $ \doc_ptr ->
   c_xapian_document_add_posting doc_ptr dat pos
 
+enquire (Database database) =
+  withForeignPtr database $ \dbptr -> do
+    document <- c_xapian_enquire_new dbptr
+    managed <- newForeignPtr finalizerFree document
+    return (Enquire managed)
 
 -- Private stuff
 
 type XapianWritableDatabase = ()
 type XapianDocument = ()
 type XapianDatabase = ()
+type XapianEnquire = ()
 
 foreign import ccall "cxapian.h xapian_writable_db_new"
   c_xapian_writable_db_new :: CString ->
@@ -109,3 +118,7 @@ foreign import ccall "cxapian.h xapian_document_add_posting"
                                    CString ->
                                    Int ->
                                    IO ()
+
+foreign import ccall "cxapian.h xapian_enquire_new"
+  c_xapian_enquire_new :: Ptr XapianDatabase ->
+                          IO (Ptr XapianEnquire)

@@ -30,6 +30,10 @@ data Database = Database !(ForeignPtr XapianDatabase)
 data Enquire = Enquire !(ForeignPtr XapianEnquire)
                deriving (Eq, Show)
 
+data Query = Query !(ForeignPtr XapianEnquire)
+           deriving (Eq, Show)
+
+
 newtype CreateDBOption = CreateDBOption { unCreateDBOption :: Int }
                          deriving (Show, Eq)
 
@@ -84,12 +88,29 @@ enquire (Database database) =
     managed <- newForeignPtr finalizerFree document
     return (Enquire managed)
 
+query term = unsafePerformIO $
+  useAsCString (pack term) $ \dat -> do
+    query <- c_xapian_query_new dat
+    managed <- newForeignPtr finalizerFree query
+    return (Query managed)
+
+combineQueries (Query a) (Query b) operator = unsafePerformIO $
+  withForeignPtr a $ \queryA ->
+  withForeignPtr b $ \queryB -> do
+    query <- c_xapian_query_combine operator queryA queryB
+    managed <- newForeignPtr finalizerFree query
+    return (Query managed)
+
+a <|> b = combineQueries a b queryOpOr
+  where queryOpOr = 0
+
 -- Private stuff
 
 type XapianWritableDatabase = ()
 type XapianDocument = ()
 type XapianDatabase = ()
 type XapianEnquire = ()
+type XapianQuery = ()
 
 foreign import ccall "cxapian.h xapian_writable_db_new"
   c_xapian_writable_db_new :: CString ->
@@ -122,3 +143,12 @@ foreign import ccall "cxapian.h xapian_document_add_posting"
 foreign import ccall "cxapian.h xapian_enquire_new"
   c_xapian_enquire_new :: Ptr XapianDatabase ->
                           IO (Ptr XapianEnquire)
+
+foreign import ccall "cxapian.h xapian_query_new"
+  c_xapian_query_new :: CString -> IO (Ptr XapianQuery)
+
+foreign import ccall "cxapian.h xapian_query_combine"
+  c_xapian_query_combine :: Int ->
+                            Ptr XapianQuery ->
+                            Ptr XapianQuery ->
+                            IO (Ptr XapianQuery)

@@ -63,3 +63,13 @@ void *xapian_enquire_new (void *vdatabase) {
   Xapian::Database *database = (Xapian::Database*)vdatabase;
   return new Xapian::Enquire(*database);
 }
+
+void *xapian_query_new (const char* term) {
+  return new Xapian::Query(std::string(term));
+}
+
+void *xapian_query_combine (int op, void *vqa, void *vqb) {
+  Xapian::Query *queryA = (Xapian::Query*)vqa;
+  Xapian::Query *queryB = (Xapian::Query*)vqb;
+  return new Xapian::Query((Xapian::Query::op) op, *queryA, *queryB);
+}

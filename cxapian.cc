@@ -13,6 +13,10 @@ struct _xapian_document {
   Xapian::Document* xapian_document;
 };
 
+struct _xapian_enquire {
+  Xapian::Enquire* xapian_enquire;
+};
+
 xapian_database_t *
 xapian_writable_db_new(const char *cFilename, int options,
                        const char **errorStr) {
@@ -88,8 +92,16 @@ xapian_database_new (const char *cFilename, const char **errorStr) {
   }
 }
 
-void *xapian_enquire_new (xapian_database_t *database) {
-  return new Xapian::Enquire(*(database->xapian_database));
+xapian_enquire_t *
+xapian_enquire_new (xapian_database_t *database) {
+  xapian_enquire_t *enquire = NULL;
+  enquire = (xapian_enquire_t *)malloc(sizeof(xapian_enquire_t));
+  if(enquire == NULL) {
+    return NULL;
+  }
+
+  enquire->xapian_enquire = new Xapian::Enquire(*(database->xapian_database));
+  return enquire;
 }
 
 void *xapian_query_new (const char* term) {

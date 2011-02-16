@@ -3,6 +3,7 @@
 
 typedef struct _xapian_database xapian_database_t;
 typedef struct _xapian_document xapian_document_t;
+typedef struct _xapian_enquire xapian_enquire_t;
 
 extern "C" {
 
@@ -27,7 +28,8 @@ extern "C" {
   xapian_database_t *
   xapian_database_new (const char *cFilename, const char **errorStr);
 
-  void *xapian_enquire_new (xapian_database_t *database);
+  xapian_enquire_t *
+  xapian_enquire_new (xapian_database_t *database);
 
   void *xapian_query_new (const char* term);
 

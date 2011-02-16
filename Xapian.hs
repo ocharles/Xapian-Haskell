@@ -11,7 +11,7 @@ import Foreign.C.Types
 -- For testing - here's how it looks to clients
 --
 testStuff =
-  do (Right db) <- openWritableDatabase "test.db" createOrOverwriteDB
+  do (Right db) <- openDatabase "test.db" createOrOverwriteDB
      doc <- newDocument
      addPosting doc "A posting" 1
      addDocument db doc
@@ -21,10 +21,8 @@ testStuff =
 data Document = Document !(ForeignPtr XapianDocument)
                 deriving (Eq, Show)
 
-data WritableDatabase = WritableDatabase !(ForeignPtr XapianWritableDatabase)
-                      deriving (Eq, Show)
-
 data Database = Database !(ForeignPtr XapianDatabase)
+              | WritableDatabase !(ForeignPtr XapianDatabase)
                 deriving (Eq, Show)
 
 data Enquire = Enquire !(ForeignPtr XapianEnquire)
@@ -33,26 +31,26 @@ data Enquire = Enquire !(ForeignPtr XapianEnquire)
 data Query = Query !(ForeignPtr XapianEnquire)
            deriving (Eq, Show)
 
+newtype DatabaseMode = DatabaseMode { getDatabaseMode :: Int }
+                     deriving (Show, Eq)
 
-newtype CreateDBOption = CreateDBOption { unCreateDBOption :: Int }
-                         deriving (Show, Eq)
+createOrOpenDB      = Just $ DatabaseMode 1
+createDB            = Just $ DatabaseMode 2
+createOrOverwriteDB = Just $ DatabaseMode 3
+openDB              = Just $ DatabaseMode 4
+readOnly            = Nothing
 
-createOrOpenDB      = CreateDBOption 1
-createDB            = CreateDBOption 2
-createOrOverwriteDB = CreateDBOption 3
-openDB              = CreateDBOption 4
-
-openWritableDatabase filename options =
+openDatabase filename (Just mode) =
   useAsCString (pack filename) $ \cFilename ->
   alloca $ \errorPtr -> do
-    dbHandle <- c_xapian_writable_db_new cFilename options errorPtr
+    dbHandle <- c_xapian_writable_db_new cFilename mode errorPtr
     if dbHandle == nullPtr
       then do err <- peekCString =<< peek errorPtr
               return (Left err)
       else do managed <- newForeignPtr finalizerFree dbHandle
               return (Right $ WritableDatabase managed)
 
-openDatabase filename =
+openDatabase filename Nothing =
   useAsCString (pack filename) $ \cFilename ->
   alloca $ \errorPtr -> do
     dbHandle <- c_xapian_database_new cFilename errorPtr
@@ -119,7 +117,7 @@ type XapianQuery = ()
 
 foreign import ccall "cxapian.h xapian_writable_db_new"
   c_xapian_writable_db_new :: CString ->
-                              CreateDBOption ->
+                              DatabaseMode ->
                               Ptr CString ->
                               IO (Ptr XapianWritableDatabase)
 

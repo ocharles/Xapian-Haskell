@@ -109,7 +109,6 @@ describeQuery (Query q) = unsafePerformIO $
 
 -- Private stuff
 
-type XapianWritableDatabase = ()
 type XapianDocument = ()
 type XapianDatabase = ()
 type XapianEnquire = ()
@@ -119,10 +118,10 @@ foreign import ccall "cxapian.h xapian_writable_db_new"
   c_xapian_writable_db_new :: CString ->
                               DatabaseMode ->
                               Ptr CString ->
-                              IO (Ptr XapianWritableDatabase)
+                              IO (Ptr XapianDatabase)
 
 foreign import ccall "cxapian.h xapian_writable_db_add_document"
-  c_xapian_database_add_document :: Ptr XapianWritableDatabase ->
+  c_xapian_database_add_document :: Ptr XapianDatabase ->
                                     Ptr XapianDocument ->
                                     IO ()
 

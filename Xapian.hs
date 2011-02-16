@@ -21,9 +21,6 @@ testStuff =
 data Document = Document !(ForeignPtr XapianDocument)
                 deriving (Eq, Show)
 
-data WritableDatabase = WritableDatabase !(ForeignPtr XapianWritableDatabase)
-                      deriving (Eq, Show)
-
 data Database = Database !(ForeignPtr XapianDatabase)
                 deriving (Eq, Show)
 
@@ -49,8 +46,8 @@ openWritableDatabase filename options =
     if dbHandle == nullPtr
       then do err <- peekCString =<< peek errorPtr
               return (Left err)
-      else do managed <- newForeignPtr finalizerFree dbHandle
-              return (Right $ WritableDatabase managed)
+      else do managed <- newForeignPtr c_xapian_database_delete dbHandle
+              return (Right $ Database managed)
 
 openDatabase filename =
   useAsCString (pack filename) $ \cFilename ->
@@ -62,7 +59,7 @@ openDatabase filename =
       else do managed <- newForeignPtr finalizerFree dbHandle
               return (Right $ Database managed)
 
-addDocument (WritableDatabase db) (Document doc) = do
+addDocument (Database db) (Document doc) = do
   withForeignPtr doc $ \docptr ->
     withForeignPtr db $ \dbptr ->
     c_xapian_database_add_document dbptr docptr
@@ -111,7 +108,6 @@ describeQuery (Query q) = unsafePerformIO $
 
 -- Private stuff
 
-type XapianWritableDatabase = ()
 type XapianDocument = ()
 type XapianDatabase = ()
 type XapianEnquire = ()
@@ -121,10 +117,10 @@ foreign import ccall "cxapian.h xapian_writable_db_new"
   c_xapian_writable_db_new :: CString ->
                               CreateDBOption ->
                               Ptr CString ->
-                              IO (Ptr XapianWritableDatabase)
+                              IO (Ptr XapianDatabase)
 
 foreign import ccall "cxapian.h xapian_writable_db_add_document"
-  c_xapian_database_add_document :: Ptr XapianWritableDatabase ->
+  c_xapian_database_add_document :: Ptr XapianDatabase ->
                                     Ptr XapianDocument ->
                                     IO ()
 
@@ -132,6 +128,9 @@ foreign import ccall "cxapion.h xapian_database_new"
   c_xapian_database_new :: CString ->
                            Ptr CString ->
                            IO (Ptr XapianDatabase)
+
+foreign import ccall "cxapion.h &xapian_database_delete"
+  c_xapian_database_delete :: FunPtr (Ptr XapianDatabase -> IO ())
 
 foreign import ccall "cxapian.h xapian_document_new"
   c_xapian_document_new :: IO (Ptr XapianDocument)

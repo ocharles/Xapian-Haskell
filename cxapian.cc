@@ -52,6 +52,32 @@ xapian_writable_db_add_document(xapian_database_t *database,
   wdb->flush();
 }
 
+xapian_database_t *
+xapian_database_new (const char *cFilename, const char **errorStr) {
+  xapian_database_t *db = NULL;
+  db = (xapian_database_t *) malloc(sizeof(xapian_database_t));
+  if (db == NULL) {
+    return NULL;
+  }
+
+  try {
+    std::string filename(cFilename);
+    db->xapian_database = new Xapian::Database(filename);
+    return db;
+  }
+  catch (const Xapian::Error & error) {
+    *errorStr = error.get_msg().c_str();
+    free(db);
+    return NULL;
+  }
+}
+
+void
+xapian_database_delete (xapian_database_t *database) {
+  delete database->xapian_database;
+  free(database);
+}
+
 xapian_document_t *
 xapian_document_new() {
   xapian_document_t *document = NULL;
@@ -74,26 +100,6 @@ void
 xapian_document_add_posting (xapian_document_t *doc, const char* posting, int pos)
 {
   doc->xapian_document->add_posting(std::string(posting), pos);
-}
-
-xapian_database_t *
-xapian_database_new (const char *cFilename, const char **errorStr) {
-  xapian_database_t *db = NULL;
-  db = (xapian_database_t *) malloc(sizeof(xapian_database_t));
-  if (db == NULL) {
-    return NULL;
-  }
-
-  try {
-    std::string filename(cFilename);
-    db->xapian_database = new Xapian::Database(filename);
-    return db;
-  }
-  catch (const Xapian::Error & error) {
-    *errorStr = error.get_msg().c_str();
-    free(db);
-    return NULL;
-  }
 }
 
 xapian_enquire_t *

@@ -16,6 +16,12 @@ extern "C" {
   xapian_writable_db_add_document(xapian_database_t *database,
                                   xapian_document_t *document);
 
+  xapian_database_t *
+  xapian_database_new (const char *cFilename, const char **errorStr);
+
+  void
+  xapian_database_delete (xapian_database_t *database);
+
   xapian_document_t *
   xapian_document_new ();
 
@@ -25,9 +31,6 @@ extern "C" {
   void
   xapian_document_add_posting (xapian_document_t *doc, const char* posting,
                                     int pos);
-
-  xapian_database_t *
-  xapian_database_new (const char *cFilename, const char **errorStr);
 
   xapian_enquire_t *
   xapian_enquire_new (xapian_database_t *database);

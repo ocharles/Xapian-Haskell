@@ -61,6 +61,13 @@ stemToDocument (Stem stem) (Document document) text =
   withForeignPtr document $ \documentPtr -> do
     c_xapian_stem_string stemPtr documentPtr ctext
 
+parseQuery (Stem stem) query = unsafePerformIO $
+  useAsCString (pack query) $ \cQuery ->
+  withForeignPtr stem $ \stemPtr -> do
+    final_query <- c_xapian_parse_query cQuery stemPtr
+    managed <- newForeignPtr c_xapian_query_delete final_query
+    return (Query managed)
+
 openWritableDatabase filename options =
   useAsCString (pack filename) $ \cFilename ->
   alloca $ \errorPtr -> do
@@ -229,3 +236,8 @@ foreign import ccall "cxapian.h xapian_stem_string"
                           Ptr XapianDocument ->
                           CString ->
                           IO ()
+
+foreign import ccall "cxapian.h xapian_parse_query"
+  c_xapian_parse_query :: CString ->
+                          Ptr XapianStem ->
+                          IO (Ptr XapianQuery)

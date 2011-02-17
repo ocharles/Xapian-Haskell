@@ -77,6 +77,10 @@ extern "C" {
   void
   xapian_stem_string (xapian_stem_t *stem, xapian_document_t *document,
                       const char *string);
+
+  xapian_query_t *
+  xapian_parse_query (const char *query_string,
+                      xapian_stem_t *stem);
 }
 
 #endif

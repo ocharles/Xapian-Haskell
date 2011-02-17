@@ -16,7 +16,7 @@ struct _xapian_enquire {
 };
 
 struct _xapian_query {
-  Xapian::Query* xapian_query;
+  Xapian::Query xapian_query;
 };
 
 struct _xapian_msets {
@@ -120,7 +120,7 @@ xapian_query_t *
 xapian_query_new (const char* term) {
   xapian_query_t *query = new xapian_query_t;
 
-  query->xapian_query = new Xapian::Query(std::string(term));
+  query->xapian_query = Xapian::Query(std::string(term));
   return query;
 }
 
@@ -128,20 +128,19 @@ xapian_query_t *
 xapian_query_combine (int op, xapian_query_t *qa, xapian_query_t *qb) {
   xapian_query_t *query = new xapian_query_t;
 
-  query->xapian_query = new Xapian::Query((Xapian::Query::op) op,
-                                          *(qa->xapian_query),
-                                          *(qb->xapian_query));
+  query->xapian_query = Xapian::Query((Xapian::Query::op) op,
+                                      qa->xapian_query,
+                                      qb->xapian_query);
   return query;
 }
 
 const char *
 xapian_query_describe (xapian_query_t *query) {
-  return query->xapian_query->get_description().c_str();
+  return query->xapian_query.get_description().c_str();
 }
 
 void
 xapian_query_delete(xapian_query_t *query) {
-  delete query->xapian_query;
   delete query;
 }
 
@@ -150,7 +149,7 @@ xapian_enquire_query (xapian_enquire_t* enquire, xapian_query_t *query,
                       int min, int max) {
   xapian_msets_t *msets = new xapian_msets_t;
 
-  enquire->xapian_enquire->set_query(*query->xapian_query);
+  enquire->xapian_enquire->set_query(query->xapian_query);
   Xapian::MSet xapian_msets = enquire->xapian_enquire->get_mset(min, max);
 
   msets->iterator = xapian_msets.begin();
@@ -194,4 +193,16 @@ xapian_stem_string (xapian_stem_t *stem, xapian_document_t *document,
   tg.set_stemmer(*stem->xapian_stem);
   tg.set_document(*document->xapian_document);
   tg.index_text(std::string(string));
+}
+
+xapian_query_t *
+xapian_parse_query (const char *query_string,
+                    xapian_stem_t *stem) {
+  xapian_query_t *query = new xapian_query_t;
+  Xapian::QueryParser query_parser;
+  query_parser.set_stemmer(*stem->xapian_stem);
+  query->xapian_query = query_parser.parse_query(std::string(query_string),
+                                                 0);
+
+  return query;
 }

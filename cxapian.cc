@@ -77,6 +77,12 @@ xapian_document_new() {
 }
 
 void
+xapian_document_delete(xapian_document_t *document) {
+  delete document->xapian_document;
+  delete document;
+}
+
+void
 xapian_document_set_data (xapian_document_t *doc, const char* data)
 {
   doc->xapian_document->set_data(std::string(data));
@@ -95,6 +101,13 @@ xapian_enquire_new (xapian_database_t *database) {
   enquire->xapian_enquire = new Xapian::Enquire(*(database->xapian_database));
   return enquire;
 }
+
+void
+xapian_enquire_delete(xapian_enquire_t *enquire) {
+  delete enquire->xapian_enquire;
+  delete enquire;
+}
+
 
 xapian_query_t *
 xapian_query_new (const char* term) {
@@ -117,4 +130,10 @@ xapian_query_combine (int op, xapian_query_t *qa, xapian_query_t *qb) {
 const char *
 xapian_query_describe (xapian_query_t *query) {
   return query->xapian_query->get_description().c_str();
+}
+
+void
+xapian_query_delete(xapian_query_t *query) {
+  delete query->xapian_query;
+  delete query;
 }

@@ -56,7 +56,7 @@ openDatabase filename =
     if dbHandle == nullPtr
       then do err <- peekCString =<< peek errorPtr
               return (Left err)
-      else do managed <- newForeignPtr finalizerFree dbHandle
+      else do managed <- newForeignPtr c_xapian_database_delete dbHandle
               return (Right $ Database managed)
 
 addDocument (Database db) (Document doc) = do
@@ -66,7 +66,7 @@ addDocument (Database db) (Document doc) = do
 
 newDocument = do
   document <- c_xapian_document_new
-  managed <- newForeignPtr finalizerFree document
+  managed <- newForeignPtr c_xapian_document_delete document
   return (Document managed)
 
 setDocumentData (Document document) docData =
@@ -82,20 +82,20 @@ addPosting (Document document) term pos =
 enquire (Database database) =
   withForeignPtr database $ \dbptr -> do
     document <- c_xapian_enquire_new dbptr
-    managed <- newForeignPtr finalizerFree document
+    managed <- newForeignPtr c_xapian_enquire_delete document
     return (Enquire managed)
 
 query term = unsafePerformIO $
   useAsCString (pack term) $ \dat -> do
     query <- c_xapian_query_new dat
-    managed <- newForeignPtr finalizerFree query
+    managed <- newForeignPtr c_xapian_query_delete query
     return (Query managed)
 
 combineQueries (Query a) (Query b) operator = unsafePerformIO $
   withForeignPtr a $ \queryA ->
   withForeignPtr b $ \queryB -> do
     query <- c_xapian_query_combine operator queryA queryB
-    managed <- newForeignPtr finalizerFree query
+    managed <- newForeignPtr c_xapian_query_delete query
     return (Query managed)
 
 a <|> b = combineQueries a b queryOpOr
@@ -135,6 +135,9 @@ foreign import ccall "cxapion.h &xapian_database_delete"
 foreign import ccall "cxapian.h xapian_document_new"
   c_xapian_document_new :: IO (Ptr XapianDocument)
 
+foreign import ccall "cxapion.h &xapian_document_delete"
+  c_xapian_document_delete :: FunPtr (Ptr XapianDocument -> IO ())
+
 foreign import ccall "cxapian.h xapian_document_set_data"
   c_xapian_document_set_data :: Ptr XapianDocument -> CString -> IO ()
 
@@ -148,6 +151,9 @@ foreign import ccall "cxapian.h xapian_enquire_new"
   c_xapian_enquire_new :: Ptr XapianDatabase ->
                           IO (Ptr XapianEnquire)
 
+foreign import ccall "cxapion.h &xapian_enquire_delete"
+  c_xapian_enquire_delete :: FunPtr (Ptr XapianEnquire -> IO ())
+
 foreign import ccall "cxapian.h xapian_query_new"
   c_xapian_query_new :: CString -> IO (Ptr XapianQuery)
 
@@ -160,3 +166,6 @@ foreign import ccall "cxapian.h xapian_query_combine"
 foreign import ccall "cxapian.h xapian_query_describe"
   c_xapian_query_describe :: Ptr XapianQuery ->
                              CString
+
+foreign import ccall "cxapion.h &xapian_query_delete"
+  c_xapian_query_delete :: FunPtr (Ptr XapianQuery -> IO ())

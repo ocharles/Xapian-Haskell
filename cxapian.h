@@ -26,6 +26,9 @@ extern "C" {
   xapian_document_new ();
 
   void
+  xapian_document_delete (xapian_document_t *document);
+
+  void
   xapian_document_set_data (xapian_document_t *document, const char* data);
 
   void
@@ -35,6 +38,9 @@ extern "C" {
   xapian_enquire_t *
   xapian_enquire_new (xapian_database_t *database);
 
+  void
+  xapian_enquire_delete (xapian_enquire_t *enquire);
+
   xapian_query_t *
   xapian_query_new (const char* term);
 
@@ -43,6 +49,9 @@ extern "C" {
 
   const char *
   xapian_query_describe (xapian_query_t *vqa);
+
+  void
+  xapian_query_delete (xapian_query_t *query);
 }
 
 #endif

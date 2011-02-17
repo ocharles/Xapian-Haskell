@@ -37,6 +37,8 @@ data Enquire = Enquire !(ForeignPtr XapianEnquire)
 data Query = Query !(ForeignPtr XapianEnquire)
            deriving (Eq, Show)
 
+data Stem = Stem !(ForeignPtr XapianStem)
+               deriving (Eq, Show)
 
 newtype CreateDBOption = CreateDBOption { unCreateDBOption :: Int }
                          deriving (Show, Eq)
@@ -45,6 +47,14 @@ createOrOpenDB      = CreateDBOption 1
 createDB            = CreateDBOption 2
 createOrOverwriteDB = CreateDBOption 3
 openDB              = CreateDBOption 4
+
+englishStem = createStem "english"
+
+createStem language =
+  useAsCString (pack language) $ \cLang -> do
+    stemHandle <- c_xapian_stem_new cLang
+    managed <- newForeignPtr c_xapian_stem_delete stemHandle
+    return (Stem managed)
 
 openWritableDatabase filename options =
   useAsCString (pack filename) $ \cFilename ->
@@ -130,6 +140,7 @@ type XapianDatabase = ()
 type XapianEnquire = ()
 type XapianQuery = ()
 type XapianMSetIterator = ()
+type XapianStem = ()
 
 foreign import ccall "cxapian.h xapian_writable_db_new"
   c_xapian_writable_db_new :: CString ->
@@ -201,3 +212,9 @@ foreign import ccall "cxapian.h xapian_msets_get"
 
 foreign import ccall "cxapian.h xapian_msets_next"
   c_xapian_msets_next :: Ptr XapianMSetIterator -> IO ()
+
+foreign import ccall "cxapian.h xapian_stem_new"
+  c_xapian_stem_new :: CString -> IO (Ptr XapianStem)
+
+foreign import ccall "cxapian.h &xapian_stem_delete"
+  c_xapian_stem_delete :: FunPtr (Ptr XapianStem -> IO())

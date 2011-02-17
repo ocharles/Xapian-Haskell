@@ -24,6 +24,10 @@ struct _xapian_msets {
   Xapian::MSetIterator end;
 };
 
+struct _xapian_stem {
+  Xapian::Stem *xapian_stem;
+};
+
 xapian_database_t *
 xapian_writable_db_new(const char *cFilename, int options,
                        const char **errorStr) {
@@ -168,4 +172,17 @@ xapian_msets_get (xapian_msets_t *msets) {
 void
 xapian_msets_next(xapian_msets_t *msets) {
   msets->iterator++;
+}
+
+xapian_stem_t *
+xapian_stem_new(const char *language) {
+  xapian_stem_t *stem = new xapian_stem_t;
+  stem->xapian_stem = new Xapian::Stem(std::string(language));
+  return stem;
+}
+
+void
+xapian_stem_delete (xapian_stem_t *stem) {
+  delete stem->xapian_stem;
+  delete stem;
 }

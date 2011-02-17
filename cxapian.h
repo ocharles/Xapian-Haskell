@@ -6,6 +6,7 @@ typedef struct _xapian_document xapian_document_t;
 typedef struct _xapian_enquire xapian_enquire_t;
 typedef struct _xapian_query xapian_query_t;
 typedef struct _xapian_msets xapian_msets_t;
+typedef struct _xapian_stem xapian_stem_t;
 
 extern "C" {
 
@@ -66,6 +67,12 @@ extern "C" {
 
   void
   xapian_msets_next(xapian_msets_t *msets);
+
+  xapian_stem_t *
+  xapian_stem_new(const char *language);
+
+  void
+  xapian_stem_delete(xapian_stem_t *stem);
 }
 
 #endif

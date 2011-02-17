@@ -3,8 +3,6 @@
 #include "cxapian.h"
 #include <xapian.h>
 
-#include <stdlib.h>
-
 struct _xapian_database {
   Xapian::Database* xapian_database;
 };
@@ -19,6 +17,11 @@ struct _xapian_enquire {
 
 struct _xapian_query {
   Xapian::Query* xapian_query;
+};
+
+struct _xapian_msets {
+  Xapian::MSetIterator iterator;
+  Xapian::MSetIterator end;
 };
 
 xapian_database_t *
@@ -136,4 +139,33 @@ void
 xapian_query_delete(xapian_query_t *query) {
   delete query->xapian_query;
   delete query;
+}
+
+xapian_msets_t *
+xapian_enquire_query (xapian_enquire_t* enquire, xapian_query_t *query,
+                      int min, int max) {
+  xapian_msets_t *msets = new xapian_msets_t;
+
+  enquire->xapian_enquire->set_query(*query->xapian_query);
+  Xapian::MSet xapian_msets = enquire->xapian_enquire->get_mset(min, max);
+
+  msets->iterator = xapian_msets.begin();
+  msets->end = xapian_msets.end();
+
+  return msets;
+}
+
+int
+xapian_msets_valid (xapian_msets_t *msets) {
+  return msets->iterator != msets->end;
+}
+
+int
+xapian_msets_get (xapian_msets_t *msets) {
+  return *msets->iterator;
+}
+
+void
+xapian_msets_next(xapian_msets_t *msets) {
+  msets->iterator++;
 }

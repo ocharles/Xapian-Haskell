@@ -13,9 +13,16 @@ import Foreign.C.Types
 testStuff =
   do (Right db) <- openWritableDatabase "test.db" createOrOverwriteDB
      doc <- newDocument
-     addPosting doc "A posting" 1
+     addPosting doc "red" 1
      addDocument db doc
+     doc2 <- newDocument
+     addPosting doc2 "red" 1
+     addDocument db doc2
      return ()
+
+testQuery =
+  do (Right db) <- openDatabase "test.db"
+     enquire db (query "red" <&> query "red")
 
 -- Public API (sort of, I need to decide what to export)
 data Document = Document !(ForeignPtr XapianDocument)
@@ -79,11 +86,18 @@ addPosting (Document document) term pos =
   withForeignPtr document $ \doc_ptr ->
   c_xapian_document_add_posting doc_ptr dat pos
 
-enquire (Database database) =
-  withForeignPtr database $ \dbptr -> do
-    document <- c_xapian_enquire_new dbptr
-    managed <- newForeignPtr c_xapian_enquire_delete document
-    return (Enquire managed)
+enquire (Database database) (Query query) =
+  withForeignPtr database $ \dbptr ->
+  withForeignPtr query $ \queryptr -> do
+    enquire <- c_xapian_enquire_new dbptr
+    let msets = c_xapian_enquire_query enquire queryptr 0 10
+    fetchMSets msets
+      where fetchMSets msets =
+                if c_xapian_msets_valid msets then
+                    do mset <- c_xapian_msets_get msets
+                       c_xapian_msets_next msets
+                       fetchMSets msets >>= \rest -> return (mset:rest)
+                else return []
 
 query term = unsafePerformIO $
   useAsCString (pack term) $ \dat -> do
@@ -99,7 +113,10 @@ combineQueries (Query a) (Query b) operator = unsafePerformIO $
     return (Query managed)
 
 a <|> b = combineQueries a b queryOpOr
-  where queryOpOr = 0
+  where queryOpOr = 1
+
+a <&> b = combineQueries a b queryOpAnd
+  where queryOpAnd = 0
 
 describeQuery (Query q) = unsafePerformIO $
   withForeignPtr q $ \query ->
@@ -112,6 +129,7 @@ type XapianDocument = ()
 type XapianDatabase = ()
 type XapianEnquire = ()
 type XapianQuery = ()
+type XapianMSetIterator = ()
 
 foreign import ccall "cxapian.h xapian_writable_db_new"
   c_xapian_writable_db_new :: CString ->
@@ -169,3 +187,17 @@ foreign import ccall "cxapian.h xapian_query_describe"
 
 foreign import ccall "cxapion.h &xapian_query_delete"
   c_xapian_query_delete :: FunPtr (Ptr XapianQuery -> IO ())
+
+foreign import ccall "cxapian.h xapian_enquire_query"
+  c_xapian_enquire_query :: Ptr XapianEnquire -> Ptr XapianQuery ->
+                            Int -> Int ->
+                            Ptr XapianMSetIterator
+
+foreign import ccall "cxapian.h xapian_msets_valid"
+  c_xapian_msets_valid :: Ptr XapianMSetIterator -> Bool
+
+foreign import ccall "cxapian.h xapian_msets_get"
+  c_xapian_msets_get :: Ptr XapianMSetIterator -> IO (Int)
+
+foreign import ccall "cxapian.h xapian_msets_next"
+  c_xapian_msets_next :: Ptr XapianMSetIterator -> IO ()

@@ -5,6 +5,7 @@ typedef struct _xapian_database xapian_database_t;
 typedef struct _xapian_document xapian_document_t;
 typedef struct _xapian_enquire xapian_enquire_t;
 typedef struct _xapian_query xapian_query_t;
+typedef struct _xapian_msets xapian_msets_t;
 
 extern "C" {
 
@@ -52,6 +53,19 @@ extern "C" {
 
   void
   xapian_query_delete (xapian_query_t *query);
+
+  xapian_msets_t *
+  xapian_enquire_query (xapian_enquire_t* enquire, xapian_query_t *query,
+                        int min, int max);
+
+  int
+  xapian_msets_valid (xapian_msets_t *msets);
+
+  int
+  xapian_msets_get (xapian_msets_t *msets);
+
+  void
+  xapian_msets_next(xapian_msets_t *msets);
 }
 
 #endif

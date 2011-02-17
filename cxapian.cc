@@ -24,11 +24,7 @@ struct _xapian_query {
 xapian_database_t *
 xapian_writable_db_new(const char *cFilename, int options,
                        const char **errorStr) {
-  xapian_database_t *db = NULL;
-  db = (xapian_database_t*) malloc(sizeof(xapian_database_t));
-  if (db == NULL) {
-    return NULL;
-  }
+  xapian_database_t *db = new xapian_database_t();
 
   try {
     std::string filename(cFilename);
@@ -37,7 +33,7 @@ xapian_writable_db_new(const char *cFilename, int options,
   }
   catch (const Xapian::Error & error) {
     *errorStr = error.get_msg().c_str();
-    free(db);
+    delete db;
     return NULL;
   }
 }
@@ -52,11 +48,7 @@ xapian_writable_db_add_document(xapian_database_t *database,
 
 xapian_database_t *
 xapian_database_new (const char *cFilename, const char **errorStr) {
-  xapian_database_t *db = NULL;
-  db = (xapian_database_t *) malloc(sizeof(xapian_database_t));
-  if (db == NULL) {
-    return NULL;
-  }
+  xapian_database_t *db = new xapian_database_t;
 
   try {
     std::string filename(cFilename);
@@ -65,7 +57,7 @@ xapian_database_new (const char *cFilename, const char **errorStr) {
   }
   catch (const Xapian::Error & error) {
     *errorStr = error.get_msg().c_str();
-    free(db);
+    delete db;
     return NULL;
   }
 }
@@ -73,16 +65,12 @@ xapian_database_new (const char *cFilename, const char **errorStr) {
 void
 xapian_database_delete (xapian_database_t *database) {
   delete database->xapian_database;
-  free(database);
+  delete database;
 }
 
 xapian_document_t *
 xapian_document_new() {
-  xapian_document_t *document = NULL;
-  document = (xapian_document_t *)malloc(sizeof(xapian_document_t));
-  if (document == NULL) {
-    return NULL;
-  }
+  xapian_document_t *document = new xapian_document_t;
 
   document->xapian_document = new Xapian::Document();
   return document;
@@ -102,11 +90,7 @@ xapian_document_add_posting (xapian_document_t *doc, const char* posting, int po
 
 xapian_enquire_t *
 xapian_enquire_new (xapian_database_t *database) {
-  xapian_enquire_t *enquire = NULL;
-  enquire = (xapian_enquire_t *)malloc(sizeof(xapian_enquire_t));
-  if(enquire == NULL) {
-    return NULL;
-  }
+  xapian_enquire_t *enquire = new xapian_enquire_t;
 
   enquire->xapian_enquire = new Xapian::Enquire(*(database->xapian_database));
   return enquire;
@@ -114,11 +98,7 @@ xapian_enquire_new (xapian_database_t *database) {
 
 xapian_query_t *
 xapian_query_new (const char* term) {
-  xapian_query_t *query = NULL;
-  query = (xapian_query_t *)malloc(sizeof(xapian_query_t));
-  if(query == NULL) {
-    return NULL;
-  }
+  xapian_query_t *query = new xapian_query_t;
 
   query->xapian_query = new Xapian::Query(std::string(term));
   return query;
@@ -126,11 +106,7 @@ xapian_query_new (const char* term) {
 
 xapian_query_t *
 xapian_query_combine (int op, xapian_query_t *qa, xapian_query_t *qb) {
-  xapian_query_t *query = NULL;
-  query = (xapian_query_t *)malloc(sizeof(xapian_query_t));
-  if(query == NULL) {
-    return NULL;
-  }
+  xapian_query_t *query = new xapian_query_t;
 
   query->xapian_query = new Xapian::Query((Xapian::Query::op) op,
                                           *(qa->xapian_query),

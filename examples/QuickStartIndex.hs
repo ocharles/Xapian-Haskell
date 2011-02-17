@@ -1,6 +1,6 @@
 import Control.Monad (zipWithM)
 import System.Environment (getArgs)
-import Xapian;
+import Search.Xapian;
 
 main = do
   (dbPath:store:terms) <- getArgs

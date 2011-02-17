@@ -6,17 +6,15 @@ support.
 
 To get going, here's what you'll need to do:
 
-    g++ -shared cxapian.cc -o libcxapian.so -lxapian
+    g++ -shared c/cxapian.cc -o libcxapian.so -lxapian
 
 Which will generate "libcxapian" (which may need a better name). You can then
 use this with Xapian.hs:
 
-    ghci Xapian.hs -lcxapian -L.
+    ghci -isrc -lcxapian -L.
 
-And away you go! I've added `testStuff` as some really basic test code. It will
-produce test.db in your current pwd. You can poke this with:
-
-    delve -a test.db
+And away you go! There are some examples of how far we've got in the `examples`
+directory.
 
 
 
@@ -31,15 +29,7 @@ moment!)
 
 TODO
 
-    - Stop passing around void* everywhere in cxapian and pass some actual typed
-      pointers
-
     - We're are almost entirely trapped in the IO monad - should we be? Could
       we move some stuff to the ST monad and act more pure?
-
-    - cxapian needs to export delete functions, and the foreignPtr in Xapian.hs
-      needs to use this deletion stuff
-
-    - Add document probably shouldn't be calling flush
 
     - ...lots more :)

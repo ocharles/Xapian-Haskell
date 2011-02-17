@@ -11,13 +11,12 @@ import Foreign.C.Types
 -- For testing - here's how it looks to clients
 --
 testStuff =
-  do (Right db) <- openWritableDatabase "test.db" createOrOverwriteDB
+  do let textData = "Oh my, how very confusing Haskell can be!"
+     (Right db) <- openWritableDatabase "test.db" createOrOverwriteDB
      doc <- newDocument
-     addPosting doc "red" 1
+     stemToDocument englishStem doc textData
+     setDocumentData doc textData
      addDocument db doc
-     doc2 <- newDocument
-     addPosting doc2 "red" 1
-     addDocument db doc2
      return ()
 
 testQuery =
@@ -50,11 +49,17 @@ openDB              = CreateDBOption 4
 
 englishStem = createStem "english"
 
-createStem language =
+createStem language = unsafePerformIO $
   useAsCString (pack language) $ \cLang -> do
     stemHandle <- c_xapian_stem_new cLang
     managed <- newForeignPtr c_xapian_stem_delete stemHandle
     return (Stem managed)
+
+stemToDocument (Stem stem) (Document document) text =
+  useAsCString (pack text) $ \ctext ->
+  withForeignPtr stem $ \stemPtr ->
+  withForeignPtr document $ \documentPtr -> do
+    c_xapian_stem_string stemPtr documentPtr ctext
 
 openWritableDatabase filename options =
   useAsCString (pack filename) $ \cFilename ->
@@ -218,3 +223,9 @@ foreign import ccall "cxapian.h xapian_stem_new"
 
 foreign import ccall "cxapian.h &xapian_stem_delete"
   c_xapian_stem_delete :: FunPtr (Ptr XapianStem -> IO())
+
+foreign import ccall "cxapian.h xapian_stem_string"
+  c_xapian_stem_string :: Ptr XapianStem ->
+                          Ptr XapianDocument ->
+                          CString ->
+                          IO ()

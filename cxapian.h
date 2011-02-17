@@ -73,6 +73,10 @@ extern "C" {
 
   void
   xapian_stem_delete(xapian_stem_t *stem);
+
+  void
+  xapian_stem_string (xapian_stem_t *stem, xapian_document_t *document,
+                      const char *string);
 }
 
 #endif

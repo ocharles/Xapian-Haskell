@@ -186,3 +186,12 @@ xapian_stem_delete (xapian_stem_t *stem) {
   delete stem->xapian_stem;
   delete stem;
 }
+
+void
+xapian_stem_string (xapian_stem_t *stem, xapian_document_t *document,
+                    const char *string) {
+  Xapian::TermGenerator tg;
+  tg.set_stemmer(*stem->xapian_stem);
+  tg.set_document(*document->xapian_document);
+  tg.index_text(std::string(string));
+}

@@ -61,11 +61,17 @@ foreign import ccall "cxapion.h &xapian_database_delete"
 foreign import ccall "cxapian.h xapian_document_new"
   c_xapian_document_new :: IO (Ptr XapianDocument)
 
+foreign import ccall "cxapian.h xapian_get_document"
+  c_xapian_get_document :: Ptr XapianDatabase -> Int -> IO (Ptr XapianDocument)
+
 foreign import ccall "cxapion.h &xapian_document_delete"
   c_xapian_document_delete :: FunPtr (Ptr XapianDocument -> IO ())
 
 foreign import ccall "cxapian.h xapian_document_set_data"
   c_xapian_document_set_data :: Ptr XapianDocument -> CString -> IO ()
+
+foreign import ccall "cxapian.h xapian_document_get_data"
+  c_xapian_document_get_data :: Ptr XapianDocument -> IO (CString)
 
 foreign import ccall "cxapian.h xapian_document_add_posting"
   c_xapian_document_add_posting :: Ptr XapianDocument ->

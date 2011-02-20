@@ -8,7 +8,7 @@ struct _xapian_database {
 };
 
 struct _xapian_document {
-  Xapian::Document* xapian_document;
+  Xapian::Document xapian_document;
 };
 
 struct _xapian_enquire {
@@ -50,7 +50,7 @@ xapian_writable_db_add_document(xapian_database_t *database,
                                 xapian_document_t *document) {
   Xapian::WritableDatabase *wdb =
     static_cast <Xapian::WritableDatabase *> (database->xapian_database);
-  wdb->add_document(*(document->xapian_document));
+  wdb->add_document(document->xapian_document);
 }
 
 xapian_database_t *
@@ -79,26 +79,40 @@ xapian_document_t *
 xapian_document_new() {
   xapian_document_t *document = new xapian_document_t;
 
-  document->xapian_document = new Xapian::Document();
+  document->xapian_document = *(new Xapian::Document());
+  return document;
+}
+
+xapian_document_t *
+xapian_get_document (xapian_database_t *database, int doc_id)
+{
+  xapian_document_t *document = new xapian_document_t;
+
+  document->xapian_document = database->xapian_database->get_document(doc_id);
   return document;
 }
 
 void
 xapian_document_delete(xapian_document_t *document) {
-  delete document->xapian_document;
   delete document;
 }
 
 void
 xapian_document_set_data (xapian_document_t *doc, const char* data)
 {
-  doc->xapian_document->set_data(std::string(data));
+  doc->xapian_document.set_data(std::string(data));
+}
+
+const char *
+xapian_document_get_data (xapian_document_t *document)
+{
+  return document->xapian_document.get_data().c_str();
 }
 
 void
 xapian_document_add_posting (xapian_document_t *doc, const char* posting, int pos)
 {
-  doc->xapian_document->add_posting(std::string(posting), pos);
+  doc->xapian_document.add_posting(std::string(posting), pos);
 }
 
 xapian_enquire_t *
@@ -191,7 +205,7 @@ xapian_stem_string (xapian_stem_t *stem, xapian_document_t *document,
                     const char *string) {
   Xapian::TermGenerator tg;
   tg.set_stemmer(*stem->xapian_stem);
-  tg.set_document(*document->xapian_document);
+  tg.set_document(document->xapian_document);
   tg.index_text(std::string(string));
 }
 

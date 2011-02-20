@@ -27,12 +27,15 @@ module Search.Xapian
          openWritableDatabase
        , openDatabase
        , enquire
+       , Database
 
          -- * Documents
        , newDocument
        , addDocument
        , setDocumentData
+       , getDocumentData
        , addPosting
+       , getDocument
 
          -- * Stemming
        , stemToDocument
@@ -176,6 +179,12 @@ newDocument = do
   managed <- newForeignPtr c_xapian_document_delete document
   return (Document managed)
 
+getDocument (Database database) id =
+  withForeignPtr database $ \dbPtr -> do
+  document <- c_xapian_get_document dbPtr id
+  managed <- newForeignPtr c_xapian_document_delete document
+  return (Document managed)
+
 -- | @setDocumentData document data@ will set the entire data section
 -- of @document@ to @data@, clearing what may have originally been there.
 setDocumentData :: Document -- ^ The document who's data to set
@@ -185,6 +194,11 @@ setDocumentData (Document document) docData =
   useAsCString (pack docData) $ \dat ->
   withForeignPtr document $ \doc_ptr ->
   c_xapian_document_set_data doc_ptr dat
+
+getDocumentData (Document document) =
+  withForeignPtr document $ \docPtr ->
+  do dataPtr <- c_xapian_document_get_data docPtr
+     peekCString dataPtr
 
 -- | @addPosting document posting pos@ will index the term @posting@ in
 -- the document @document@ at position @pos@.

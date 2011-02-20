@@ -27,11 +27,17 @@ extern "C" {
   xapian_document_t *
   xapian_document_new ();
 
+  xapian_document_t *
+  xapian_get_document (xapian_database_t *database, int doc_id);
+
   void
   xapian_document_delete (xapian_document_t *document);
 
   void
   xapian_document_set_data (xapian_document_t *document, const char* data);
+
+  const char *
+  xapian_document_get_data (xapian_document_t *document);
 
   void
   xapian_document_add_posting (xapian_document_t *doc, const char* posting,

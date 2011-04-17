@@ -8,9 +8,6 @@ import Data.ByteString.Char8 (pack)
 main = do
   (dbPath:store:terms) <- getArgs
   (Right db) <- openWritableDatabase CreateOrOpen dbPath
-  let doc = foldr (\(pos,term) cont -> addPosting pos (pack term) . cont)
-                  id
-                  (zip [1..] terms)
-            $ document store
+  let doc = addPostings (zip [1..] $ map pack terms) $ document store
   addDocument db doc
   return ()

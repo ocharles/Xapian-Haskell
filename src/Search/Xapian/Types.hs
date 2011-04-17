@@ -99,6 +99,10 @@ data QueryOptions = QueryOptions
   , results :: Int
   }
 
+queryRange :: Int -> Int -> QueryOptions
+queryRange from to = QueryOptions from (to - from + 1)
+
+
 -- * documents
 
 -- | t represents the document data

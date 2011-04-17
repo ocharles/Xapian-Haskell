@@ -7,6 +7,13 @@ TODO
 * use more ADTs
 * unsafePerformIO is bad.
 * data is stored as UTF8, which underlying text representation is appropriate?
+* support values
 
 maybe...
 * allow for custom stem algorithms in Haskell
+* remote backends?
+
+from the docs:
+* spelling correction
+* sorting results
+* thesaurus

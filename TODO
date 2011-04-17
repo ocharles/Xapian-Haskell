@@ -5,3 +5,5 @@ TODO
 * make use of a serializer to use any user defined document data
 * improve the query interface
 * use more ADTs
+* unsafePerformIO is bad.
+* data is stored as UTF8, which underlying text representation is appropriate?

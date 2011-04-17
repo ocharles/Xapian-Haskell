@@ -21,11 +21,24 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 
 -}
 
-module Search.Xapian.Types (
-  module Search.Xapian.Types
-) where
+module Search.Xapian.Types
+       (
+         -- * Databases
+         ReadableDatabase (..)
+       , Database
+       , WritableDatabase
+       , InitDBOption (..)
 
--- | cereal
+         -- * Queries
+       , Query (..)
+       , CompiledQuery
+       , QueryOptions (..)
+
+         -- * Document
+       , Document (..)
+       , DocumentId (..)
+       ) where
+
 import Data.Serialize
 import Data.Word
 import qualified Data.ByteString as BS
@@ -34,7 +47,59 @@ import Foreign.C.String
 import Foreign.C.Types
 import Search.Xapian.FFI
 
--- * Sketch the types
+-- * database
+
+class ReadableDatabase db where
+  searchWith :: Serialize t
+             => QueryOptions
+             -> db t
+             -> Query
+             -> IO [DocumentId]
+
+
+  getDocument :: Serialize t
+              => db t
+              -> DocumentId
+              -> IO (Document t)
+
+instance ReadableDatabase Database where
+  searchWith = undefined
+  getDocument = undefined
+
+instance ReadableDatabase WritableDatabase where
+  searchWith opts (WritableDatabase db) q = searchWith opts db q
+  getDocument (WritableDatabase db) id' = getDocument db id'
+
+
+data Database t = Database !(ForeignPtr XapianDatabase)
+  deriving (Eq, Show)
+
+newtype WritableDatabase t = WritableDatabase (Database t) -- | never export constructor
+
+
+data InitDBOption
+  = Create
+  | CreateOrOpen
+  | CreateOrOverwrite
+  | Open
+
+-- * queries
+
+data Query = EmptyQuery
+           | Query BS.ByteString
+           | Or Query Query
+           | And Query Query
+  deriving (Show)
+
+data CompiledQuery = CompiledQuery !(ForeignPtr XapianEnquire)
+  deriving (Eq, Show)
+
+data QueryOptions = QueryOptions
+  { offset :: Int
+  , results :: Int
+  }
+
+-- * documents
 
 -- | t represents the document data
 data Document t = Document
@@ -43,84 +108,5 @@ data Document t = Document
   , documentData :: t
   } deriving (Eq, Show)
 
--- | t represents the document data
-data Database t = Database !(ForeignPtr XapianDatabase)
-  deriving (Eq, Show)
-
-data XQuery = XQuery !(ForeignPtr XapianEnquire)
-  deriving (Eq, Show)
-
--- this pure data type enables us to stay pure
-data Query = EmptyQuery | Query BS.ByteString | Or Query Query | And Query Query
-
-data QueryOptions = QueryOptions
-  { offset :: Int
-  , results :: Int
-  }
-
 -- | doc_id == 0 is invalid; what is the range of
 newtype DocumentId = DocId { getDocId :: Word32 }
-
-type Term = BS.ByteString
-type Pos  = Word32
-
-data Stemmer = Danish | Dutch | English | Finnish | French
-             | German | Hungarian | Italian | Norwegian
-             | Portuguese | Romanian | Russian | Spanish
-             | Swedish | Turkish
-             deriving (Show, Eq)
-
-
--- * Sketch the functions on documents
-
-newDocument :: Serialize t => t -> IO (Document t)
-newDocument = undefined
-
-getDocument :: Serialize t => Database t -> DocumentId -> IO (Document t)
-getDocument = undefined
-
-setDocumentData :: Serialize t => Document t -> t -> IO ()
-setDocumentData = undefined
-
-addTerm :: Serialize t => Document t -> Term -> IO ()
-addTerm = undefined
-
-addTermAt :: Serialize t => Document t -> Term -> Pos -> IO ()
-addTermAt = undefined
-
--- * Sketch the functions on queries
-
-mkQuery :: BS.ByteString -> Query
-mkQuery = undefined
-
-queryAll :: [Query] -> Query
-queryAll = foldr And EmptyQuery
-
-queryAny :: [Query] -> Query
-queryAny = foldr Or EmptyQuery
-
-search :: Serialize t
-       => Database
-       -> Query
-       -> IO [DocumentId]
-search = searchWith undefined
-
-searchWith :: Serialize t
-           => QueryOptions
-           -> Database t
-           -> Query
-           -> IO [DocumentId]
-searchWith = undefined
-
--- * Sketch the functions on databases
-
-openDatabase :: Serialize t
-             => FilePath
-             -> IO (Either String (Database t))
-openDatabase = openDatabaseWith undefined
-
-openDatabaseWith :: Serialize t
-                 => CreateDBOption
-                 -> FilePath
-                 -> IO (Either String (Database t))
-openDatabaseWith = undefined

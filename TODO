@@ -7,3 +7,6 @@ TODO
 * use more ADTs
 * unsafePerformIO is bad.
 * data is stored as UTF8, which underlying text representation is appropriate?
+
+maybe...
+* allow for custom stem algorithms in Haskell

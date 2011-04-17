@@ -20,7 +20,7 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 
 -}
 
-{-# LANGUAGE ForeignFunctionInterface #-}
+{-# LANGUAGE ForeignFunctionInterface, EmptyDataDecls #-}
 
 module Search.Xapian.FFI where
 
@@ -29,12 +29,12 @@ import Foreign
 import Foreign.C.String
 import Foreign.C.Types
 
-type XapianDocument = ()
-type XapianDatabase = ()
-type XapianEnquire = ()
-type XapianQuery = ()
-type XapianMSetIterator = ()
-type XapianStem = ()
+data XapianDocument
+data XapianDatabase
+data XapianEnquire
+data XapianQuery
+data XapianMSetIterator
+data XapianStem
 
 newtype CreateDBOption = CreateDBOption { unCreateDBOption :: Int }
                          deriving (Show, Eq)

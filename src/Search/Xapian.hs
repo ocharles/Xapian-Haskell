@@ -200,16 +200,7 @@ getDocumentData (Document document) =
   do dataPtr <- c_xapian_document_get_data docPtr
      peekCString dataPtr
 
--- | @addPosting document posting pos@ will index the term @posting@ in
--- the document @document@ at position @pos@.
-addPosting :: Document -- ^ The document to add a posting to
-           -> String   -- ^ The term to index within the document
-           -> Int      -- ^ The position of the term within the document
-           -> IO ()
-addPosting (Document document) term pos =
-  useAsCString (pack term) $ \dat ->
-  withForeignPtr document $ \doc_ptr ->
-  c_xapian_document_add_posting doc_ptr dat pos
+
 
 -- | @enquire database query offset limit@ will execute @query@ over
 -- @database@, limited to @limit@ results and offseting by @offset@

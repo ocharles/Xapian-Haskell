@@ -32,23 +32,24 @@ import Foreign.C.Types
 data XapianDocument
 data XapianDatabase
 data XapianEnquire
-data XapianQuery
+type XapianQuery = XapianEnquire
 data XapianMSetIterator
 data XapianStem
+data XapianTermsIterator
 
 newtype CreateDBOption = CreateDBOption { unCreateDBOption :: Int }
                          deriving (Show, Eq)
 
 foreign import ccall "cxapian.h xapian_writable_db_new"
   c_xapian_writable_db_new :: CString ->
-                              CreateDBOption ->
+                              Int -> -- InitDBOption
                               Ptr CString ->
                               IO (Ptr XapianDatabase)
 
 foreign import ccall "cxapian.h xapian_writable_db_add_document"
   c_xapian_database_add_document :: Ptr XapianDatabase ->
                                     Ptr XapianDocument ->
-                                    IO ()
+                                    IO CUInt
 
 foreign import ccall "cxapion.h xapian_database_new"
   c_xapian_database_new :: CString ->
@@ -86,6 +87,9 @@ foreign import ccall "cxapian.h xapian_enquire_new"
 foreign import ccall "cxapion.h &xapian_enquire_delete"
   c_xapian_enquire_delete :: FunPtr (Ptr XapianEnquire -> IO ())
 
+foreign import ccall "cxapian.h xapian_query_empty"
+  c_xapian_query_empty :: IO (Ptr XapianQuery)
+
 foreign import ccall "cxapian.h xapian_query_new"
   c_xapian_query_new :: CString -> IO (Ptr XapianQuery)
 
@@ -115,6 +119,18 @@ foreign import ccall "cxapian.h xapian_msets_get"
 
 foreign import ccall "cxapian.h xapian_msets_next"
   c_xapian_msets_next :: Ptr XapianMSetIterator -> IO ()
+
+foreign import ccall "cxapian.h xapian_get_terms"
+  c_xapian_get_terms :: Ptr XapianDocument -> Ptr XapianTermsIterator
+
+foreign import ccall "cxapian.h xapian_terms_valid"
+  c_xapian_terms_valid :: Ptr XapianTermsIterator -> Bool
+
+foreign import ccall "cxapian.h xapian_terms_get"
+  c_xapian_terms_get :: Ptr XapianTermsIterator -> IO (CString)
+
+foreign import ccall "cxapian.h xapian_terms_next"
+  c_xapian_terms_next :: Ptr XapianTermsIterator -> IO ()
 
 foreign import ccall "cxapian.h xapian_stem_new"
   c_xapian_stem_new :: CString -> IO (Ptr XapianStem)

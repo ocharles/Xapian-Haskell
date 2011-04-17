@@ -24,6 +24,11 @@ struct _xapian_msets {
   Xapian::MSetIterator end;
 };
 
+struct _xapian_terms {
+  Xapian::TermIterator iterator;
+  Xapian::TermIterator end;
+};
+
 struct _xapian_stem {
   Xapian::Stem *xapian_stem;
 };
@@ -45,12 +50,12 @@ xapian_writable_db_new(const char *cFilename, int options,
   }
 }
 
-void
+unsigned int
 xapian_writable_db_add_document(xapian_database_t *database,
                                 xapian_document_t *document) {
   Xapian::WritableDatabase *wdb =
     static_cast <Xapian::WritableDatabase *> (database->xapian_database);
-  wdb->add_document(document->xapian_document);
+  return wdb->add_document(document->xapian_document);
 }
 
 xapian_database_t *
@@ -129,6 +134,13 @@ xapian_enquire_delete(xapian_enquire_t *enquire) {
   delete enquire;
 }
 
+xapian_query_t *
+xapian_query_empty () {
+  xapian_query_t *query = new xapian_query_t;
+
+  query->xapian_query = Xapian::Query();
+  return query;
+}
 
 xapian_query_t *
 xapian_query_new (const char* term) {
@@ -185,6 +197,31 @@ xapian_msets_get (xapian_msets_t *msets) {
 void
 xapian_msets_next(xapian_msets_t *msets) {
   msets->iterator++;
+}
+
+xapian_terms_t *
+xapian_get_terms (_xapian_document* document) {
+  xapian_terms_t *terms = new xapian_terms_t;
+
+  terms->iterator = document->xapian_document.termlist_begin();
+  terms->end = document->xapian_document.termlist_end();
+
+  return terms;
+}
+
+int
+xapian_terms_valid (xapian_terms_t *terms) {
+  return terms->iterator != terms->end;
+}
+
+const char *
+xapian_terms_get (xapian_terms_t *terms) {
+  return (*terms->iterator).c_str();
+}
+
+void
+xapian_terms_next(xapian_terms_t *terms) {
+  terms->iterator++;
 }
 
 xapian_stem_t *

@@ -8,6 +8,9 @@ TODO
 * unsafePerformIO is bad.
 * data is stored as UTF8, which underlying text representation is appropriate?
 * support values
+* databases may throw Xapian::DatabaseCorruptError or Xapian::DatabaseLockError
+  while opening
+* apply Tibell's style guide
 
 maybe...
 * allow for custom stem algorithms in Haskell

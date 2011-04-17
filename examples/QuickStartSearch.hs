@@ -1,9 +1,12 @@
 import System.Environment (getArgs)
-import Search.Xapian;
+import Control.Monad (forM_)
+import Search.Xapian.Database
+import Search.Xapian.Types
 
 main = do
   (dbPath:terms) <- getArgs
   (Right db) <- openDatabase dbPath
-  results <- enquire db (foldl1 (<|>) $ map query terms) 0 10
-  (print . ("You may be interested in document #" ++) . show) `mapM` results
-  return ()
+  MSet results <- searchWith db (foldl1 Or $ map queryString terms) (QueryRange 0 10)
+  forM_ (results :: [Document String]) $ \result ->
+   do putStr "You may be interested in document#"
+      print result

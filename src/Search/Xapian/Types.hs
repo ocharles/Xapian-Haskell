@@ -23,94 +23,138 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 
 module Search.Xapian.Types
        (
+         -- * Error
+         XapianError (..)
+         
          -- * Databases
-         ReadableDatabase (..)
-       , Database
+       , ReadableDatabase (..)
+       , Database (..)
        , WritableDatabase
        , InitDBOption (..)
+       , packInitDBOption
 
          -- * Queries
+       , MSet (..)
        , Query (..)
-       , CompiledQuery
-       , QueryOptions (..)
+       , QueryPtr
+       , QueryRange (..)
+       , queryString
 
          -- * Document
        , Document (..)
        , DocumentId (..)
+       , Term (..)
+       , Pos
+       , document
        ) where
 
+import Control.Applicative
+import Data.Either
 import Data.Serialize
 import Data.Word
 import qualified Data.ByteString as BS
+import Data.ByteString.Char8 (pack)
 import Foreign
 import Foreign.C.String
 import Foreign.C.Types
 import Search.Xapian.FFI
+import Search.Xapian.Internal.Types
 
 -- * database
 
+-- | XapianError, inspired (blatantly copied) by hdbc
+--
+-- The main Xapian exception object. As much information as possible is passed from
+-- the database through to the application through this object.
+--
+-- Errors generated in the Haskell layer will have seNativeError set to
+-- Nothing.
+-- 
+
+
 class ReadableDatabase db where
-  searchWith :: Serialize t
-             => QueryOptions
-             -> db t
+  searchWith :: Serialize doc
+             => db doc
              -> Query
-             -> IO [DocumentId]
+             -> QueryRange
+             -> IO (MSet doc)
 
 
-  getDocument :: Serialize t
-              => db t
+  getDocument :: Serialize doc
+              => db doc
               -> DocumentId
-              -> IO (Document t)
+              -> IO (Either XapianError (Document doc))
 
 instance ReadableDatabase Database where
-  searchWith = undefined
-  getDocument = undefined
+  searchWith database@(Database dbFPtr) query (QueryRange off lim) =
+   do queryFPtr <- compileQuery query
+      withForeignPtr dbFPtr $ \dbPtr ->
+          withForeignPtr queryFPtr $ \queryPtr ->
+           do enquire <- c_xapian_enquire_new dbPtr
+              let msets = c_xapian_enquire_query enquire queryPtr off lim
+              MSet . rights <$> fetchMSets msets
+    where
+      fetchMSets msets =
+          if c_xapian_msets_valid msets
+             then do mset <- c_xapian_msets_get msets
+                     let docId = DocId (fromIntegral mset)
+                     doc  <- getDocument database docId
+                     c_xapian_msets_next msets
+                     rest <- fetchMSets msets
+                     return (doc:rest)
+             else return []
+          
+
+  getDocument (Database database) docId@(DocId id') =
+     withForeignPtr database $ \dbPtr ->
+      do docPtr  <- c_xapian_get_document dbPtr (fromIntegral id') -- not quite right
+         docFPtr <- newForeignPtr c_xapian_document_delete docPtr
+         eitherDocDat  <- getDocumentData docFPtr
+         case eitherDocDat of
+              Left err     -> return (Left err)
+              Right dat    -> do terms <- getDocumentTerms docFPtr
+                                 return . Right $ Document (Just docId) dat terms
 
 instance ReadableDatabase WritableDatabase where
-  searchWith opts (WritableDatabase db) q = searchWith opts db q
+  searchWith (WritableDatabase db) = searchWith db
   getDocument (WritableDatabase db) id' = getDocument db id'
 
-
-data Database t = Database !(ForeignPtr XapianDatabase)
-  deriving (Eq, Show)
-
-newtype WritableDatabase t = WritableDatabase (Database t) -- | never export constructor
-
-
 data InitDBOption
-  = Create
-  | CreateOrOpen
+  = CreateOrOpen
+  | Create
   | CreateOrOverwrite
   | Open
+  deriving (Show, Eq, Ord, Enum)
 
--- * queries
+packInitDBOption :: InitDBOption -> Int
+packInitDBOption option =
+  case option of
+       CreateOrOpen      -> 1
+       Create            -> 2
+       CreateOrOverwrite -> 3
+       Open              -> 4
 
-data Query = EmptyQuery
-           | Query BS.ByteString
-           | Or Query Query
-           | And Query Query
-  deriving (Show)
+-- * query result
 
-data CompiledQuery = CompiledQuery !(ForeignPtr XapianEnquire)
-  deriving (Eq, Show)
+-- | it's a list, not a set
+newtype MSet doc = MSet {getMSet :: [Document doc]}
 
-data QueryOptions = QueryOptions
-  { offset :: Int
-  , results :: Int
+-- | would YOU expect this when you think of a range?
+data QueryRange = QueryRange
+  { rangeOffset :: Int
+  , rangeSize :: Int
   }
-
-queryRange :: Int -> Int -> QueryOptions
-queryRange from to = QueryOptions from (to - from + 1)
-
-
--- * documents
 
 -- | t represents the document data
 data Document t = Document
-  { documentPtr  :: !(ForeignPtr XapianDocument) -- | we dont wanna show
-                                                 -- | the documentPtr ...
-  , documentData :: t
+  { documentId    :: Maybe DocumentId
+  , documentData  :: t
+  , documentTerms :: [Term]
   } deriving (Eq, Show)
+
+document :: Serialize t => t -> Document t
+document t = Document Nothing t []
 
 -- | doc_id == 0 is invalid; what is the range of
 newtype DocumentId = DocId { getDocId :: Word32 }
+  deriving (Show, Eq)

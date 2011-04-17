@@ -7,21 +7,10 @@ import Data.Serialize
 
 import Search.Xapian.Types
 
+addTerm :: Serialize t => BS.ByteString -> Document t -> Document t
+addTerm bs doc@Document{documentTerms = documentTerms} =
+    doc{documentTerms = Term bs : documentTerms}
 
-type Term = BS.ByteString
-type Pos  = Word32
-
-newDocument :: Serialize t => t -> IO (Document t)
-newDocument = undefined
-
-setDocumentData :: Serialize t => Document t -> t -> IO ()
-setDocumentData = undefined
-
-getDocumentData :: Serialize t => Document t -> t -> IO ()
-getDocumentData = undefined
-
-addTerm :: Serialize t => Document t -> Term -> IO ()
-addTerm = undefined
-
-addTermAt :: Serialize t => Document t -> Term -> Pos -> IO ()
-addTermAt = undefined
+addPosting :: Serialize t => Pos -> BS.ByteString -> Document t -> Document t
+addPosting pos bs doc@Document{documentTerms = documentTerms} =
+      doc{documentTerms = Posting pos bs : documentTerms}

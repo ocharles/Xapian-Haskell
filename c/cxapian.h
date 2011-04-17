@@ -6,6 +6,7 @@ typedef struct _xapian_document xapian_document_t;
 typedef struct _xapian_enquire xapian_enquire_t;
 typedef struct _xapian_query xapian_query_t;
 typedef struct _xapian_msets xapian_msets_t;
+typedef struct _xapian_terms xapian_terms_t;
 typedef struct _xapian_stem xapian_stem_t;
 
 extern "C" {
@@ -14,7 +15,7 @@ extern "C" {
   xapian_writable_db_new (const char *filename, int action,
                           const char **error);
 
-  void
+  unsigned int
   xapian_writable_db_add_document(xapian_database_t *database,
                                   xapian_document_t *document);
 
@@ -50,6 +51,9 @@ extern "C" {
   xapian_enquire_delete (xapian_enquire_t *enquire);
 
   xapian_query_t *
+  xapian_query_empty ();
+
+  xapian_query_t *
   xapian_query_new (const char* term);
 
   xapian_query_t *
@@ -73,6 +77,18 @@ extern "C" {
 
   void
   xapian_msets_next(xapian_msets_t *msets);
+
+  xapian_terms_t *
+  xapian_get_terms (_xapian_document* document);
+
+  int
+  xapian_terms_valid (xapian_terms_t *terms);
+
+  const char *
+  xapian_terms_get (xapian_terms_t *terms);
+
+  void
+  xapian_terms_next(xapian_terms_t *terms);
 
   xapian_stem_t *
   xapian_stem_new(const char *language);

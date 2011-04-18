@@ -2,14 +2,12 @@ module Search.Xapian.Database where
 
 import Foreign
 import Foreign.C.String
-import Foreign.C.Types
 import Control.Monad (forM_)
 import Control.Applicative
 import qualified Data.ByteString as BS
 import Data.ByteString.Char8 (pack, useAsCString)
 import Data.Serialize
 
-import Search.Xapian.Document
 import Search.Xapian.Types
 import Search.Xapian.Internal.Types
 import Search.Xapian.FFI
@@ -44,16 +42,6 @@ openWritableDatabase option path =
                  return (Left $ Error (Just GenericError) err)
          else do managed <- newForeignPtr c_xapian_database_delete dbHandle
                  return (Right $ WritableDatabase $ Database managed)
-
-
--- * querying databases
-
-
-search :: (Serialize doc, ReadableDatabase db)
-       => db doc
-       -> Query
-       -> IO (MSet doc)
-search db query = searchWith db query undefined
 
 
 -- * query objects

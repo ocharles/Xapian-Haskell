@@ -52,11 +52,8 @@ import Control.Applicative
 import Data.Either
 import Data.Serialize
 import Data.Word
-import qualified Data.ByteString as BS
-import Data.ByteString.Char8 (pack)
 import Foreign
 import Foreign.C.String
-import Foreign.C.Types
 import Search.Xapian.FFI
 import Search.Xapian.Internal.Types
 
@@ -73,11 +70,11 @@ import Search.Xapian.Internal.Types
 
 
 class ReadableDatabase db where
-  searchWith :: Serialize doc
-             => db doc
-             -> Query
-             -> QueryRange
-             -> IO (MSet doc)
+  search :: Serialize doc
+         => db doc
+         -> Query
+         -> QueryRange
+         -> IO (MSet doc)
 
 
   getDocument :: Serialize doc
@@ -86,7 +83,7 @@ class ReadableDatabase db where
               -> IO (Either Error (Document doc))
 
 instance ReadableDatabase Database where
-  searchWith database@(Database dbFPtr) query (QueryRange off lim) =
+  search database@(Database dbFPtr) query (QueryRange off lim) =
    do queryFPtr <- compileQuery query
       withForeignPtr dbFPtr $ \dbPtr ->
           withForeignPtr queryFPtr $ \queryPtr ->
@@ -124,7 +121,7 @@ instance ReadableDatabase Database where
                else do action handle
 
 instance ReadableDatabase WritableDatabase where
-  searchWith (WritableDatabase db) = searchWith db
+  search (WritableDatabase db) = search db
   getDocument (WritableDatabase db) id' = getDocument db id'
 
 data InitDBOption

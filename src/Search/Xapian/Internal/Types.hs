@@ -1,6 +1,6 @@
 -- | this module is not intended to be made visible
 module Search.Xapian.Internal.Types
-       ( XapianError (..)
+       ( Error (..)
        , WritableDatabase (..)
        , Database (..)
        , Pos
@@ -16,6 +16,7 @@ module Search.Xapian.Internal.Types
        , compileQuery
        , Term (..)
        , getDocumentTerms
+       , NativeError (..)
        ) where
 
 import Foreign
@@ -29,9 +30,12 @@ import Data.ByteString.Char8 (pack)
 import Data.Serialize
 import Search.Xapian.FFI
 
-data XapianError = XapianError { xeNativeError :: Maybe Int
-                               , seErrorMsg :: String
-                               } deriving (Show)
+data Error = Error { xeNativeError :: Maybe NativeError
+                   , seErrorMsg :: String
+                   } deriving (Show)
+
+data NativeError = DocNotFoundError | GenericError
+  deriving (Eq, Show)
 
 data Database t = Database !(ForeignPtr XapianDatabase)
   deriving (Eq, Show)
@@ -128,12 +132,12 @@ setDocumentData docFPtr docData =
 
 getDocumentData :: Serialize dat
                 => DocumentPtr
-                -> IO (Either XapianError dat)
+                -> IO (Either Error dat)
 getDocumentData docFPtr =
     withForeignPtr docFPtr $ \docPtr ->
      do dat <- BS.packCString =<< c_xapian_document_get_data docPtr
         return $ case decode $ nullify dat of
-                      Left msg   -> Left $ XapianError Nothing msg
+                      Left msg   -> Left $ Error Nothing msg
                       Right dat' -> Right dat'
 
 -- * handling NULL values

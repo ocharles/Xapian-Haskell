@@ -63,7 +63,7 @@ foreign import ccall "cxapian.h xapian_document_new"
   c_xapian_document_new :: IO (Ptr XapianDocument)
 
 foreign import ccall "cxapian.h xapian_get_document"
-  c_xapian_get_document :: Ptr XapianDatabase -> Int -> IO (Ptr XapianDocument)
+  c_xapian_get_document :: Ptr XapianDatabase -> Int -> Ptr CString -> IO (Ptr XapianDocument)
 
 foreign import ccall "cxapion.h &xapian_document_delete"
   c_xapian_document_delete :: FunPtr (Ptr XapianDocument -> IO ())

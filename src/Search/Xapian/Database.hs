@@ -19,21 +19,21 @@ import Search.Xapian.FFI
 
 openDatabase :: Serialize doc
              => FilePath
-             -> IO (Either XapianError (Database doc))
+             -> IO (Either Error (Database doc))
 openDatabase path =
   useAsCString (pack path) $ \cpath ->
   alloca $ \errorPtr ->
    do dbHandle <- c_xapian_database_new cpath errorPtr
       if dbHandle == nullPtr
          then do err <- peekCString =<< peek errorPtr
-                 return (Left $ XapianError (Just undefined) err)
+                 return (Left $ Error (Just GenericError) err)
          else do managed <- newForeignPtr c_xapian_database_delete dbHandle
                  return (Right $ Database managed)
 
 openWritableDatabase :: Serialize doc
                      => InitDBOption
                      -> FilePath
-                     -> IO (Either XapianError (WritableDatabase doc))
+                     -> IO (Either Error (WritableDatabase doc))
 openWritableDatabase option path =
   useAsCString (pack path) $ \cpath ->
   alloca $ \errorPtr ->
@@ -41,7 +41,7 @@ openWritableDatabase option path =
       dbHandle <- c_xapian_writable_db_new cpath option' errorPtr
       if dbHandle == nullPtr
          then do err <- peekCString =<< peek errorPtr
-                 return (Left $ XapianError (Just undefined) err)
+                 return (Left $ Error (Just GenericError) err)
          else do managed <- newForeignPtr c_xapian_database_delete dbHandle
                  return (Right $ WritableDatabase $ Database managed)
 

@@ -24,7 +24,7 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 module Search.Xapian.Types
        (
          -- * Error
-         XapianError (..)
+         Error (..)
          
          -- * Databases
        , ReadableDatabase (..)
@@ -62,7 +62,7 @@ import Search.Xapian.Internal.Types
 
 -- * database
 
--- | XapianError, inspired (blatantly copied) by hdbc
+-- | Error, inspired (blatantly copied) by hdbc
 --
 -- The main Xapian exception object. As much information as possible is passed from
 -- the database through to the application through this object.
@@ -83,7 +83,7 @@ class ReadableDatabase db where
   getDocument :: Serialize doc
               => db doc
               -> DocumentId
-              -> IO (Either XapianError (Document doc))
+              -> IO (Either Error (Document doc))
 
 instance ReadableDatabase Database where
   searchWith database@(Database dbFPtr) query (QueryRange off lim) =
@@ -106,14 +106,22 @@ instance ReadableDatabase Database where
           
 
   getDocument (Database database) docId@(DocId id') =
-     withForeignPtr database $ \dbPtr ->
-      do docPtr  <- c_xapian_get_document dbPtr (fromIntegral id') -- not quite right
-         docFPtr <- newForeignPtr c_xapian_document_delete docPtr
-         eitherDocDat  <- getDocumentData docFPtr
-         case eitherDocDat of
-              Left err     -> return (Left err)
-              Right dat    -> do terms <- getDocumentTerms docFPtr
-                                 return . Right $ Document (Just docId) dat terms
+       withForeignPtr database $ \dbPtr ->
+       handleError dbPtr $ \docPtr ->
+        do docFPtr <- newForeignPtr c_xapian_document_delete docPtr
+           eitherDocDat  <- getDocumentData docFPtr
+           case eitherDocDat of
+                Left err  -> return (Left err)
+                Right dat -> do terms <- getDocumentTerms docFPtr
+                                return . Right $ Document (Just docId) dat terms
+    where
+      handleError dbPtr action =
+        alloca $ \errorPtr ->
+         do handle <- c_xapian_get_document dbPtr (fromIntegral id') errorPtr
+            if handle == nullPtr
+               then do err <- peekCString =<< peek errorPtr
+                       return . Left $ Error (Just DocNotFoundError) err
+               else do action handle
 
 instance ReadableDatabase WritableDatabase where
   searchWith (WritableDatabase db) = searchWith db

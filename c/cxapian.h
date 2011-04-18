@@ -29,7 +29,7 @@ extern "C" {
   xapian_document_new ();
 
   xapian_document_t *
-  xapian_get_document (xapian_database_t *database, int doc_id);
+  xapian_get_document (xapian_database_t *database, int doc_id, const char **errorStr);
 
   void
   xapian_document_delete (xapian_document_t *document);

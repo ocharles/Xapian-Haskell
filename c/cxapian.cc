@@ -89,12 +89,19 @@ xapian_document_new() {
 }
 
 xapian_document_t *
-xapian_get_document (xapian_database_t *database, int doc_id)
+xapian_get_document (xapian_database_t *database, int doc_id, const char **errorStr)
 {
   xapian_document_t *document = new xapian_document_t;
 
-  document->xapian_document = database->xapian_database->get_document(doc_id);
-  return document;
+  try {
+    document->xapian_document = database->xapian_database->get_document(doc_id);
+    return document;
+  }
+  catch (const Xapian::DocNotFoundError & error) {
+    *errorStr = error.get_msg().c_str();
+    delete document;
+    return NULL;
+  }
 }
 
 void

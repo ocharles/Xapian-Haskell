@@ -1,7 +1,6 @@
 TODO
 ----
 
-* add a cabal file
 * make use of a serializer to use any user defined document data
 * improve the query interface
 * use more ADTs

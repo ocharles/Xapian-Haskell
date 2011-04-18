@@ -1,0 +1,26 @@
+Name:           Xapian-Haskell
+Version:        0.0.1
+License:        Other
+License-File:   LICENSE
+Author:         Oliver Charles <oliver.g.charles@googlemail.com>
+Maintainer:     Long Huynh Huu <long.upcase@googlemail.com>
+Cabal-Version:  >= 1.8
+Build-Type:     Simple
+Description:    Haskell bindings for the Xapian search engine
+Synopsis:       Haskell bindings for the Xapian search engine
+Category:       Search, Database, Text
+
+
+Library
+  HS-Source-Dirs:     src/
+  Exposed-Modules:    Search.Xapian.Database,
+                      Search.Xapian.Document,
+                      Search.Xapian.Types,
+                      Search.Xapian.Stem
+                      --Search.Xapian
+  Build-Depends:      base,
+                      blaze-builder,
+                      bytestring,
+                      cereal
+  ghc-options:          -Wall -funbox-strict-fields -O
+  ghc-prof-options:     -Wall -funbox-strict-fields -O -prof -auto-all

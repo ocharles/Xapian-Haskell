@@ -1,26 +1,40 @@
-Name:           Xapian-Haskell
-Version:        0.0.1
-License:        Other
-License-File:   LICENSE
-Author:         Oliver Charles <oliver.g.charles@googlemail.com>
-Maintainer:     Long Huynh Huu <long.upcase@googlemail.com>
-Cabal-Version:  >= 1.8
-Build-Type:     Simple
-Description:    Haskell bindings for the Xapian search engine
-Synopsis:       Haskell bindings for the Xapian search engine
-Category:       Search, Database, Text
+name:           Xapian-Haskell
+version:        0.0.1
+license:        OtherLicense
+license-file:   LICENSE
+author:         Oliver Charles <oliver.g.charles@googlemail.com>
+maintainer:     Long Huynh Huu <long.upcase@googlemail.com>
+cabal-version:  >= 1.8
+build-type:     Simple
+description:    Haskell bindings for the Xapian search engine
+synopsis:       Haskell bindings for the Xapian search engine
+category:       Search, Database
 
+extra-source-files: c/cxapian.cc
+                    examples/QuickStartIndex.hs
+                    examples/QuickStartSearch.hs
+                    examples/Test.hs
 
-Library
-  HS-Source-Dirs:     src/
-  Exposed-Modules:    Search.Xapian.Database,
+source-repository HEAD
+  type: git
+  location: git://github.com/exit91/Xapian-Haskell.git
+
+library
+  hs-source-dirs:     src/
+  exposed-modules:    Search.Xapian.Database,
                       Search.Xapian.Document,
                       Search.Xapian.Types,
                       Search.Xapian.Stem
                       --Search.Xapian
-  Build-Depends:      base,
+  other-modules:      Search.Xapian.Internal.Types,
+                      Search.Xapian.FFI
+  build-depends:      base,
                       blaze-builder,
                       bytestring,
                       cereal
   ghc-options:          -Wall -funbox-strict-fields -O
   ghc-prof-options:     -Wall -funbox-strict-fields -O -prof -auto-all
+  extensions:         EmptyDataDecls,
+                      ForeignFunctionInterface
+  c-sources:          c/cxapian.cc
+  extra-libraries:    xapian

@@ -59,6 +59,12 @@ extern "C" {
   xapian_query_t *
   xapian_query_combine (int op, xapian_query_t *vqa, xapian_query_t *vqb);
 
+  xapian_query_t *
+  xapian_query_new_value (int op, int valno, const char *value);
+
+  xapian_query_t *
+  xapian_query_new_double (int op, xapian_query_t *q, double d);
+
   const char *
   xapian_query_describe (xapian_query_t *vqa);
 

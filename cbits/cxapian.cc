@@ -167,6 +167,26 @@ xapian_query_combine (int op, xapian_query_t *qa, xapian_query_t *qb) {
   return query;
 }
 
+xapian_query_t *
+xapian_query_new_value (int op, int valno, const char *value) {
+  xapian_query_t *query = new xapian_query_t;
+
+  query->xapian_query = Xapian::Query((Xapian::Query::op) op,
+                                      (Xapian::valueno) valno,
+                                      std::string(value));
+  return query;
+}
+
+xapian_query_t *
+xapian_query_new_double (int op, xapian_query_t *q, double d) {
+  xapian_query_t *query = new xapian_query_t;
+
+  query->xapian_query = Xapian::Query((Xapian::Query::op) op,
+                                      q->xapian_query,
+                                      d);
+  return query;
+}
+
 const char *
 xapian_query_describe (xapian_query_t *query) {
   return query->xapian_query.get_description().c_str();

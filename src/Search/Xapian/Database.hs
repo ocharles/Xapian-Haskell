@@ -6,6 +6,7 @@ import Control.Monad (forM_)
 import Control.Applicative
 import qualified Data.ByteString as BS
 import Data.ByteString.Char8 (pack, useAsCString)
+import Data.Either (rights)
 import Data.Serialize
 
 import Search.Xapian.Types
@@ -88,18 +89,6 @@ openWritableDatabase option path =
          else do managed <- newForeignPtr c_xapian_database_delete dbHandle
                  return (Right $ WritableDatabase $ Database managed)
 
-
--- * query objects
-
-
-queryAll :: [Query] -> Query
-queryAll [] = EmptyQuery
-queryAll xs = foldr1 Q.and xs
-
-queryAny :: [Query] -> Query
-queryAny [] = EmptyQuery
-queryAny xs = foldr1 Q.or xs
-
 -- * document handling
 
 addDocument :: Serialize t
@@ -117,8 +106,8 @@ addDocument (WritableDatabase (Database db)) doc =
         withForeignPtr docFPtr $ \docPtr ->
             DocId . fromIntegral <$> c_xapian_database_add_document dbPtr docPtr
                 
-deleteDocument :: Serialize t => Database t -> DocumentId -> IO ()
-deleteDocument = undefined
+deleteDocumentById :: Serialize t => Database t -> DocumentId -> IO ()
+deleteDocumentById = undefined
 
 deleteDocumentByTerm :: Serialize t => Database t -> Term -> IO ()
 deleteDocumentByTerm = undefined

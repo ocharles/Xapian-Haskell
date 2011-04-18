@@ -88,13 +88,12 @@ data OpNullary
     deriving (Show)
 
 data OpUnary
-    = OpNot 
-    | OpScaleWeight Double -- Xapian::InvalidArgumentError if scale is negative
-    | OpEliteSet
+    = OpScaleWeight Double -- Xapian::InvalidArgumentError if scale is negative
     deriving (Show)
 
 data OpBinary
     = OpOr 
+    | OpEliteSet
     | OpAnd 
     | OpXor 
     | OpAndMaybe 

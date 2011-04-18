@@ -1,9 +1,7 @@
 import Control.Monad (zipWithM)
 import System.Environment (getArgs)
-import Search.Xapian.Database
-import Search.Xapian.Types
-import Search.Xapian.Document
 import Data.ByteString.Char8 (pack)
+import Search.Xapian
 
 main = do
   (dbPath:store:terms) <- getArgs

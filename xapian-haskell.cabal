@@ -25,7 +25,7 @@ library
                       Search.Xapian.Document,
                       Search.Xapian.Types,
                       Search.Xapian.Stem
-                      --Search.Xapian
+                      Search.Xapian
   other-modules:      Search.Xapian.Internal.Types,
                       Search.Xapian.FFI
   build-depends:      base,

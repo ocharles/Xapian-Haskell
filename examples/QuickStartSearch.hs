@@ -1,7 +1,6 @@
 import System.Environment (getArgs)
 import Control.Monad (forM_)
-import Search.Xapian.Database
-import Search.Xapian.Types
+import Search.Xapian
 
 main = do
   (dbPath:terms) <- getArgs

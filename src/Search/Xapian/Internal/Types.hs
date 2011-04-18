@@ -1,22 +1,29 @@
 -- | this module is not intended to be made visible
 module Search.Xapian.Internal.Types
        ( Error (..)
+       , NativeError (..)
+
        , WritableDatabase (..)
        , Database (..)
+
+       , Query (..)
+       , OpNullary (..)
+       , OpUnary (..)
+       , OpBinary (..)
+       , OpMulti (..)
+       , QueryPtr
+
        , Pos
        , DocumentPtr
+       , Value
+       , ValueNumber
        , newDocumentPtr
        , addTerm'
        , addPosting'
        , setDocumentData
        , getDocumentData
-       , Query (..)
-       , QueryPtr
-       , queryString
-       , compileQuery
        , Term (..)
        , getDocumentTerms
-       , NativeError (..)
        ) where
 
 import Foreign
@@ -26,9 +33,20 @@ import Blaze.ByteString.Builder.ByteString as Blaze
 import Data.Bits
 import Data.Monoid
 import qualified Data.ByteString as BS
-import Data.ByteString.Char8 (pack)
+import Data.ByteString.Char8 (pack, ByteString)
 import Data.Serialize
 import Search.Xapian.FFI
+
+-- | Error, inspired (blatantly copied) by hdbc
+--
+-- The main Xapian exception object. As much information as possible is passed from
+-- the database through to the application through this object.
+--
+-- Errors generated in the Haskell layer will have seNativeError set to
+-- Nothing.
+-- 
+
+
 
 data Error = Error { xeNativeError :: Maybe NativeError
                    , seErrorMsg :: String
@@ -37,58 +55,74 @@ data Error = Error { xeNativeError :: Maybe NativeError
 data NativeError = DocNotFoundError | GenericError
   deriving (Eq, Show)
 
+
+-- * Database related types
+-- --------------------------------------------------------------------
+
 data Database t = Database !(ForeignPtr XapianDatabase)
   deriving (Eq, Show)
 
 newtype WritableDatabase t = WritableDatabase (Database t)
 
+
+-- * Query related types
+-- --------------------------------------------------------------------
+
+type QueryPtr = ForeignPtr XapianEnquire
+
+-- Internal Representation of Queries
+
+data Query
+    = EmptyQuery -- ^ does not match anything
+    | Atom ByteString
+    | Nullary OpNullary
+    | Unary  OpUnary   Query
+    | Binary OpBinary  Query  Query
+    | Multi  OpMulti  [Query]
+    deriving (Show)
+
+data OpNullary
+    = OpValueGE ValueNumber Value
+    | OpValueLE ValueNumber Value
+    | OpValueRange ValueNumber [Value]
+    deriving (Show)
+
+data OpUnary
+    = OpNot 
+    | OpScaleWeight Double -- Xapian::InvalidArgumentError if scale is negative
+    | OpEliteSet
+    deriving (Show)
+
+data OpBinary
+    = OpOr 
+    | OpAnd 
+    | OpXor 
+    | OpAndMaybe 
+    | OpAndNot 
+    | OpFilter 
+    | OpNear Int
+    deriving (Show)
+
+data OpMulti
+    = OpSynonym
+    | OpPhrase Int
+    deriving (Show)
+
+
+-- * Document related types
+-- --------------------------------------------------------------------
+
 type DocumentPtr = ForeignPtr XapianDocument
 
 type Pos  = Word32
 
-
--- * building queries
-
-data Query = EmptyQuery
-           | Query BS.ByteString
-           | Or Query Query
-           | And Query Query
-  deriving (Show)
-
-type QueryPtr = ForeignPtr XapianEnquire
-
-queryString :: String -> Query
-queryString = Query . pack
-
-compileQuery :: Query -> IO QueryPtr
-compileQuery q =
-    case q of
-         EmptyQuery ->
-              do c_xapian_query_empty >>= newForeignPtr c_xapian_query_delete
-         Query term  ->
-             BS.useAsCString term $ \dat ->
-              do c_xapian_query_new dat >>= newForeignPtr c_xapian_query_delete
-         And q' q'' ->
-              do c'  <- compileQuery q'
-                 c'' <- compileQuery q''
-                 combineQueries c' c'' andOp
-         Or  q' q'' ->
-              do c'  <- compileQuery q'
-                 c'' <- compileQuery q''
-                 combineQueries c' c'' orOp
-  where
-    andOp = 0
-    orOp  = 1
-
-    combineQueries a b operator =
-        withForeignPtr a $ \queryA ->
-        withForeignPtr b $ \queryB ->
-         do query <- c_xapian_query_combine operator queryA queryB
-            newForeignPtr c_xapian_query_delete query
+-- * document fields
+type ValueNumber = Int
+type Value       = ByteString
 
 -- * handling documents
 
-data Term = Term BS.ByteString | Posting Pos BS.ByteString
+data Term = Term ByteString | Posting Pos ByteString
   deriving (Eq, Show)
 
 newDocumentPtr :: IO DocumentPtr
@@ -99,7 +133,7 @@ newDocumentPtr =
 -- | @addPosting document posting pos@ will index the term @posting@ in
 -- the document @document@ at position @pos@.
 addPosting' :: DocumentPtr   -- ^ The document to add a posting to
-            -> BS.ByteString -- ^ The term to index within the document
+            -> ByteString -- ^ The term to index within the document
             -> Pos           -- ^ The position of the term within the document
             -> IO ()
 addPosting' docFPtr term pos =
@@ -108,7 +142,7 @@ addPosting' docFPtr term pos =
     c_xapian_document_add_posting docPtr dat (fromIntegral pos) -- fix it
 
 addTerm' :: DocumentPtr
-         -> BS.ByteString
+         -> ByteString
          -> IO ()
 addTerm' = undefined         
 
@@ -146,7 +180,7 @@ getDocumentData docFPtr =
 
 -- | unnullify removes any NULL from the bytestring in order
 -- to be able to convert bytestrings into cstrings
-unnullify :: BS.ByteString -> BS.ByteString
+unnullify :: ByteString -> ByteString
 unnullify = Blaze.toByteString . go
   where
     go bs =
@@ -164,7 +198,7 @@ unnullify = Blaze.toByteString . go
       in ((pos + 1, acc'), byte .|. 0x80)
 
 -- | nullify is the inverse of unnullify
-nullify :: BS.ByteString -> BS.ByteString
+nullify :: ByteString -> ByteString
 nullify = Blaze.toByteString . go
   where
     go bs =

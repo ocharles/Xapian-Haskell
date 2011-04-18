@@ -10,8 +10,7 @@ description:    Haskell bindings for the Xapian search engine
 synopsis:       Haskell bindings for the Xapian search engine
 category:       Search, Database
 
-extra-source-files: c/cxapian.cc
-                    examples/QuickStartIndex.hs
+extra-source-files: examples/QuickStartIndex.hs
                     examples/QuickStartSearch.hs
                     examples/Test.hs
 
@@ -25,6 +24,7 @@ library
                       Search.Xapian.Document,
                       Search.Xapian.Types,
                       Search.Xapian.Stem
+                      Search.Xapian.Query
                       Search.Xapian
   other-modules:      Search.Xapian.Internal.Types,
                       Search.Xapian.FFI
@@ -35,6 +35,7 @@ library
   ghc-options:          -Wall -funbox-strict-fields -O
   ghc-prof-options:     -Wall -funbox-strict-fields -O -prof -auto-all
   extensions:         EmptyDataDecls,
-                      ForeignFunctionInterface
-  c-sources:          c/cxapian.cc
+                      ForeignFunctionInterface,
+                      TypeSynonymInstances
+  c-sources:          cbits/cxapian.cc
   extra-libraries:    xapian

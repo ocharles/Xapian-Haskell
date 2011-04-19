@@ -9,8 +9,10 @@ import Data.ByteString.Char8 (pack, useAsCString)
 import Data.Either (rights)
 import Data.Serialize
 
+import Search.Xapian.Document
 import Search.Xapian.Types
 import Search.Xapian.Internal.Types
+import Search.Xapian.Internal.Utils
 import Search.Xapian.FFI
 import qualified Search.Xapian.Query as Q
 
@@ -24,17 +26,15 @@ instance ReadableDatabase Database where
           withForeignPtr queryFPtr $ \queryPtr ->
            do enquire <- c_xapian_enquire_new dbPtr
               let msets = c_xapian_enquire_query enquire queryPtr off lim
-              MSet . rights <$> fetchMSets msets
+              MSet . rights <$> collect c_xapian_msets_valid
+                                        c_xapian_msets_next
+                                        get_as_document
+                                        msets
     where
-      fetchMSets msets =
-          if c_xapian_msets_valid msets
-             then do mset <- c_xapian_msets_get msets
-                     let docId = DocId (fromIntegral mset)
-                     doc  <- getDocument database docId
-                     c_xapian_msets_next msets
-                     rest <- fetchMSets msets
-                     return (doc:rest)
-             else return []
+      get_as_document msets =
+       do mset <- c_xapian_msets_get msets
+          let docId = DocId $ fromIntegral mset
+          getDocument database docId
           
 
   getDocument (Database database) docId@(DocId id') =
@@ -44,8 +44,11 @@ instance ReadableDatabase Database where
            eitherDocDat  <- getDocumentData docFPtr
            case eitherDocDat of
                 Left err  -> return (Left err)
-                Right dat -> do terms <- getDocumentTerms docFPtr
-                                return . Right $ Document (Just docId) dat terms
+                Right dat ->
+                 do terms <- getDocumentTerms docFPtr
+                    return . Right $
+                        (document dat){documentTerms = terms
+                                      , documentId = Just docId}
     where
       handleError dbPtr action =
         alloca $ \errorPtr ->
@@ -61,9 +64,9 @@ instance ReadableDatabase WritableDatabase where
 
 -- * opening databases
 
-openDatabase :: Serialize doc
+openDatabase :: (Serialize dat, Prefixable fields)
              => FilePath
-             -> IO (Either Error (Database doc))
+             -> IO (Either Error (Database fields dat))
 openDatabase path =
   useAsCString (pack path) $ \cpath ->
   alloca $ \errorPtr ->
@@ -74,10 +77,10 @@ openDatabase path =
          else do managed <- newForeignPtr c_xapian_database_delete dbHandle
                  return (Right $ Database managed)
 
-openWritableDatabase :: Serialize doc
+openWritableDatabase :: (Serialize dat, Prefixable fields)
                      => InitDBOption
                      -> FilePath
-                     -> IO (Either Error (WritableDatabase doc))
+                     -> IO (Either Error (WritableDatabase fields dat))
 openWritableDatabase option path =
   useAsCString (pack path) $ \cpath ->
   alloca $ \errorPtr ->
@@ -91,9 +94,9 @@ openWritableDatabase option path =
 
 -- * document handling
 
-addDocument :: Serialize t
-            => WritableDatabase t
-            -> Document t
+addDocument :: (Serialize dat, Prefixable fields)
+            => WritableDatabase fields dat
+            -> Document fields dat
             -> IO DocumentId
 addDocument (WritableDatabase (Database db)) doc =
  do docFPtr <- newDocumentPtr 
@@ -106,16 +109,18 @@ addDocument (WritableDatabase (Database db)) doc =
         withForeignPtr docFPtr $ \docPtr ->
             DocId . fromIntegral <$> c_xapian_database_add_document dbPtr docPtr
                 
-deleteDocumentById :: Serialize t => Database t -> DocumentId -> IO ()
+deleteDocumentById :: (Serialize dat, Prefixable fields)
+                   => Database fields dat -> DocumentId -> IO ()
 deleteDocumentById = undefined
 
-deleteDocumentByTerm :: Serialize t => Database t -> Term -> IO ()
+deleteDocumentByTerm :: (Serialize dat, Prefixable fields)
+                     => Database fields dat -> Term -> IO ()
 deleteDocumentByTerm = undefined
      
 
-replaceDocument :: Serialize t
-                => Database t
+replaceDocument :: (Serialize dat, Prefixable fields)
+                => Database fields dat
                 -> DocumentId
-                -> Document t
+                -> Document fields dat
                 -> IO ()
 replaceDocument = undefined

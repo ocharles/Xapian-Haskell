@@ -23,11 +23,12 @@ library
   exposed-modules:    Search.Xapian.Database,
                       Search.Xapian.Document,
                       Search.Xapian.Types,
-                      Search.Xapian.Stem
-                      Search.Xapian.Query
-                      Search.Xapian.Query.Combinators
+                      Search.Xapian.Stem,
+                      Search.Xapian.Query,
+                      Search.Xapian.Query.Combinators,
                       Search.Xapian
   other-modules:      Search.Xapian.Internal.Types,
+                      Search.Xapian.Internal.Utils,
                       Search.Xapian.FFI
   build-depends:      base,
                       blaze-builder,

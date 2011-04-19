@@ -6,6 +6,7 @@ import Search.Xapian
 main = do
   (dbPath:store:terms) <- getArgs
   (Right db) <- openWritableDatabase CreateOrOpen dbPath
-  let doc = addPostings (zip [1..] $ map pack terms) $ document store
+  let doc :: SimpleDocument String
+      doc = addPostings (zip [1..] $ map pack terms) $ document store
   addDocument db doc
   return ()

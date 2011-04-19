@@ -23,11 +23,13 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 
 module Search.Xapian.Types
        (
-         -- * Error
+         -- * Error types
          Error (..)
          
          -- * Database related types
        , ReadableDatabase (..)
+       , SimpleDatabase
+       , SimpleWritableDatabase
        , Database (..)
        , WritableDatabase
        , InitDBOption (..)
@@ -40,49 +42,59 @@ module Search.Xapian.Types
        , QueryRange (..)
 
          -- * Document related types
+       , Prefixable (..)
+       , SimpleDocument
+       , Fieldless
        , Document (..)
        , DocumentId (..)
        , Term (..)
        , ValueNumber
        , Value
        , Pos
-       , document
+
+         -- * Stemming related types
+       , Stemmer (..)
        ) where
 
 import Control.Applicative
 import Data.Either
 import Data.ByteString (ByteString)
+import qualified Data.ByteString as BS
 import Data.Serialize
 import Data.Word
 import Foreign
 import Foreign.C.String
 import Search.Xapian.FFI
 import Search.Xapian.Internal.Types
+import Data.Map (Map)
 
 -- * Database related types
 -- --------------------------------------------------------------------
 
 
 class ReadableDatabase db where
-  search :: Serialize doc
-         => db doc
+  search :: (Serialize dat, Prefixable fields)
+         => db fields dat
          -> Query
          -> QueryRange
-         -> IO (MSet doc)
+         -> IO (MSet fields dat)
 
 
-  getDocument :: Serialize doc
-              => db doc
+  getDocument :: (Serialize dat, Prefixable fields)
+              => db fields dat
               -> DocumentId
-              -> IO (Either Error (Document doc))
+              -> IO (Either Error (Document fields dat))
 
 
 data InitDBOption
-  = CreateOrOpen
-  | Create
-  | CreateOrOverwrite
-  | Open
-  deriving (Show, Eq, Ord, Enum)
+    = CreateOrOpen
+    | Create
+    | CreateOrOverwrite
+    | Open
+    deriving (Show, Eq, Ord, Enum)
+
+type SimpleDatabase = Database Fieldless
+type SimpleWritableDatabase = WritableDatabase Fieldless
 
 packInitDBOption :: InitDBOption -> Int
 packInitDBOption option =
@@ -96,29 +108,69 @@ packInitDBOption option =
 -- --------------------------------------------------------------------
 
 -- | it's a list, not a set
-newtype MSet doc = MSet {getMSet :: [Document doc]}
+newtype MSet fields dat = MSet {getMSet :: [Document fields dat]}
 
 -- | would YOU expect this when you think of a range?
 data QueryRange = QueryRange
-  { rangeOffset :: Int
-  , rangeSize :: Int
-  }
+    { rangeOffset :: Int
+    , rangeSize :: Int
+    } deriving (Show)
 
 -- * Document related types
 -- --------------------------------------------------------------------
 
--- | t represents the document data
-data Document t = Document
-  { documentId    :: Maybe DocumentId
-  , documentData  :: t
-  , documentTerms :: [Term]
-  } deriving (Eq, Show)
+class Prefixable fields where
+    getPrefix :: fields -> ByteString
+    getField  :: fields -> ByteString -> Maybe ByteString
 
-document :: Serialize t => t -> Document t
-document t = Document Nothing t []
+data Document fields dat = Document
+    { documentId    :: Maybe DocumentId
+    , documentStem  :: Maybe Stemmer
+    , documentTerms :: [Term]
+    , documentFields :: Map fields ByteString
+    , documentData  :: dat
+    } deriving (Show)
+
+type SimpleDocument = Document Fieldless
+
+data Fieldless = Fieldless deriving (Show)
+
+instance Prefixable Fieldless where
+    getPrefix Fieldless = BS.empty
+    getField  Fieldless = const Nothing
+
 
 -- | doc_id == 0 is invalid; what is the range of
 newtype DocumentId = DocId { getDocId :: Word32 }
-  deriving (Show, Eq)
+    deriving (Show, Eq)
+
+type Pos  = Word32
 
 
+data Term = Term ByteString
+          | Posting Pos ByteString
+  deriving (Eq, Show)
+
+-- * Stemming related types
+-- --------------------------------------------------------------------
+
+data Stemmer = Danish
+             | Dutch
+             | DutchKraaijPohlmann -- ^ A different Dutch stemmer
+             | English       -- ^ Martin Porter's 2002 revision of his stemmer
+             | EnglishLovins -- ^ Lovin's stemmer
+             | EnglishPorter -- ^ Porter's stemmer as described in his 1980 paper
+             | Finnish
+             | French
+             | German
+             | German2 -- ^ Normalises umlauts and ß
+             | Hungarian
+             | Italian
+             | Norwegian
+             | Portuguese
+             | Romanian
+             | Russian
+             | Spanish
+             | Swedish
+             | Turkish
+             deriving (Show, Eq)

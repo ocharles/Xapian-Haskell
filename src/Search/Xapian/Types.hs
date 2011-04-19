@@ -56,7 +56,6 @@ module Search.Xapian.Types
        , Stemmer (..)
        ) where
 
-import Control.Applicative
 import Data.Either
 import Data.ByteString (ByteString)
 import qualified Data.ByteString as BS
@@ -64,9 +63,6 @@ import Data.Map (Map)
 import Data.IntMap (IntMap)
 import Data.Serialize
 import Data.Word
-import Foreign
-import Foreign.C.String
-import Search.Xapian.FFI
 import Search.Xapian.Internal.Types
 
 -- * Database related types
@@ -131,6 +127,14 @@ class Ord fields => Prefixable fields where
 
 data Fieldless = Fieldless deriving (Show, Ord, Eq)
 
+-- | This instance allows to combine fields
+--   (Caution: prefixes may collide)
+instance (Prefixable a, Prefixable b) => Prefixable (Either a b) where
+  getPrefix (Left a) = getPrefix a
+  getPrefix (Right b) = getPrefix b
+  stripPrefix (Left a) = stripPrefix a
+  stripPrefix (Right b) = stripPrefix b
+
 instance Prefixable Fieldless where
     getPrefix   Fieldless = BS.empty
     stripPrefix Fieldless = const Nothing
@@ -140,14 +144,14 @@ data Document fields dat = Document
     { documentId    :: Maybe DocumentId       -- ^ might have an @DocumentId@
                                               --   given by the database
     , documentStem  :: Maybe Stemmer          -- ^ might use a @Stemmer@
-    , documentValues :: Maybe (IntMap Value)  -- ^ might have @Values@
+    , documentValues :: IntMap Value          -- ^ might have @Values@
                                               --   (metadata) associated
                                               --   with it in order to
                                               --   refine queries
     , documentTerms :: [Term]                 -- ^ has raw @Term@s associated
                                               --   with it
-    , documentFields :: Map fields ByteString -- ^ has prefixed @Term@s,
-                                              --   known as fields
+    , documentFields :: Map fields [ByteString]-- ^ has prefixed @Term@s,
+                                               --   known as fields
     , documentData  :: dat    -- ^ contains data representing or pointing to
                               --   the original document
     } deriving (Show)
@@ -161,6 +165,8 @@ newtype DocumentId = DocId { getDocId :: Word32 }
 type Pos  = Word32
 
 
-data Term = Term ByteString
-          | Posting Pos ByteString
+data Term = Term    ByteString     -- ^ a single term
+          | Posting Pos ByteString -- ^ a term with information
+                                   --   about its position
+          | RawText ByteString     -- ^ a text to be parsed as terms
   deriving (Eq, Show)

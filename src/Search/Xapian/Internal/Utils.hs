@@ -6,22 +6,22 @@ module Search.Xapian.Internal.Utils
      , newDocumentPtr
      , addPosting'
      , addTerm'
+     , addValue
      , getDocumentTerms
      , getDocumentData
      , setDocumentData
 
        -- * Stemmer related
      , createStemmer
+     , stemWord
+     , stemToDocument
      ) where
 
 import Foreign
-import Foreign.C.String
 import Blaze.ByteString.Builder as Blaze
-import Blaze.ByteString.Builder.ByteString as Blaze
-import Data.Bits
 import Data.Monoid
 import qualified Data.ByteString as BS
-import Data.ByteString.Char8 (pack, ByteString, useAsCString)
+import Data.ByteString.Char8 (pack, ByteString, packCString, useAsCString)
 import Data.Serialize
 
 import Search.Xapian.Internal.Types
@@ -74,7 +74,16 @@ addPosting' docFPtr term pos =
 addTerm' :: DocumentPtr
          -> ByteString
          -> IO ()
-addTerm' = undefined         
+addTerm' docFPtr term =
+    withForeignPtr docFPtr $ \docPtr ->
+    useAsCString term $ \cterm ->
+    c_xapian_document_add_term docPtr cterm
+
+addValue :: DocumentPtr -> ValueNumber -> Value -> IO ()
+addValue docFPtr valno val =
+    useAsCString val $ \cval ->
+    withForeignPtr docFPtr $ \docPtr ->
+    c_xapian_document_add_value docPtr valno cval
 
 getDocumentTerms :: DocumentPtr -> IO [Term]
 getDocumentTerms docFPtr =
@@ -125,7 +134,7 @@ unnullify = Blaze.toByteString . go
 
     flipBit (pos, acc) byte =
       let acc' = if byte .&. 0x80 == 0 then acc .|. (2^pos) else acc
-      in ((pos + 1, acc'), byte .|. 0x80)
+      in ((pos + 1 :: Word8, acc'), byte .|. 0x80)
 
 -- | nullify is the inverse of unnullify
 nullify :: ByteString -> ByteString
@@ -136,27 +145,33 @@ nullify = Blaze.toByteString . go
          then mempty
          else
             let (bs',rest) = BS.splitAt 8 bs
-                ((_,b),bs'') =
+                (_,bs'') =
                   BS.mapAccumL flipBit (0, BS.head bs') (BS.tail bs')
             in Blaze.fromByteString bs''
                `mappend` go rest
 
     flipBit (pos, acc) byte =
       let byte' = if acc .&. 2^pos == 0 then byte else byte - 0x80
-      in  ((pos + 1, acc), byte')
+      in  ((pos + 1 :: Word8, acc), byte')
 
 -- | @stemToDocument stemmer document text@ adds stemmed posting terms derived from
 -- @text@ using the stemming algorith @stemmer@ to @doc@
 stemToDocument :: Stemmer      -- ^ The stemming algorithm to use
                -> ForeignPtr XapianDocument  -- ^ The document to add terms to
-               -> String    -- ^ The text to stem and index
+               -> ByteString    -- ^ The text to stem and index
                -> IO ()
 stemToDocument stemmer document text =
-  useAsCString (pack text) $ \ctext ->
-   do stem <- createStemmer stemmer
-      withForeignPtr stem $ \stemPtr ->
-          withForeignPtr document $ \documentPtr ->
-           do c_xapian_stem_string stemPtr documentPtr ctext
+    useAsCString text $ \ctext ->
+     do stem <- createStemmer stemmer
+        withForeignPtr stem $ \stemPtr ->
+            withForeignPtr document $ \documentPtr ->
+             do c_xapian_stem_string stemPtr documentPtr ctext
+
+stemWord :: StemmerPtr -> ByteString -> IO ByteString
+stemWord stemFPtr word =
+    withForeignPtr stemFPtr $ \stemPtr ->
+    useAsCString word $ \cword ->
+    c_xapian_stem_word stemPtr cword >>= packCString
 
 
 createStemmer :: Stemmer -> IO StemmerPtr
@@ -169,6 +184,7 @@ createStemmer stemmer =
                     EnglishLovins -> "english_lovins"
                     EnglishPorter -> "english_porter"
                     Finnish -> "finnish"
+                    French  -> "french"
                     German  -> "german"
                     German2 -> "german2"
                     Hungarian  -> "hungarian"

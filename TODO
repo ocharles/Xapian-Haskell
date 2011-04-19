@@ -2,6 +2,7 @@ TODO
 ----
 
 * what is the best way to create iterators from Haskell to pass to C?
+* do we need to ensure a closed writable database on exit?
 * unsafePerformIO is bad.
 * data is stored as UTF8, which underlying text representation is appropriate?
 * databases may throw Xapian::DatabaseCorruptError or Xapian::DatabaseLockError

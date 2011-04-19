@@ -1,13 +1,17 @@
 module Search.Xapian.Database where
 
+import Prelude hiding (words)
 import Foreign
 import Foreign.C.String
 import Control.Monad (forM_)
 import Control.Applicative
 import qualified Data.ByteString as BS
-import Data.ByteString.Char8 (pack, useAsCString)
+import Data.ByteString.Char8 (pack, useAsCString, words)
 import Data.Either (rights)
+import qualified Data.IntMap as IntMap
+import qualified Data.Map as Map
 import Data.Serialize
+import Data.Traversable (sequenceA)
 
 import Search.Xapian.Document
 import Search.Xapian.Types
@@ -109,16 +113,43 @@ addDocument :: (Serialize dat, Prefixable fields)
             => WritableDatabase fields dat
             -> Document fields dat
             -> IO DocumentId
-addDocument (WritableDatabase (Database db)) doc =
+addDocument (WritableDatabase (Database db))
+            doc@Document{documentStem = maybeStemmer} =
  do docFPtr <- newDocumentPtr 
     withForeignPtr db $ \dbPtr ->
-     do forM_ (documentTerms doc) $ \term ->
-            case term of
-                 Term        term' -> addTerm' docFPtr term'
-                 Posting pos term' -> addPosting' docFPtr term' pos
+     do stemFPtr <- sequenceA $ createStemmer <$> maybeStemmer
+        add_terms docFPtr stemFPtr
+        add_values docFPtr (documentValues doc)
+        add_fields docFPtr (documentFields doc)
         setDocumentData docFPtr (documentData doc)
         withForeignPtr docFPtr $ \docPtr ->
             DocId . fromIntegral <$> c_xapian_database_add_document dbPtr docPtr
+  where
+    stem maybeStemFPtr word =
+      case maybeStemFPtr of
+           Just stemFPtr -> stemWord stemFPtr word
+           Nothing -> return word
+
+    add_terms docFPtr stemFPtr =
+     do forM_ (documentTerms doc) $ \term ->
+          case term of
+               Term        term' -> stem stemFPtr term' >>= addTerm' docFPtr
+               Posting pos term' -> stem stemFPtr term' >>= (\term'' ->
+                                    addPosting' docFPtr term'' pos)
+               RawText bs        ->
+                  case maybeStemmer of
+                       Just stemmer -> stemToDocument stemmer docFPtr bs
+                       Nothing      -> mapM_ (addTerm' docFPtr) (words bs)
+
+    add_values docFPtr values =
+        mapM_ (uncurry $ addValue docFPtr) (IntMap.toList values)
+
+    add_fields docFPtr fields =
+        forM_ (Map.toList fields) $ \(key, values) ->
+            forM_ values $ \value ->
+                addTerm' docFPtr (getPrefix key `BS.append` value)
+
+
                 
 deleteDocumentById :: (Serialize dat, Prefixable fields)
                    => Database fields dat -> DocumentId -> IO ()

@@ -24,7 +24,6 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 
 module Search.Xapian.FFI where
 
-import Data.ByteString.Char8
 import Foreign
 import Foreign.C.String
 import Foreign.C.Types
@@ -63,7 +62,8 @@ foreign import ccall "cxapian.h xapian_document_new"
   c_xapian_document_new :: IO (Ptr XapianDocument)
 
 foreign import ccall "cxapian.h xapian_get_document"
-  c_xapian_get_document :: Ptr XapianDatabase -> Int -> Ptr CString -> IO (Ptr XapianDocument)
+  c_xapian_get_document :: Ptr XapianDatabase
+                        -> Int -> Ptr CString -> IO (Ptr XapianDocument)
 
 foreign import ccall "cxapion.h &xapian_document_delete"
   c_xapian_document_delete :: FunPtr (Ptr XapianDocument -> IO ())
@@ -74,11 +74,17 @@ foreign import ccall "cxapian.h xapian_document_set_data"
 foreign import ccall "cxapian.h xapian_document_get_data"
   c_xapian_document_get_data :: Ptr XapianDocument -> IO (CString)
 
+foreign import ccall "cxapian.h xapian_document_add_term"
+  c_xapian_document_add_term :: Ptr XapianDocument -> CString -> IO ()
+
 foreign import ccall "cxapian.h xapian_document_add_posting"
   c_xapian_document_add_posting :: Ptr XapianDocument ->
                                    CString ->
                                    Int ->
                                    IO ()
+
+foreign import ccall "cxapian.h xapian_document_add_value"
+  c_xapian_document_add_value :: Ptr XapianDocument -> Int -> CString -> IO ()
 
 foreign import ccall "cxapian.h xapian_enquire_new"
   c_xapian_enquire_new :: Ptr XapianDatabase ->
@@ -153,6 +159,9 @@ foreign import ccall "cxapian.h xapian_stem_string"
                           Ptr XapianDocument ->
                           CString ->
                           IO ()
+
+foreign import ccall "cxapian.h xapian_stem_word"
+  c_xapian_stem_word :: Ptr XapianStem -> CString -> IO CString
 
 foreign import ccall "cxapian.h xapian_parse_query"
   c_xapian_parse_query :: CString ->

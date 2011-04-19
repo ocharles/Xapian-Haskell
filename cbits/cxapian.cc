@@ -122,6 +122,12 @@ xapian_document_get_data (xapian_document_t *document)
 }
 
 void
+xapian_document_add_term(xapian_document_t *doc, const char* term)
+{
+  doc->xapian_document.add_term(std::string(term));
+}
+
+void
 xapian_document_add_posting (xapian_document_t *doc, const char* posting, int pos)
 {
   doc->xapian_document.add_posting(std::string(posting), pos);
@@ -133,6 +139,13 @@ xapian_enquire_new (xapian_database_t *database) {
 
   enquire->xapian_enquire = new Xapian::Enquire(*(database->xapian_database));
   return enquire;
+}
+
+void
+xapian_document_add_value (xapian_document_t *document, int valno,
+                           const char *value) {
+  document->xapian_document.add_value((Xapian::valueno) valno,
+                                      std::string(value));
 }
 
 void
@@ -271,6 +284,12 @@ xapian_stem_string (xapian_stem_t *stem, xapian_document_t *document,
   tg.set_stemmer(*stem->xapian_stem);
   tg.set_document(document->xapian_document);
   tg.index_text(std::string(string));
+}
+
+const char *
+xapian_stem_word (xapian_stem_t *stem, const char *word) {
+  const char *stemmed_word = (*stem->xapian_stem)(std::string(word)).c_str();
+  return stemmed_word;
 }
 
 xapian_query_t *

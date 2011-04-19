@@ -41,8 +41,15 @@ extern "C" {
   xapian_document_get_data (xapian_document_t *document);
 
   void
-  xapian_document_add_posting (xapian_document_t *doc, const char* posting,
-                                    int pos);
+  xapian_document_add_term(xapian_document_t *doc, const char* term);
+
+  void
+  xapian_document_add_posting (xapian_document_t *document,
+                               const char* posting, int pos);
+
+  void
+  xapian_document_add_value (xapian_document_t *document, int valno,
+                             const char *value);
 
   xapian_enquire_t *
   xapian_enquire_new (xapian_database_t *database);
@@ -105,6 +112,9 @@ extern "C" {
   void
   xapian_stem_string (xapian_stem_t *stem, xapian_document_t *document,
                       const char *string);
+
+  const char *
+  xapian_stem_word (xapian_stem_t *stem, const char *word);
 
   xapian_query_t *
   xapian_parse_query (const char *query_string,

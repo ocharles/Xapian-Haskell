@@ -17,7 +17,6 @@ module Search.Xapian.Query
 
 import Foreign
 import Foreign.C.String
-import Control.Monad (forM_)
 import Data.ByteString.Char8 (pack, useAsCString, ByteString)
 
 
@@ -97,11 +96,9 @@ instance GetOpCode OpMulti where
     opcode OpSynonym = 13
     opcode (OpPhrase _) = 7
 
-data QueryIterator
-
 compileQuery :: Query -> IO QueryPtr
-compileQuery query =
-    case query of
+compileQuery query' =
+    case query' of
          EmptyQuery -> c_xapian_query_empty >>= manage
          Atom bs    -> useAsCString bs $ \cs ->
                        c_xapian_query_new cs >>= manage

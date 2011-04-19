@@ -16,6 +16,9 @@ module Search.Xapian.Internal.Types
        , DocumentPtr
        , ValueNumber
        , Value
+
+       , StemmerPtr
+       , Stemmer (..)
        ) where
 
 import Foreign
@@ -62,8 +65,9 @@ type QueryPtr = ForeignPtr XapianEnquire
 -- Internal Representation of Queries
 
 data Query
-    = EmptyQuery -- ^ does not match anything
+    = EmptyQuery        -- ^ does not match anything
     | Atom ByteString
+    | Parsed Stemmer ByteString -- ^ parsed natively by Xapian
     | Nullary OpNullary
     | Unary  OpUnary   Query
     | Binary OpBinary  Query  Query
@@ -106,3 +110,28 @@ type DocumentPtr = ForeignPtr XapianDocument
 type ValueNumber = Int
 type Value       = ByteString
 
+-- * Stemming related types
+-- --------------------------------------------------------------------
+
+type StemmerPtr = ForeignPtr XapianStem
+
+data Stemmer = Danish
+             | Dutch
+             | DutchKraaijPohlmann -- ^ A different Dutch stemmer
+             | English       -- ^ Martin Porter's 2002 revision of his stemmer
+             | EnglishLovins -- ^ Lovin's stemmer
+             | EnglishPorter -- ^ Porter's stemmer as described in his 1980 paper
+             | Finnish
+             | French
+             | German
+             | German2 -- ^ Normalises umlauts and ß
+             | Hungarian
+             | Italian
+             | Norwegian
+             | Portuguese
+             | Romanian
+             | Russian
+             | Spanish
+             | Swedish
+             | Turkish
+             deriving (Show, Eq)

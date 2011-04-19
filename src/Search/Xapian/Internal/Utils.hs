@@ -9,6 +9,9 @@ module Search.Xapian.Internal.Utils
      , getDocumentTerms
      , getDocumentData
      , setDocumentData
+
+       -- * Stemmer related
+     , createStemmer
      ) where
 
 import Foreign
@@ -18,7 +21,7 @@ import Blaze.ByteString.Builder.ByteString as Blaze
 import Data.Bits
 import Data.Monoid
 import qualified Data.ByteString as BS
-import Data.ByteString.Char8 (pack, ByteString)
+import Data.ByteString.Char8 (pack, ByteString, useAsCString)
 import Data.Serialize
 
 import Search.Xapian.Internal.Types
@@ -141,3 +144,42 @@ nullify = Blaze.toByteString . go
     flipBit (pos, acc) byte =
       let byte' = if acc .&. 2^pos == 0 then byte else byte - 0x80
       in  ((pos + 1, acc), byte')
+
+-- | @stemToDocument stemmer document text@ adds stemmed posting terms derived from
+-- @text@ using the stemming algorith @stemmer@ to @doc@
+stemToDocument :: Stemmer      -- ^ The stemming algorithm to use
+               -> ForeignPtr XapianDocument  -- ^ The document to add terms to
+               -> String    -- ^ The text to stem and index
+               -> IO ()
+stemToDocument stemmer document text =
+  useAsCString (pack text) $ \ctext ->
+   do stem <- createStemmer stemmer
+      withForeignPtr stem $ \stemPtr ->
+          withForeignPtr document $ \documentPtr ->
+           do c_xapian_stem_string stemPtr documentPtr ctext
+
+
+createStemmer :: Stemmer -> IO StemmerPtr
+createStemmer stemmer =
+    let lang = case stemmer of
+                    Danish  -> "danish"
+                    Dutch   -> "dutch"
+                    DutchKraaijPohlmann -> "kraaij_pohlmann"
+                    English -> "english"
+                    EnglishLovins -> "english_lovins"
+                    EnglishPorter -> "english_porter"
+                    Finnish -> "finnish"
+                    German  -> "german"
+                    German2 -> "german2"
+                    Hungarian  -> "hungarian"
+                    Italian -> "italian"
+                    Norwegian  -> "norwegian"
+                    Portuguese -> "portuguese"
+                    Romanian -> "romanian"
+                    Russian -> "russian"
+                    Spanish -> "spanish"
+                    Swedish -> "swedish"
+                    Turkish -> "turkish"
+    in useAsCString (pack lang) $ \clang ->
+        do c_xapian_stem_new clang
+           >>= newForeignPtr c_xapian_stem_delete

@@ -88,10 +88,15 @@ class ReadableDatabase db where
 
 
 data InitDBOption
-    = CreateOrOpen
-    | Create
-    | CreateOrOverwrite
-    | Open
+    = CreateOrOpen      -- ^ Create the database if it doesn't exist,
+                        --   otherwise open it for writing
+    | Create            -- ^ Create a database. If the database already exists
+                        --   (or cannot be created) an error is raised
+    | CreateOrOverwrite -- ^ Create a new database, overwriting any existing
+                        --   database with the same name
+    | Open              -- ^ Open an existing database for writing. An error
+                        --   will be raised if the database does not already
+                        --   exist
     deriving (Show, Eq, Ord, Enum)
 
 type SimpleDatabase = Database Fieldless
@@ -159,27 +164,3 @@ type Pos  = Word32
 data Term = Term ByteString
           | Posting Pos ByteString
   deriving (Eq, Show)
-
--- * Stemming related types
--- --------------------------------------------------------------------
-
-data Stemmer = Danish
-             | Dutch
-             | DutchKraaijPohlmann -- ^ A different Dutch stemmer
-             | English       -- ^ Martin Porter's 2002 revision of his stemmer
-             | EnglishLovins -- ^ Lovin's stemmer
-             | EnglishPorter -- ^ Porter's stemmer as described in his 1980 paper
-             | Finnish
-             | French
-             | German
-             | German2 -- ^ Normalises umlauts and ß
-             | Hungarian
-             | Italian
-             | Norwegian
-             | Portuguese
-             | Romanian
-             | Russian
-             | Spanish
-             | Swedish
-             | Turkish
-             deriving (Show, Eq)

@@ -64,6 +64,10 @@ instance ReadableDatabase WritableDatabase where
 
 -- * opening databases
 
+-- | @openDatabase filename@ will open the database at @filename@ in readonly
+-- mode. If the database could not be opened, a string error message will be
+-- returned in the left value.
+--
 openDatabase :: (Serialize dat, Prefixable fields)
              => FilePath
              -> IO (Either Error (Database fields dat))
@@ -77,6 +81,11 @@ openDatabase path =
          else do managed <- newForeignPtr c_xapian_database_delete dbHandle
                  return (Right $ Database managed)
 
+-- FIXME 'mode' is a bad term here...
+-- | @openWritableDatabase mode filename@ will open the database at @filename@
+-- with the mode specified by @mode@. If the database could not be opened
+-- successfully, a string error message will be stored in the left value.
+--
 openWritableDatabase :: (Serialize dat, Prefixable fields)
                      => InitDBOption
                      -> FilePath
@@ -94,6 +103,8 @@ openWritableDatabase option path =
 
 -- * document handling
 
+-- | @addDocument db doc@ will add the document @doc@ to the writable
+-- open database @db@.
 addDocument :: (Serialize dat, Prefixable fields)
             => WritableDatabase fields dat
             -> Document fields dat

@@ -5,6 +5,7 @@ module Search.Xapian.Query
        Queryable (..)
 
        -- * Convenience functions
+       , rawQuery
        , queryAll
        , queryAny
        , resultsFromTo
@@ -22,6 +23,7 @@ import Data.ByteString.Char8 (pack, useAsCString, ByteString)
 
 import Search.Xapian.Types
 import Search.Xapian.Internal.Types
+import Search.Xapian.Internal.Utils
 import Search.Xapian.FFI
 import Search.Xapian.Query.Combinators as Q
 
@@ -29,6 +31,7 @@ import Search.Xapian.Query.Combinators as Q
 -- * using queries with strings, utf-16, whatever
 
 class Queryable s where
+    -- | @query term@ will create a verbatim Query object for @term@.
     query :: s -> Query
 
 instance Queryable String where
@@ -38,6 +41,19 @@ instance Queryable ByteString where
     query = Atom
 
 -- * Convenience functions
+
+-- | FIXME: I'm unreliable
+-- | @rawQuery stemmer query@ will store a natural language @query@ into an
+-- aggregate "Query" value. The stemming algorithm @stem@ will be used on
+-- query terms.
+--
+rawQuery :: Queryable s
+         => Stemmer -- ^ The stemming algorithm to apply to query terms
+         -> s       -- ^ The plain text query to parse
+         -> Query   -- ^ The aggregate query
+rawQuery stemmer queryString =
+    let Atom bs = query queryString
+    in  Parsed stemmer bs
 
 resultsFromTo :: Int -> Int -> QueryRange
 resultsFromTo from to = QueryRange from (from - to + 1)
@@ -89,6 +105,11 @@ compileQuery query =
          EmptyQuery -> c_xapian_query_empty >>= manage
          Atom bs    -> useAsCString bs $ \cs ->
                        c_xapian_query_new cs >>= manage
+         Parsed stemmer bs
+                    -> useAsCString bs $ \cs ->
+                       (createStemmer stemmer >>=) $
+                       (flip withForeignPtr) $ \stemPtr ->
+                       c_xapian_parse_query cs stemPtr >>= manage
          Nullary op -> compileNullary op
          Unary op q -> do cq <- compileQuery q
                           compileUnary op cq
@@ -131,6 +152,10 @@ compileQuery query =
 manage :: Ptr XapianQuery -> IO QueryPtr
 manage = newForeignPtr c_xapian_query_delete
 
+-- | @describeQuery query@ will result in a plain text description
+-- of @query@. Note, this is not really meant for human consumption, but
+-- may help for debugging.
+--
 describeQuery :: QueryPtr -> IO String
 describeQuery q =
   withForeignPtr q $ \query' ->

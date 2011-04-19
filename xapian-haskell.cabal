@@ -33,7 +33,8 @@ library
   build-depends:      base,
                       blaze-builder,
                       bytestring,
-                      cereal
+                      cereal,
+                      containers
   ghc-options:          -Wall -funbox-strict-fields -O
   ghc-prof-options:     -Wall -funbox-strict-fields -O -prof -auto-all
   extensions:         EmptyDataDecls,

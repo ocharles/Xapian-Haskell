@@ -60,13 +60,14 @@ import Control.Applicative
 import Data.Either
 import Data.ByteString (ByteString)
 import qualified Data.ByteString as BS
+import Data.Map (Map)
+import Data.IntMap (IntMap)
 import Data.Serialize
 import Data.Word
 import Foreign
 import Foreign.C.String
 import Search.Xapian.FFI
 import Search.Xapian.Internal.Types
-import Data.Map (Map)
 
 -- * Database related types
 -- --------------------------------------------------------------------
@@ -119,26 +120,34 @@ data QueryRange = QueryRange
 -- * Document related types
 -- --------------------------------------------------------------------
 
-class Prefixable fields where
-    getPrefix :: fields -> ByteString
-    getField  :: fields -> ByteString -> Maybe ByteString
+class Ord fields => Prefixable fields where
+    getPrefix   :: fields -> ByteString
+    stripPrefix :: fields -> ByteString -> Maybe ByteString
 
+data Fieldless = Fieldless deriving (Show, Ord, Eq)
+
+instance Prefixable Fieldless where
+    getPrefix   Fieldless = BS.empty
+    stripPrefix Fieldless = const Nothing
+
+-- | A @Document@
 data Document fields dat = Document
-    { documentId    :: Maybe DocumentId
-    , documentStem  :: Maybe Stemmer
-    , documentTerms :: [Term]
-    , documentFields :: Map fields ByteString
-    , documentData  :: dat
+    { documentId    :: Maybe DocumentId       -- ^ might have an @DocumentId@
+                                              --   given by the database
+    , documentStem  :: Maybe Stemmer          -- ^ might use a @Stemmer@
+    , documentValues :: Maybe (IntMap Value)  -- ^ might have @Values@
+                                              --   (metadata) associated
+                                              --   with it in order to
+                                              --   refine queries
+    , documentTerms :: [Term]                 -- ^ has raw @Term@s associated
+                                              --   with it
+    , documentFields :: Map fields ByteString -- ^ has prefixed @Term@s,
+                                              --   known as fields
+    , documentData  :: dat    -- ^ contains data representing or pointing to
+                              --   the original document
     } deriving (Show)
 
 type SimpleDocument = Document Fieldless
-
-data Fieldless = Fieldless deriving (Show)
-
-instance Prefixable Fieldless where
-    getPrefix Fieldless = BS.empty
-    getField  Fieldless = const Nothing
-
 
 -- | doc_id == 0 is invalid; what is the range of
 newtype DocumentId = DocId { getDocId :: Word32 }

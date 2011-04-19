@@ -4,7 +4,6 @@ TODO
 * what is the best way to create iterators from Haskell to pass to C?
 * unsafePerformIO is bad.
 * data is stored as UTF8, which underlying text representation is appropriate?
-* support values
 * databases may throw Xapian::DatabaseCorruptError or Xapian::DatabaseLockError
   while opening
 * apply Tibell's style guide

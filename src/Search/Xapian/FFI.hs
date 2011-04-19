@@ -99,13 +99,13 @@ foreign import ccall "cxapian.h xapian_query_combine"
                             Ptr XapianQuery ->
                             IO (Ptr XapianQuery)
 
-foreign import ccall "cxapian.h xapian_query_value_comparison"
+foreign import ccall "cxapian.h xapian_query_new_value"
   c_xapian_query_new_value :: Int -- operation code
                            -> Int -- value number
                            -> CString -- value
                            -> IO (Ptr XapianQuery)
 
-foreign import ccall "cxapian.h xapian_query_unary"
+foreign import ccall "cxapian.h xapian_query_new_double"
   c_xapian_query_new_double  :: Int -> Ptr XapianQuery -> Double
                              -> IO (Ptr XapianQuery)
 

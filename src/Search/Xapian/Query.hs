@@ -4,11 +4,6 @@ module Search.Xapian.Query
      ( -- * Generic Query constructor
        Queryable (..)
 
-       -- * Combinators
-       , scale, eliteSet, or, and, xor
-       , andMaybe, andNot, filter, near
-       , synonyms, phrase
-       
        -- * Convenience functions
        , queryAll
        , queryAny
@@ -19,8 +14,7 @@ module Search.Xapian.Query
        , compileQuery
      ) where
 
-import Prelude hiding (and, or, filter)
-import Foreign hiding (xor)
+import Foreign
 import Foreign.C.String
 import Control.Monad (forM_)
 import Data.ByteString.Char8 (pack, useAsCString, ByteString)
@@ -29,11 +23,7 @@ import Data.ByteString.Char8 (pack, useAsCString, ByteString)
 import Search.Xapian.Types
 import Search.Xapian.Internal.Types
 import Search.Xapian.FFI
-
-
--- | Most likely you want to import this module as a qualified module, i.e.
--- 
--- > import qualified Search.Xapian.Query as Q
+import Search.Xapian.Query.Combinators as Q
 
 
 -- * using queries with strings, utf-16, whatever
@@ -47,54 +37,6 @@ instance Queryable String where
 instance Queryable ByteString where
     query = Atom
 
--- * Combinators
-
---
-greaterEqual :: ValueNumber -> Value -> Query
-greaterEqual valno val = Nullary $ OpValueGE valno val
-
-lowerEqual :: ValueNumber -> Value -> Query
-lowerEqual   valno val = Nullary $ OpValueLE valno val
-
-inRange :: ValueNumber -> [Value] -> Query
-inRange valno vals = Nullary $ OpValueRange valno vals
-
---
-scale :: Double -> Query -> Query
-scale s = Unary (OpScaleWeight s)
-
---
-or :: Query -> Query -> Query
-or = Binary OpOr
-
-and :: Query -> Query -> Query
-and = Binary OpAnd
-
-xor :: Query -> Query -> Query
-xor = Binary OpXor
-
-andMaybe :: Query -> Query -> Query
-andMaybe = Binary OpAndMaybe
-
-andNot :: Query -> Query -> Query
-andNot = Binary OpAndNot
-
-filter :: Query -> Query -> Query
-filter = Binary OpFilter
-
-near :: Int -> Query -> Query -> Query
-near distance = Binary (OpNear distance)
-
-eliteSet :: Query -> Query -> Query
-eliteSet = Binary OpEliteSet
-
---
-synonyms :: [Query] -> Query
-synonyms = Multi OpSynonym
-
-phrase :: Int -> [Query] -> Query
-phrase windowSize = Multi (OpPhrase windowSize)
-
 -- * Convenience functions
 
 resultsFromTo :: Int -> Int -> QueryRange
@@ -105,11 +47,11 @@ paging page amount = QueryRange (amount * page) amount
 
 queryAll :: Queryable s =>  [s] -> Query
 queryAll [] = EmptyQuery
-queryAll xs = foldr1 and $ map query xs
+queryAll xs = foldr1 Q.and $ map query xs
 
 queryAny :: Queryable s => [s] -> Query
 queryAny [] = EmptyQuery
-queryAny xs = foldr1 eliteSet $ map query xs
+queryAny xs = foldr1 Q.eliteSet $ map query xs
 
 -- * Low-level stuff
 

@@ -117,42 +117,41 @@ getDocumentData docFPtr =
 -- because cstrings can't contain any NULL value, we have to store 7 bytes of
 -- date as 8 bytes of data
 
--- | unnullify removes any NULL from the bytestring in order
--- to be able to convert bytestrings into cstrings
+_zero = 48 :: Word8
+z  = 122 :: Word8
+z' = BS.pack [z]
+z0 = BS.pack [z,_zero]
+zz = BS.pack [z,z]
+
+-- | unnullify maps NULL to z0 and z to zz
 unnullify :: ByteString -> ByteString
 unnullify = Blaze.toByteString . go
   where
     go bs =
-      if BS.null bs
-         then mempty
-         else
-            let (bs',rest) = BS.splitAt 7 bs
-                ((_,b),bs'') = BS.mapAccumL flipBit (0,0x80) bs'
-            in Blaze.fromStorable (b :: Word8)
-               `mappend` Blaze.fromByteString bs''
-               `mappend` go rest
-
-    flipBit (pos, acc) byte =
-      let acc' = if byte .&. 0x80 == 0 then acc .|. (2^pos) else acc
-      in ((pos + 1 :: Word8, acc'), byte .|. 0x80)
+      let (xs,xss) = BS.span (\x -> x /= 0 && x /= z) bs
+          replacement = if BS.head xss == 0 then z0
+                                            else zz
+      in if BS.null xss
+            then Blaze.fromByteString xs
+            else Blaze.fromByteString xs `mappend`
+                 Blaze.fromByteString replacement `mappend`
+                 go (BS.tail xss)
 
 -- | nullify is the inverse of unnullify
 nullify :: ByteString -> ByteString
 nullify = Blaze.toByteString . go
   where
     go bs =
-      if BS.null bs
-         then mempty
-         else
-            let (bs',rest) = BS.splitAt 8 bs
-                (_,bs'') =
-                  BS.mapAccumL flipBit (0, BS.head bs') (BS.tail bs')
-            in Blaze.fromByteString bs''
-               `mappend` go rest
-
-    flipBit (pos, acc) byte =
-      let byte' = if acc .&. 2^pos == 0 then byte else byte - 0x80
-      in  ((pos + 1 :: Word8, acc), byte')
+        let (xs,xss) = BS.span (/= z) bs
+            replacement = if xss `BS.index` 1 == _zero then 0 :: Word8
+                                                       else z
+        in  if BS.null xss
+               then Blaze.fromByteString xs
+               else if BS.length xss == 1
+                       then error $ "nullify: failed to decode document data" -- FIXME
+                       else Blaze.fromByteString xs `mappend`
+                            Blaze.fromStorable replacement `mappend`
+                            go (BS.drop 2 xss)
 
 -- | @stemToDocument stemmer document text@ adds stemmed posting terms derived from
 -- @text@ using the stemming algorith @stemmer@ to @doc@

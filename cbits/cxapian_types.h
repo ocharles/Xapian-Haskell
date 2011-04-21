@@ -23,7 +23,7 @@ typedef struct _rwdatabase rwdatabase;
 struct _query { Xapian::Query *get; };
 typedef struct _query query;
 
-// TODO
+// cxapian_mset.cc
 struct _mset { Xapian::MSet *get; };
 typedef struct _mset mset;
 

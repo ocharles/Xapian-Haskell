@@ -1,6 +1,7 @@
 TODO
 ----
 
+* unpack Op-datatypes in module Query
 * make sure, that any exception in the c bindings is caught
 * what is the best way to create iterators from Haskell to pass to C?
 * do we need to ensure a closed writable database on exit?
@@ -12,6 +13,7 @@ TODO
 
 maybe...
 * allow for custom stem algorithms in Haskell
+* we can optimise queries like HaskellDB does with `optimize :: PrimQuery -> PrimQuery`
 
 from the docs:
 * spelling correction

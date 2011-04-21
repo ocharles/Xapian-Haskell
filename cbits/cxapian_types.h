@@ -27,9 +27,11 @@ typedef struct _query query;
 struct _termiterator { Xapian::TermIterator *iter; };
 typedef struct _termiterator termiterator;
 
+// cxapian_valueiterator.cc
 struct _valueiterator { Xapian::ValueIterator *iter; };
 typedef struct _valueiterator valueiterator;
 
+// cxapian_positioniterator.cc
 struct _positioniterator { Xapian::PositionIterator *iter; };
 typedef struct _positioniterator positioniterator;
 

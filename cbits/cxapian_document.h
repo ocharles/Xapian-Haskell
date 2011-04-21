@@ -55,13 +55,19 @@ unsigned int
 document_termlist_count (document *);
 
 termiterator *
-document_termlist_iterator (document *);
+document_termlist_begin (document *);
+
+termiterator *
+document_termlist_end (document *);
 
 unsigned int
 document_values_count (document *);
 
 valueiterator *
-document_values_iterator (document *);
+document_values_begin (document *);
+
+valueiterator *
+document_values_end (document *);
 
 unsigned int
 document_get_docid (document *);

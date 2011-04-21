@@ -97,7 +97,20 @@ document_termlist_count (document *doc)
 }
 
 termiterator *
-document_termlist_iterator (document *doc);
+document_termlist_begin (document *doc)
+{
+    termiterator *termit = new termiterator();
+    *termit->iter = doc->get->termlist_begin();
+    return termit;
+}
+
+termiterator *
+document_termlist_end (document *doc)
+{
+    termiterator *termit = new termiterator();
+    *termit->iter = doc->get->termlist_end();
+    return termit;
+}
 
 unsigned int
 document_values_count (document *doc)
@@ -106,7 +119,20 @@ document_values_count (document *doc)
 }
 
 valueiterator *
-document_values_iterator (document *doc);
+document_values_begin (document *doc)
+{
+    valueiterator *valit = new valueiterator();
+    *valit->iter = doc->get->values_begin();
+    return valit;
+}
+
+valueiterator *
+document_values_end (document *doc)
+{
+    valueiterator *valit = new valueiterator();
+    *valit->iter = doc->get->values_end();
+    return valit;
+}
 
 unsigned int
 document_get_docid (document *doc)

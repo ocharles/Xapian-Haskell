@@ -30,11 +30,10 @@ valueiterator_get (valueiterator *vi)
     return (**vi->iter).c_str();
 }
 
-valueiterator *
+void
 valueiterator_next (valueiterator *vi)
 {
-    vi->iter = vi->iter++; // TODO:does ++ mutate state?
-    return vi;
+    vi->iter = vi->iter++; // TODO:does ++ mutate state? does this work as expected?
 }
 
 unsigned int

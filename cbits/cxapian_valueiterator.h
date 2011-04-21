@@ -18,7 +18,7 @@ valueiterator_delete (valueiterator *);
 const char *
 valueiterator_get (valueiterator *);
 
-valueiterator *
+void  // I use void to emphasize the mutation involved
 valueiterator_next (valueiterator *);
 
 unsigned int

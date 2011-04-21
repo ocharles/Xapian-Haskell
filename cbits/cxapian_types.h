@@ -22,10 +22,20 @@ struct _rwdatabase {
 };
 
 
+struct _termiterator {
+    Xapian::TermIterator *iter;
+};
+
+struct _valueiterator {
+    Xapian::ValueIterator *iter;
+};
+
 typedef struct _termgenerator termgenerator;
 typedef struct _stem stem;
 typedef struct _stopper stopper;
 typedef struct _document document;
 typedef struct _rwdatabase rwdatabase;
+typedef struct _termiterator termiterator;
+typedef struct _valueiterator valueiterator;
 
 #endif //CXAPIAN_TYPES

@@ -23,10 +23,14 @@ typedef struct _rwdatabase rwdatabase;
 struct _query { Xapian::Query *get; };
 typedef struct _query query;
 
+// cxapian_termiterator.cc
 struct _termiterator { Xapian::TermIterator *iter; };
 typedef struct _termiterator termiterator;
 
 struct _valueiterator { Xapian::ValueIterator *iter; };
 typedef struct _valueiterator valueiterator;
+
+struct _positioniterator { Xapian::PositionIterator *iter; };
+typedef struct _positioniterator positioniterator;
 
 #endif //CXAPIAN_TYPES

@@ -1,6 +1,7 @@
 TODO
 ----
 
+* make sure, that any exception in the c bindings is caught
 * what is the best way to create iterators from Haskell to pass to C?
 * do we need to ensure a closed writable database on exit?
 * unsafePerformIO is bad.

@@ -5,69 +5,76 @@
 termiterator *
 termiterator_new ()
 {
-    termiterator *ti = new termiterator();
-    ti->iter = new Xapian::TermIterator();
-    return ti;
+    termiterator *self = new termiterator();
+    self->iter = new Xapian::TermIterator();
+    return self;
 }
 
 termiterator *
-termiterator_copy (termiterator *original)
+termiterator_copy (termiterator *other)
 {
-    termiterator *ti = new termiterator();
-    ti->iter = new Xapian::TermIterator(*original->iter);
-    return ti;
-}
-
-const char *
-termiterator_get (termiterator *ti)
-{
-    return (**ti->iter).c_str();
+    termiterator *self = new termiterator();
+    self->iter = new Xapian::TermIterator(*other->iter);
+    return self;
 }
 
 void
-termiterator_skip_to (termiterator *ti, const char *tname)
+termiterator_delete (termiterator *self)
 {
-    ti->iter->skip_to(std::string(tname));
+    delete self->iter;
+    delete self;
+}
+
+const char *
+termiterator_get (termiterator *self)
+{
+    return (**self->iter).c_str();
+}
+
+void
+termiterator_skip_to (termiterator *self, const char *tname)
+{
+    self->iter->skip_to(std::string(tname));
 }
 
 unsigned int
-termiterator_get_wdf (termiterator *ti)
+termiterator_get_wdf (termiterator *self)
 {
-    return ti->iter->get_wdf();
+    return self->iter->get_wdf();
 }
 
 unsigned int
-termiterator_get_termfreq (termiterator *ti)
+termiterator_get_termfreq (termiterator *self)
 {
-    return ti->iter->get_termfreq();
+    return self->iter->get_termfreq();
 }
 
 unsigned int
-termiterator_positionlist_count (termiterator *ti)
+termiterator_positionlist_count (termiterator *self)
 {
-    return ti->iter->positionlist_count();
+    return self->iter->positionlist_count();
 }
 
 positioniterator *
-termiterator_positionlist_begin (termiterator *ti)
+termiterator_positionlist_begin (termiterator *self)
 {
     positioniterator *pi = new positioniterator();
     pi->iter = new Xapian::PositionIterator(
-                        ti->iter->positionlist_begin());
+                        self->iter->positionlist_begin());
     return pi;
 }
 
 positioniterator *
-termiterator_positionlist_end (termiterator *ti)
+termiterator_positionlist_end (termiterator *self)
 {
     positioniterator *pi = new positioniterator();
     pi->iter = new Xapian::PositionIterator(
-                        ti->iter->positionlist_end());
+                        self->iter->positionlist_end());
     return pi;
 }
 
 const char *
-termiterator_get_description (termiterator *ti)
+termiterator_get_description (termiterator *self)
 {
-    return ti->iter->get_description().c_str();
+    return self->iter->get_description().c_str();
 }

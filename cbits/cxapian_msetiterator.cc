@@ -27,13 +27,15 @@ msetiterator_delete (msetiterator *mi)
 void
 msetiterator_next (msetiterator *mi)
 {
-    mi->iter = mi->iter++; // TODO: does this work?
+    if (mi->iter)
+        mi->iter = mi->iter++; // TODO: does this work?
 }
 
 void
 msetiterator_prev (msetiterator *mi)
 {
-    mi->iter = mi->iter--; // TODO: does this work?
+    if (mi->iter)
+        mi->iter = mi->iter--; // TODO: does this work?
 }
 
 unsigned int

@@ -176,7 +176,7 @@ database_new_writable_from_path (const char *path, int action);
 database *
 database_copy_writable (database *other);
 
-database *
+void
 database_delete_writable (database *);
 
 void

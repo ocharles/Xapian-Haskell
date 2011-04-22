@@ -392,7 +392,7 @@ database_copy_writable (database *other)
     return db;
 }
 
-database *
+void
 database_delete_writable (database *db)
 {
     delete (__writable_db(db->get));

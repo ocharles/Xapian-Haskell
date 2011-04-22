@@ -5,6 +5,10 @@
 struct _database { Xapian::Database *get; };
 typedef struct _database database;
 
+// cxapian_enquire.cc
+struct _enquire { Xapian::Enquire *get; };
+typedef struct _enquire enquire;
+
 // cxapian_termgenerator.cc
 struct _termgenerator { Xapian::TermGenerator *get; };
 typedef struct _termgenerator termgenerator;
@@ -41,7 +45,7 @@ typedef struct _valueiterator valueiterator;
 struct _positioniterator { Xapian::PositionIterator *iter; };
 typedef struct _positioniterator positioniterator;
 
-// TODO
+// cxapian_postingiterator.cc
 struct _postingiterator { Xapian::PostingIterator *iter; };
 typedef struct _postingiterator postingiterator;
 

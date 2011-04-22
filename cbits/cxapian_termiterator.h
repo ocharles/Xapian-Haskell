@@ -10,7 +10,22 @@ termiterator *
 termiterator_new ();
 
 termiterator *
-termiterator_copy ();
+termiterator_copy (termiterator *other);
+
+void
+termiterator_delete (termiterator *);
+
+void
+termiterator_next (termiterator *self)
+{
+    (*self->iter)++;
+}
+
+bool
+termiterator_is_end (termiterator *self, termiterator *end)
+{
+    return *self->iter == *end->iter;
+}
 
 const char *
 termiterator_get (termiterator *);

@@ -93,7 +93,7 @@ document_clear_terms (document *doc)
 unsigned int
 document_termlist_count (document *doc)
 {
-    doc->get->termlist_count();
+    return doc->get->termlist_count();
 }
 
 termiterator *
@@ -115,7 +115,7 @@ document_termlist_end (document *doc)
 unsigned int
 document_values_count (document *doc)
 {
-    doc->get->values_count();
+    return doc->get->values_count();
 }
 
 valueiterator *

@@ -25,13 +25,21 @@ query_delete (query *q)
 }
 
 query *
+query_new_0 (const char *tname, unsigned int wqf, unsigned int termpos)
+{
+    query *self = new query();
+    self->get = new Xapian::Query( std::string(tname), wqf, termpos );
+    return self;
+}
+
+query *
 query_new_1 (int op, query *left, query *right)
 {
-    query *q = new query();
-    q->get = new Xapian::Query((Xapian::Query::op) op,
-                               *left->get,
-                               *right->get);
-    return q;
+    query *self = new query();
+    self->get = new Xapian::Query((Xapian::Query::op) op,
+                               Xapian::Query(*left->get),
+                               Xapian::Query(*right->get));
+    return self;
 }
 
 query *
@@ -87,6 +95,7 @@ query_match_all ()
 {
     query *q = new query();
     q->get = new Xapian::Query(Xapian::Query::MatchAll);
+    return q;
 }
 
 query *
@@ -94,6 +103,7 @@ query_match_nothing ()
 {
     query *q = new query();
     q->get = new Xapian::Query(Xapian::Query::MatchNothing);
+    return q;
 }
 
 unsigned int

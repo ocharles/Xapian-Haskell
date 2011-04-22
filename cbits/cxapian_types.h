@@ -9,6 +9,7 @@ typedef struct _termgenerator termgenerator;
 struct _stem { Xapian::Stem *get; };
 typedef struct _stem stem;
 
+// cxapian_stopper.cc
 struct _stopper { Xapian::Stopper *get; };
 typedef struct _stopper stopper;
 

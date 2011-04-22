@@ -26,8 +26,8 @@ termgenerator_set_document (termgenerator *tgen, document *doc);
 const document *
 termgenerator_get_document (termgenerator *tgen);
 
-void
-termgenerator_set_database (termgenerator *tgen, rwdatabase *db);
+void // ensure database is writable!
+termgenerator_set_database (termgenerator *tgen, database *db);
 
 int
 termgenerator_set_flags (termgenerator *tgen, int toggle, int mask);

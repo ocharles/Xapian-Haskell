@@ -1,6 +1,10 @@
 #ifndef CXAPIAN_TYPES
 #define CXAPIAN_TYPES
 
+// cxapian_database.cc
+struct _database { Xapian::Database *get; };
+typedef struct _database database;
+
 // cxapian_termgenerator.cc
 struct _termgenerator { Xapian::TermGenerator *get; };
 typedef struct _termgenerator termgenerator;
@@ -16,9 +20,6 @@ typedef struct _stopper stopper;
 // cxapian_document.cc
 struct _document { Xapian::Document *get; };
 typedef struct _document document;
-
-struct _rwdatabase { Xapian::WritableDatabase *get; };
-typedef struct _rwdatabase rwdatabase;
 
 // cxapian_query.cc
 struct _query { Xapian::Query *get; };
@@ -39,6 +40,10 @@ typedef struct _valueiterator valueiterator;
 // cxapian_positioniterator.cc
 struct _positioniterator { Xapian::PositionIterator *iter; };
 typedef struct _positioniterator positioniterator;
+
+// TODO
+struct _postingiterator { Xapian::PostingIterator *iter; };
+typedef struct _postingiterator postingiterator;
 
 // cxapian_msetiterator.cc
 struct _msetiterator { Xapian::MSetIterator *iter; };

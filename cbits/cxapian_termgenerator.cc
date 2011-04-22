@@ -45,9 +45,9 @@ termgenerator_get_document (termgenerator *tgen)
 }
 
 void
-termgenerator_set_database (termgenerator *tgen, rwdatabase *db)
+termgenerator_set_database (termgenerator *tgen, database *db)
 {
-    tgen->get->set_database(*db->get);
+    tgen->get->set_database(*((Xapian::WritableDatabase*)db->get));
 }
 
 int

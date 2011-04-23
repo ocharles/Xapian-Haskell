@@ -33,7 +33,7 @@ valueiterator_get (valueiterator *vi)
 void
 valueiterator_next (valueiterator *vi)
 {
-    vi->iter = vi->iter++; // TODO:does ++ mutate state? does this work as expected?
+    (*vi->iter)++; // TODO:does ++ mutate state? does this work as expected?
 }
 
 unsigned int

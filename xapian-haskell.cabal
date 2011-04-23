@@ -13,6 +13,22 @@ category:       Search, Database
 extra-source-files: examples/QuickStartIndex.hs
                     examples/QuickStartSearch.hs
                     examples/Test.hs
+                    cbits/cxapian.h
+                    cbits/cxapian_database.h
+                    cbits/cxapian_document.h
+                    cbits/cxapian_enquire.h
+                    cbits/cxapian_mset.h
+                    cbits/cxapian_msetiterator.h
+                    cbits/cxapian_positioniterator.h
+                    cbits/cxapian_postingiterator.h
+                    cbits/cxapian_query.h
+                    cbits/cxapian_stem.h
+                    cbits/cxapian_stopper.h
+                    cbits/cxapian_termgenerator.h
+                    cbits/cxapian_termiterator.h
+                    cbits/cxapian_types.h
+                    cbits/cxapian_valueiterator.h
+                    cbits/Makefile
 
 source-repository HEAD
   type: git
@@ -27,6 +43,7 @@ library
                       Search.Xapian.Query,
                       Search.Xapian.Query.Combinators,
                       Search.Xapian
+                      Search.Xapian.Internal.FFI
   other-modules:      Search.Xapian.Internal.Types,
                       Search.Xapian.Internal.Utils,
                       Search.Xapian.FFI
@@ -41,4 +58,18 @@ library
                       ForeignFunctionInterface,
                       TypeSynonymInstances
   c-sources:          cbits/cxapian.cc
+                      cbits/cxapian_database.cc
+                      cbits/cxapian_document.cc
+                      cbits/cxapian_enquire.cc
+                      cbits/cxapian_mset.cc
+                      cbits/cxapian_msetiterator.cc
+                      cbits/cxapian_positioniterator.cc
+                      cbits/cxapian_postingiterator.cc
+                      cbits/cxapian_query.cc
+                      cbits/cxapian_stem.cc
+                      cbits/cxapian_stopper.cc
+                      cbits/cxapian_termgenerator.cc
+                      cbits/cxapian_termiterator.cc
+                      cbits/cxapian_valueiterator.cc
+  cc-options:         -Wall -c
   extra-libraries:    xapian

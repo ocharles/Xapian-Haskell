@@ -25,6 +25,19 @@ termiterator_delete (termiterator *self)
     delete self;
 }
 
+void
+termiterator_next (termiterator *self)
+{
+    (*self->iter)++;
+}
+
+bool // FIXME: the FFI does NOT treat this one nicely... under obscure
+     //circumstances this function always returns 1 (true)...
+termiterator_is_end (termiterator *self, termiterator *end)
+{
+    return (*self->iter == *end->iter);
+}
+
 const char *
 termiterator_get (termiterator *self)
 {

@@ -16,16 +16,10 @@ void
 termiterator_delete (termiterator *);
 
 void
-termiterator_next (termiterator *self)
-{
-    (*self->iter)++;
-}
+termiterator_next (termiterator *);
 
 bool
-termiterator_is_end (termiterator *self, termiterator *end)
-{
-    return *self->iter == *end->iter;
-}
+termiterator_is_end (termiterator *, termiterator *end);
 
 const char *
 termiterator_get (termiterator *);

@@ -1,6 +1,7 @@
 TODO
 ----
 
+* the FFI works veeeery unpredictably, find the cause or file bug report...
 * unpack Op-datatypes in module Query
 * make sure, that any exception in the c bindings is caught
 * what is the best way to create iterators from Haskell to pass to C?

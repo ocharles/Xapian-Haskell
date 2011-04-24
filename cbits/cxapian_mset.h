@@ -1,6 +1,9 @@
 #ifndef CXAPIAN_MSET
 #define CXAPIAN_MSET
 
+#include <xapian.h>
+#include "cxapian_types.h"
+
 extern "C" {
 
 mset *

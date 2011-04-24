@@ -367,7 +367,7 @@ __writable_db (Xapian::Database *db)
 }
 
 database *
-database_new_writable ()
+database_writable_new ()
 {
     database *db = new database();
     db->get = (Xapian::Database *) new Xapian::WritableDatabase();
@@ -375,7 +375,7 @@ database_new_writable ()
 }
 
 database *
-database_new_writable_from_path (const char *path, int action)
+database_writable_new_from_path (const char *path, int action)
 {
     database *db = new database();
     db->get = (Xapian::Database *) new Xapian::WritableDatabase(
@@ -384,7 +384,7 @@ database_new_writable_from_path (const char *path, int action)
 }
 
 database *
-database_copy_writable (database *other)
+database_writable_copy (database *other)
 {
     database *db = new database();
     db->get = (Xapian::Database *) new Xapian::WritableDatabase(
@@ -393,8 +393,9 @@ database_copy_writable (database *other)
 }
 
 void
-database_delete_writable (database *db)
+database_writable_delete (database *db)
 {
+    database_commit(db);
     delete (__writable_db(db->get));
     delete db;
 }

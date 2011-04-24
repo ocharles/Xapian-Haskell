@@ -7,6 +7,265 @@ import Foreign.C.Types
 
 import qualified Data.ByteString as BS
 
+
+class Manageable a where
+    manage :: Ptr a -> IO (ForeignPtr a)
+
+
+-- Generic Database
+-- ---------------------------------------------------------
+
+data CDatabase
+
+-- Read-only databases
+
+foreign import ccall "database_new"
+    cx_database_new :: IO (Ptr CDatabase)
+
+foreign import ccall "database_new_from_path"
+    cx_database_from_path :: CString -> IO (Ptr CDatabase)
+
+foreign import ccall "database_copy"
+    cx_database_copy :: Ptr CDatabase -> IO (Ptr CDatabase)
+
+foreign import ccall "&database_delete"
+    cx_database_delete :: FunPtr(Ptr CDatabase -> IO ())
+
+foreign import ccall "database_add_database"
+    cx_database_add_database :: Ptr CDatabase -> Ptr CDatabase -> IO ()
+
+foreign import ccall "database_reopen"
+    cx_database_reopen :: Ptr CDatabase -> IO ()
+
+foreign import ccall "database_close"
+    cx_database_close :: Ptr CDatabase -> IO ()
+
+foreign import ccall "database_get_description"
+    cx_database_get_description :: Ptr CDatabase -> IO CString
+
+foreign import ccall "database_postlist_begin"
+    cx_database_postlist_begin :: Ptr CDatabase -> IO (Ptr CPostingIterator)
+
+foreign import ccall "database_postlist_end"
+    cx_database_postlist_end :: Ptr CDatabase -> IO (Ptr CPostingIterator)
+
+foreign import ccall "database_termlist_begin"
+    cx_database_termlist_begin :: Ptr CDatabase -> IO (Ptr CTermIterator)
+
+foreign import ccall "database_termlist_end"
+    cx_database_termlist_end :: Ptr CDatabase -> IO (Ptr CTermIterator)
+
+foreign import ccall "database_has_positions"
+    cx_database_has_positions :: Ptr CDatabase -> IO Bool
+
+foreign import ccall "database_positionlist_begin"
+    cx_database_positionlist_begin :: Ptr CDatabase -> IO (Ptr CPositionIterator)
+
+foreign import ccall "database_positionlist_end"
+    cx_database_positionlist_end :: Ptr CDatabase -> IO (Ptr CPositionIterator)
+
+foreign import ccall "database_allterms_begin"
+    cx_database_allterms_begin :: Ptr CDatabase -> IO (Ptr CTermIterator)
+
+foreign import ccall "database_allterms_end"
+    cx_database_allterms_end:: Ptr CDatabase -> IO (Ptr CTermIterator)
+
+foreign import ccall "database_allterms_with_prefix_begin"
+    cx_database_allterms_with_prefix_begin
+        :: Ptr CDatabase -> IO (Ptr CTermIterator)
+
+foreign import ccall "database_allterms_with_prefix_end"
+    cx_database_allterms_with_prefix_end
+        :: Ptr CDatabase -> IO (Ptr CTermIterator)
+
+foreign import ccall "database_get_doccount"
+    cx_database_get_doccount :: Ptr CDatabase -> IO CUInt
+
+foreign import ccall "database_get_lastdocid"
+    cx_database_get_lastdocid :: Ptr CDatabase -> IO CUInt
+
+foreign import ccall "database_get_avlength"
+    cx_database_get_avlength :: Ptr CDatabase -> IO Double
+
+foreign import ccall "database_get_termfreq"
+    cx_database_get_termfreq :: Ptr CDatabase -> CString -> IO CUInt
+
+foreign import ccall "database_get_value_freq"
+    cx_database_get_value_freq :: Ptr CDatabase -> CString -> IO CUInt
+
+foreign import ccall "database_get_value_lower_bound"
+    cx_database_get_value_lower_bound :: Ptr CDatabase -> CUInt -> IO CUInt
+
+foreign import ccall "database_get_doclength_lower_bound"
+    cx_database_get_doclength_lower_bound :: Ptr CDatabase -> CUInt -> IO CUInt
+
+foreign import ccall "database_get_wdf_upper_bound"
+    cx_database_wdf_upper_bound :: Ptr CDatabase -> CString -> IO CUInt
+
+foreign import ccall "database_valuestream_begin"
+    cx_database_valuestream_begin
+        :: Ptr CDatabase -> CUInt -> IO (Ptr CValueIterator)
+
+foreign import ccall "database_valuestream_end"
+    cx_database_valuestream_end
+        :: Ptr CDatabase -> CUInt -> IO (Ptr CValueIterator)
+
+foreign import ccall "database_get_doclength"
+    cx_database_get_doclength :: Ptr CDatabase -> CUInt -> CUInt
+
+foreign import ccall "database_keep_alive"
+    cx_database_keep_alive :: Ptr CDatabase -> IO ()
+
+foreign import ccall "database_get_document"
+    cx_database_get_document :: Ptr CDatabase -> CUInt -> IO (Ptr CDocument)
+
+foreign import ccall "database_get_spelling_suggestion"
+    cx_database_get_spelling_suggestion
+        :: Ptr CDatabase
+        -> CString       -- ^ word
+        -> CUInt         -- ^ maximum edit distance
+        -> IO CString    -- ^ suggested word
+
+foreign import ccall "database_spellings_begin"
+    cx_database_spellings_begin :: Ptr CDatabase -> IO (Ptr CTermIterator)
+
+foreign import ccall "database_spellings_end"
+    cx_database_spellings_end :: Ptr CDatabase -> IO (Ptr CTermIterator)
+
+foreign import ccall "database_synonyms_begin"
+    cx_database_synonyms_begin :: Ptr CDatabase -> IO (Ptr CTermIterator)
+
+foreign import ccall "database_synonyms_end"
+    cx_database_synonyms_end :: Ptr CDatabase -> IO (Ptr CTermIterator)
+
+foreign import ccall "database_synonym_keys_begin"
+    cx_database_synonym_keys_begin
+        :: Ptr CDatabase
+        -> CString                -- ^ prefix
+        -> IO (Ptr CTermIterator)
+
+-- | see @cx_database_synonym_keys_begin@
+foreign import ccall "database_synonym_keys_end"
+    cx_database_synonym_keys_end
+        :: Ptr CDatabase
+        -> CString
+        -> IO (Ptr CTermIterator)
+
+foreign import ccall "database_get_metadata"
+    cx_database_get_metadata
+        :: Ptr CDatabase
+        -> CString       -- ^ key
+        -> CString       -- ^ value
+
+foreign import ccall "database_metadata_keys_begin"
+    cx_database_metadata_keys_begin :: Ptr CDatabase -> IO (Ptr CTermIterator)
+
+foreign import ccall "database_metadata_keys_end"
+    cx_database_metadata_keys_end :: Ptr CDatabase -> IO (Ptr CTermIterator)
+
+foreign import ccall "database_get_uuid"
+    cx_database_get_uuid :: Ptr CDatabase -> IO (CString)
+
+-- Writable database
+-- ---------------------------------------------------------
+
+type DbAction = Int
+
+foreign import ccall "DB_CREATE_OR_OPEN"
+  cx_database_DB_CREATE_OR_OPEN :: DbAction
+
+foreign import ccall "DB_CREATE"
+  cx_database_DB_CREATE :: DbAction
+
+foreign import ccall "DB_CREATE_OR_OVERWRITE"
+  cx_database_DB_CREATE_OR_OVERWRITE :: DbAction
+
+foreign import ccall "DB_OPEN"
+  cx_database_DB_OPEN :: DbAction
+
+-- ensure you only use following functions on writable databases, i.e.
+-- databases constructed via database_new_writable
+
+foreign import ccall "database_writable_new"
+    cx_database_writable_new :: IO (Ptr CDatabase)
+
+foreign import ccall "database_writable_new_from_path"
+    cx_database_writable_new_from_path :: CString -> DbAction -> IO (Ptr CDatabase)
+
+foreign import ccall "database_writable_copy"
+    cx_database_writable_copy :: Ptr CDatabase -> IO (Ptr CDatabase)
+
+foreign import ccall "database_writable_delete"
+    cx_database_writable_delete :: Ptr CDatabase -> IO ()
+
+foreign import ccall "database_commit"
+    cx_database_commit :: Ptr CDatabase -> IO ()
+
+foreign import ccall "database_begin_transaction"
+    cx_database_begin_transaction
+        :: Ptr CDatabase
+        -> Bool          -- ^ flushed
+        -> IO ()
+
+foreign import ccall "database_commit_transaction"
+    cx_database_commit_transaction :: Ptr CDatabase -> IO ()
+
+foreign import ccall "database_cancel_transaction"
+    cx_database_cancel_transaction :: Ptr CDatabase -> IO ()
+
+foreign import ccall "database_add_document"
+    cx_database_add_document :: Ptr CDatabase -> Ptr CDocument -> IO ()
+
+foreign import ccall "database_delete_document_by_id"
+    cx_database_delete_document_by_id :: Ptr CDatabase -> CUInt -> IO ()
+
+foreign import ccall "database_delete_document_by_term"
+    cx_database_delete_document_by_term :: Ptr CDatabase -> CString -> IO ()
+
+foreign import ccall "database_replace_document"
+    cx_database_replace_document :: Ptr CDatabase -> CUInt -> IO (Ptr CDocument)
+
+foreign import ccall "database_add_spelling"
+    cx_database_add_spelling
+        :: Ptr CDatabase
+        -> CString       -- ^ word
+        -> CUInt         -- ^ frequency increase
+        -> IO ()
+
+foreign import ccall "database_remove_spelling"
+    cx_database_remove_spelling
+        :: Ptr CDatabase
+        -> CString       -- ^ word
+        -> CUInt         -- ^ frequency decrease
+        -> IO ()
+
+foreign import ccall "database_add_synonym"
+    cx_database_add_synonym
+        :: Ptr CDatabase
+        -> CString       -- ^ term
+        -> CString       -- ^ synonym
+        -> IO ()
+
+foreign import ccall "database_remove_synonym"
+    cx_database_remove_synonym
+        :: Ptr CDatabase
+        -> CString       -- ^ term
+        -> CString       -- ^ synonym
+        -> IO ()
+
+foreign import ccall "database_clear_synonyms"
+    cx_database_clear_synonyms :: Ptr CDatabase -> CString -> IO ()
+
+foreign import ccall "database_set_metadata"
+    cx_database_set_metadata
+        :: Ptr CDatabase
+        -> CString       -- ^ key
+        -> CString       -- ^ value
+        -> IO ()
+
+foreign import ccall "database_writable_get_description"
+    cx_database_writable_get_description :: Ptr CDatabase -> IO (CString)
+
 -- Document
 -- ---------------------------------------------------------
 
@@ -94,6 +353,117 @@ foreign import ccall "document_get_docid"
 foreign import ccall "document_get_description"
     cx_document_get_description :: Ptr CDocument -> IO CString
 
+
+-- Enquire
+-- ---------------------------------------------------------
+
+data CEnquire
+
+foreign import ccall "enquire.h enquire_new"
+    cx_enquire_new :: Ptr CDatabase -> IO (Ptr CEnquire)
+
+foreign import ccall "enquire_set_query"
+    cx_enquire_set_query :: Ptr CEnquire -> IO ()
+
+foreign import ccall "enquire_get_mset"
+    cx_get_mset :: Ptr CEnquire
+                -> CUInt        -- ^ skip n items
+                -> CUInt        -- ^ maximum amount of items
+                -> IO (Ptr CMSet)
+
+-- MSet
+-- ---------------------------------------------------------
+
+data CMSet
+
+foreign import ccall "mset_new"
+    cx_mset_new :: IO (Ptr CMSet)
+
+foreign import ccall "mset_copy"
+    cx_mset_copy :: Ptr CMSet -> IO (Ptr CMSet)
+
+foreign import ccall "mset_delete"
+    cx_mset_delete :: Ptr CMSet -> IO ()
+
+foreign import ccall "mset_fetch_all"
+    cx_mset_fetch_all :: Ptr CMSet -> IO ()
+
+foreign import ccall "mset_fetch_one"
+    cx_mset_fetch_one :: Ptr CMSet -> Ptr CMSetIterator -> IO ()
+
+foreign import ccall "mset_fetch_many"
+    cx_mset_fetch_many
+        :: Ptr CMSet
+        -> Ptr CMSetIterator   -- ^ begin
+        -> Ptr CMSetIterator   -- ^ end
+
+foreign import ccall "mset_convert_weight_to_percent"
+    cx_mset_convert_weight_to_percent :: Ptr CMSet -> Double -> IO Int
+
+foreign import ccall "mset_convert_document_to_percent"
+    cx_mset_convert_document_to_percent
+        :: Ptr CMSet -> Ptr CMSetIterator -> IO Int
+
+foreign import ccall "mset_get_termfreq"
+    cx_mset_get_termfreq :: Ptr CMSet -> CString -> IO CUInt
+
+foreign import ccall "mset_get_termweight"
+    cx_mset_get_termweight :: Ptr CMSet -> CString -> IO Double
+
+foreign import ccall "mset_get_firstitem"
+    cx_mset_get_firstitem :: Ptr CMSet -> IO CUInt
+
+foreign import ccall "mset_get_matches_lower_bound"
+    cx_mset_get_matches_lower_bound :: Ptr CMSet -> IO CUInt
+
+foreign import ccall "mset_get_matches_estimated"
+    cx_mset_get_matches_estimated :: Ptr CMSet -> IO CUInt
+
+foreign import ccall "mset_get_matches_upper_bound"
+    cx_mset_get_matches_upper_bound :: Ptr CMSet -> IO CUInt
+
+foreign import ccall "mset_get_uncollapsed_matches_lower_bound"
+    cx_mset_get_uncollapsed_matches_lower_bound :: Ptr CMSet -> IO CUInt  
+
+foreign import ccall "mset_get_uncollapsed_matches_estimated"
+    cx_mset_get_uncollapsed_matches_estimated :: Ptr CMSet -> IO CUInt
+
+foreign import ccall "mset_get_uncollapsed_matches_upper_bound"
+    cx_mset_get_uncollapsed_matches_upper_bound :: Ptr CMSet -> IO CUInt
+
+foreign import ccall "mset_get_max_possible"
+    cx_mset_get_max_possible :: Ptr CMSet -> IO Double
+
+foreign import ccall "mset_get_max_attained"
+    cx_mset_get_max_attained :: Ptr CMSet -> IO Double
+
+foreign import ccall "mset_size"
+    cx_mset_size :: Ptr CMSet -> IO CUInt
+
+foreign import ccall "mset_max_size"
+    cx_mset_max_size :: Ptr CMSet -> IO CUInt
+
+foreign import ccall "mset_empty"
+    cx_mset_empty :: Ptr CMSet -> IO Bool
+
+foreign import ccall "mset_swap"
+    cx_mset_swap :: Ptr CMSet -> Ptr CMSet -> IO ()
+
+foreign import ccall "mset_begin"
+    cx_mset_begin :: Ptr CMSet -> IO (Ptr CMSetIterator)
+
+foreign import ccall "mset_end"
+    cx_mset_end :: Ptr CMSet -> IO (Ptr CMSetIterator)
+
+foreign import ccall "mset_back"
+    cx_mset_back :: Ptr CMSet -> IO (Ptr CMSetIterator)
+
+foreign import ccall "mset_index"
+    cx_mset_index :: Ptr CMSet -> CUInt -> IO (Ptr CMSetIterator)
+
+foreign import ccall "mset_get_description"
+    cx_mset_get_description :: Ptr CMSet -> IO (CString)
+
 -- Query
 -- ---------------------------------------------------------
 
@@ -137,7 +507,7 @@ foreign import ccall "query_new_2"
 --    cx_query_new_3 :: Op -> CString -> CString -> IO (Ptr CQuery)
 
 foreign import ccall "query_new_4"
-    cx_query_new_4 :: Op -> Ptr CQuery -> CDouble -> IO (Ptr CQuery)
+    cx_query_new_4 :: Op -> Ptr CQuery -> Double -> IO (Ptr CQuery)
 
 --foreign import ccall "query_new_5"
 --    cx_query_new_5 :: Op -> CString -> CString -> IO (Ptr CQuery)
@@ -172,6 +542,79 @@ foreign import ccall "query_get_description"
     cx_query_get_description :: Ptr CQuery -> IO CString
 
 
+-- Stem
+-- ---------------------------------------------------------
+
+data CStem
+
+foreign import ccall "stem_copy"
+    cx_stem_copy :: Ptr CStem -> IO (Ptr CStem)
+
+foreign import ccall "stem_new_with_language"
+    cx_stem_new_with_language :: CString -> IO (Ptr CStem)
+
+foreign import ccall "&stem_delete"
+    cx_stem_delete :: FunPtr (Ptr CStem -> IO ())
+
+foreign import ccall "stem_word"
+    cx_stem_word :: Ptr CStem -> CString -> IO CString
+
+foreign import ccall "stem_get_description"
+    cx_stem_get_description :: Ptr CStem -> IO CString
+
+foreign import ccall "stem_get_available_languages"
+    cx_stem_get_available_languages :: IO CString
+
+-- Stopper
+-- ---------------------------------------------------------
+
+data CStopper
+
+-- MSetIterator
+-- ---------------------------------------------------------
+
+data CMSetIterator
+
+foreign import ccall "msetiterator_new"
+    cx_msetiterator_new :: IO (Ptr CMSetIterator)
+
+foreign import ccall "msetiterator_copy"
+    cx_msetiterator_copy :: Ptr CMSetIterator -> IO (Ptr CMSetIterator)
+
+foreign import ccall "msetiterator_delete"
+    cx_msetiterator_delete :: Ptr CMSetIterator -> IO ()
+
+foreign import ccall "msetiterator_next"
+    cx_msetiterator_next :: Ptr CMSetIterator -> IO ()
+
+foreign import ccall "msetiterator_prev"
+    cx_msetiterator_prev :: Ptr CMSetIterator -> IO ()
+
+foreign import ccall "msetiterator_get"
+    cx_msetiterator_get :: Ptr CMSetIterator -> IO CUInt
+
+foreign import ccall "msetiterator_get_document"
+    cx_msetiterator_get_document :: Ptr CMSetIterator -> IO (Ptr CDocument)
+
+foreign import ccall "msetiterator_get_rank"
+    cx_msetiterator_get_rank :: Ptr CMSetIterator -> IO CUInt
+
+foreign import ccall "msetiterator_get_weight"
+    cx_msetiterator_get_weight :: Ptr CMSetIterator -> IO CUInt
+
+foreign import ccall "msetiterator_get_collapse_key"
+    cx_msetiterator_get_collapse_key :: Ptr CMSetIterator -> IO CString
+
+foreign import ccall "msetiterator_get_collapse_count"
+    cx_msetiterator_get_collapse_count :: Ptr CMSetIterator -> IO CUInt
+
+foreign import ccall "msetiterator_get_percent"
+    cx_msetiterator_get_percent :: Ptr CMSetIterator -> IO Int
+
+foreign import ccall "msetiterator_get_description"
+    cx_msetiterator_get_description :: Ptr CMSetIterator -> IO CString
+
+
 -- PositionIterator
 -- ---------------------------------------------------------
 
@@ -193,6 +636,46 @@ foreign import ccall "positioniterator_skip_to"
 foreign import ccall "positioniterator_get_description"
     cx_positioniterator_get_description :: Ptr CPositionIterator
                                         -> IO CString
+
+-- PostingIterator
+-- ---------------------------------------------------------
+
+data CPostingIterator
+
+foreign import ccall "postingiterator_new"
+    cx_postingiterator_new :: IO (Ptr CPostingIterator)
+
+foreign import ccall "postingiterator_copy"
+    cx_postingiterator_copy :: Ptr CPostingIterator -> IO (Ptr CPostingIterator)
+
+foreign import ccall "postingiterator_delete"
+    cx_postingiterator_delete :: Ptr CPostingIterator -> IO ()
+
+foreign import ccall "postingiterator_get"
+    cx_postingiterator_get :: Ptr CPostingIterator -> IO CUInt
+
+foreign import ccall "postingiterator_skip_to"
+    cx_postingiterator_skip_to
+        :: Ptr CPostingIterator
+        -> CUInt                 -- ^ document ID
+        -> IO ()
+
+foreign import ccall "postingiterator_get_doclength"
+    cx_postingiterator_get_doclength :: Ptr CPostingIterator -> IO CUInt
+
+foreign import ccall "postingiterator_get_wdf"
+    cx_postingiterator_get_wdf :: Ptr CPostingIterator -> IO CUInt
+
+foreign import ccall "postingiterator_positionlist_begin"
+    cx_postingiterator_positionlist_begin
+        :: Ptr CPostingIterator -> IO (Ptr CPositionIterator)
+
+foreign import ccall "postingiterator_positionlist_end"
+    cx_postingiterator_positionlist_end
+        :: Ptr CPostingIterator -> IO (Ptr CPositionIterator)
+
+foreign import ccall "postingiterator_get_description"
+    cx_postingiterator_get_description :: Ptr CPostingIterator -> IO CString
 
 -- TermIterator
 -- ---------------------------------------------------------

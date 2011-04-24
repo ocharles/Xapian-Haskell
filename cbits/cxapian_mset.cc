@@ -1,5 +1,5 @@
 #include <xapian.h>
-#include "cxapian_types.h"
+#include "cxapian_mset.h"
 
 mset *
 mset_new ()

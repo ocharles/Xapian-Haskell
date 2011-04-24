@@ -1,5 +1,5 @@
 #include <xapian.h>
-#include "cxapian_types.h"
+#include "cxapian_enquire.h"
 
 enquire *
 enquire_new (database *db)

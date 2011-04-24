@@ -99,12 +99,6 @@ unsigned int
 database_get_doclength_upper_bound (database *);
 
 unsigned int
-database_get_doclength_lower_bound (database *);
-
-unsigned int
-database_get_doclength_upper_bound (database *);
-
-unsigned int
 database_get_wdf_upper_bound (database *, const char *term);
 
 valueiterator *
@@ -158,26 +152,22 @@ database_get_uuid (database *);
 
 /* Writable database interface */
 
-/* include from 'xapian/database.h':
- *
- * DB_CREATE_OR_OPEN
- * DB_CREATE
- * DB_CREATE_OR_OVERWRITE
- * DB_OPEN
- *
- */
+int DB_CREATE_OR_OPEN () { return (int)Xapian::DB_CREATE_OR_OPEN; };
+int DB_CREATE         () { return (int)Xapian::DB_CREATE; };
+int DB_CREATE_OR_OVERWRITE () { return (int)Xapian::DB_CREATE_OR_OVERWRITE; };
+int DB_OPEN           () { return (int)Xapian::DB_OPEN; };
 
 database *
-database_new_writable ();
+database_writable_new ();
 
 database *
-database_new_writable_from_path (const char *path, int action);
+database_writable_new_from_path (const char *path, int action);
 
 database *
-database_copy_writable (database *other);
+database_writable_copy (database *other);
 
 void
-database_delete_writable (database *);
+database_writable_delete (database *);
 
 void
 database_commit (database *);

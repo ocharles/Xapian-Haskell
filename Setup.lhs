@@ -60,19 +60,14 @@ Compile each source and put the resulting object files into the build dir
 >         when be_verbose $ putStrLn command
 >         system command
 
-Pass the list of object files to the parameters for the Haskell compiler.
+Pass the list of object files to the linker.
 
 >     let objects = map objectOf cc_sources
->     let lib' =
->          do lib <- library desc
->             let bInfo'   = libBuildInfo lib
->                 ldoptions' = ldOptions bInfo'
->                 bInfo''  = bInfo' {ldOptions = ldoptions' ++ objects}
->             return $ lib{ libBuildInfo = bInfo'' }
->     let desc' = desc { library = lib' }
+>     let bFlags' = bFlags{ buildProgramArgs =
+>             [("ld",objects)] }
 
 Since we now prepared all the object files, we can proceed with the normal
 building.
 
->     buildHook simpleUserHooks desc' bInfo hooks bFlags
+>     buildHook simpleUserHooks desc bInfo hooks bFlags'
 >     return ()

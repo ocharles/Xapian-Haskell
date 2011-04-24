@@ -29,6 +29,20 @@ extra-source-files: examples/QuickStartIndex.hs
                     cbits/cxapian_types.h
                     cbits/cxapian_valueiterator.h
                     cbits/Makefile
+                    cbits/cxapian.cc
+                    cbits/cxapian_database.cc
+                    cbits/cxapian_document.cc
+                    cbits/cxapian_enquire.cc
+                    cbits/cxapian_mset.cc
+                    cbits/cxapian_msetiterator.cc
+                    cbits/cxapian_positioniterator.cc
+                    cbits/cxapian_postingiterator.cc
+                    cbits/cxapian_query.cc
+                    cbits/cxapian_stem.cc
+                    cbits/cxapian_stopper.cc
+                    cbits/cxapian_termgenerator.cc
+                    cbits/cxapian_termiterator.cc
+                    cbits/cxapian_valueiterator.cc
 
 source-repository HEAD
   type: git
@@ -36,28 +50,29 @@ source-repository HEAD
 
 library
   hs-source-dirs:     src/
-  exposed-modules:    Search.Xapian.Database,
-                      Search.Xapian.Document,
-                      Search.Xapian.Types,
-                      Search.Xapian.Stem,
-                      Search.Xapian.Query,
-                      Search.Xapian.Query.Combinators,
-                      Search.Xapian
-                      Search.Xapian.Internal.FFI
-  other-modules:      Search.Xapian.Internal.Types,
-                      Search.Xapian.Internal.Utils,
-                      Search.Xapian.FFI
+  exposed-modules:    Search.Xapian.Internal.FFI
+                      --Search.Xapian.Database,
+                      --Search.Xapian.Document,
+                      --Search.Xapian.Types,
+                      --Search.Xapian.Stem,
+                      --Search.Xapian.Query,
+                      --Search.Xapian.Query.Combinators,
+                      --Search.Xapian
+                      --Search.Xapian.Internal.FFI
+--  other-modules:      Search.Xapian.Internal.Types,
+--                      Search.Xapian.Internal.Utils,
+--                      Search.Xapian.FFI
   build-depends:      base,
-                      blaze-builder,
+                      --blaze-builder,
                       bytestring,
-                      cereal,
+                      --cereal,
                       containers
   ghc-options:          -Wall -funbox-strict-fields -O
   ghc-prof-options:     -Wall -funbox-strict-fields -O -prof -auto-all
   extensions:         EmptyDataDecls,
                       ForeignFunctionInterface,
                       TypeSynonymInstances
-  c-sources:          cbits/cxapian.cc
+  x-cc-sources:       cbits/cxapian.cc
                       cbits/cxapian_database.cc
                       cbits/cxapian_document.cc
                       cbits/cxapian_enquire.cc
@@ -71,5 +86,6 @@ library
                       cbits/cxapian_termgenerator.cc
                       cbits/cxapian_termiterator.cc
                       cbits/cxapian_valueiterator.cc
-  cc-options:         -Wall -c
+  x-cc-options:       -Wall -c
+  x-cc-compiler:      c++
   extra-libraries:    xapian

@@ -51,21 +51,20 @@ source-repository HEAD
 library
   hs-source-dirs:     src/
   exposed-modules:    Search.Xapian.Internal.FFI
-                      --Search.Xapian.Database,
-                      --Search.Xapian.Document,
-                      --Search.Xapian.Types,
-                      --Search.Xapian.Stem,
-                      --Search.Xapian.Query,
-                      --Search.Xapian.Query.Combinators,
-                      --Search.Xapian
-                      --Search.Xapian.Internal.FFI
---  other-modules:      Search.Xapian.Internal.Types,
---                      Search.Xapian.Internal.Utils,
---                      Search.Xapian.FFI
+                      Search.Xapian.Database,
+                      Search.Xapian.Document,
+                      Search.Xapian.Types,
+                      Search.Xapian.Stem,
+                      Search.Xapian.Query,
+                      Search.Xapian.Query.Combinators,
+                      Search.Xapian
+  other-modules:      Search.Xapian.Internal.Types,
+                      Search.Xapian.Internal.Utils,
+                      Search.Xapian.FFI
   build-depends:      base,
-                      --blaze-builder,
+                      blaze-builder,
                       bytestring,
-                      --cereal,
+                      cereal,
                       containers
   ghc-options:          -Wall -funbox-strict-fields -O
   ghc-prof-options:     -Wall -funbox-strict-fields -O -prof -auto-all
@@ -87,5 +86,6 @@ library
                       cbits/cxapian_termiterator.cc
                       cbits/cxapian_valueiterator.cc
   x-cc-options:       -Wall -c
+  x-cc-includeDirs:   cbits/
   x-cc-compiler:      c++
   extra-libraries:    xapian

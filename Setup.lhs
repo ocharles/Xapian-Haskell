@@ -2,9 +2,10 @@
 > import Distribution.Simple.Setup
 > import Distribution.Simple.LocalBuildInfo
 > import Distribution.PackageDescription
+> import Distribution.Verbosity as Verbosity
 
 > import Control.Arrow ((***))
-> import Control.Monad (forM_)
+> import Control.Monad (forM_, when)
 > import Data.Maybe (fromMaybe)
 > import qualified Data.List as List
 > import System.FilePath (joinPath, replaceExtension, takeBaseName)
@@ -28,7 +29,7 @@ package description 'desc'
 
 >  do let ( cc_sources
 >           , cc_compiler
->           , cc_options ) = fromMaybe ([], "/usr/bin/c++", "-Wall -c") $
+>           , cc_options) = fromMaybe ([], "/usr/bin/c++", "-Wall -c") $
 >          do lib <- library desc
 >             let fields = customFieldsBI $ libBuildInfo lib
 >             src <- fmap words $ List.lookup "x-cc-sources" fields
@@ -41,24 +42,32 @@ Get the build directory or create it
 >     let builddir = buildDir bInfo
 >     createDirectoryIfMissing True builddir
 
+Keep the user informed if he wants to.
+
+>     let be_verbose = case flagToMaybe $ buildVerbosity bFlags of
+>                           Just v  -> v > Verbosity.normal
+>                           Nothing -> False
+
 Compile each source and put the resulting object files into the build dir
 
->     let object_of source = joinPath [builddir, replaceExtension (takeBaseName source) "o"]
+>     let objectOf source = joinPath [builddir, replaceExtension (takeBaseName source) "o"]
+>
+>     putStrLn "Compiling C++ sources"
 >
 >     forM_ cc_sources $ \source ->
 >      do let command = unwords $ [ cc_compiler, cc_options, source, "-o"
->                                 , object_of source]
->         putStrLn command
+>                                 , objectOf source]
+>         when be_verbose $ putStrLn command
 >         system command
 
 Pass the list of object files to the parameters for the Haskell compiler.
 
->     let objects = map object_of cc_sources
+>     let objects = map objectOf cc_sources
 >     let lib' =
 >          do lib <- library desc
 >             let bInfo'   = libBuildInfo lib
->                 options' = options bInfo'
->                 bInfo''  = bInfo' {options = map (id *** (++ objects)) options'}
+>                 ldoptions' = ldOptions bInfo'
+>                 bInfo''  = bInfo' {ldOptions = ldoptions' ++ objects}
 >             return $ lib{ libBuildInfo = bInfo'' }
 >     let desc' = desc { library = lib' }
 
@@ -66,3 +75,4 @@ Since we now prepared all the object files, we can proceed with the normal
 building.
 
 >     buildHook simpleUserHooks desc' bInfo hooks bFlags
+>     return ()

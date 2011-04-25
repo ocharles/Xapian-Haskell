@@ -57,8 +57,7 @@ library
                       Search.Xapian.Query.Combinators,
                       Search.Xapian
   other-modules:      Search.Xapian.Internal.Types,
-                      Search.Xapian.Internal.Utils,
-                      Search.Xapian.FFI
+                      Search.Xapian.Internal.Utils
   build-depends:      base,
                       blaze-builder,
                       bytestring,

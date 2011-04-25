@@ -69,21 +69,21 @@ data Query
     = MatchNothing        -- ^ does not match anything
     | MatchAll            -- ^ matches everything
     | Atom ByteString
-    | Parsed Stemmer ByteString -- ^ parsed natively by Xapian
-    | Nullary OpNullary
-    | Unary  OpUnary   Query
-    | Binary OpBinary  Query  Query
-    | Multi  OpMulti  [Query]
+    | Parsed  {-# UNPACK #-} Stemmer ByteString -- ^ parsed natively by Xapian
+    | Nullary {-# UNPACK #-} OpNullary
+    | Unary   {-# UNPACK #-} OpUnary   Query
+    | Binary  {-# UNPACK #-} OpBinary  Query  Query
+    | Multi   {-# UNPACK #-} OpMulti  [Query]
     deriving (Show)
 
 data OpNullary
-    = OpValueGE ValueNumber Value
-    | OpValueLE ValueNumber Value
-    | OpValueRange ValueNumber [Value]
+    = OpValueGE {-# UNPACK #-} ValueNumber Value
+    | OpValueLE {-# UNPACK #-} ValueNumber Value
+    | OpValueRange {-# UNPACK #-} ValueNumber [Value]
     deriving (Show)
 
 data OpUnary
-    = OpScaleWeight Double -- Xapian::InvalidArgumentError if scale is negative
+    = OpScaleWeight {-# UNPACK #-} Double -- Xapian::InvalidArgumentError if scale is negative
     deriving (Show)
 
 data OpBinary
@@ -99,7 +99,7 @@ data OpBinary
 
 data OpMulti
     = OpSynonym
-    | OpPhrase Int
+    | OpPhrase {-# UNPACK #-} Int
     deriving (Show)
 
 

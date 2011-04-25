@@ -12,6 +12,9 @@ enquire_new (database *db);
 //enquire *
 //enquire_copy (enquire *other);
 
+void
+enquire_delete (enquire *);
+
 void // qlen defaults to 0
 enquire_set_query (enquire *self, query *query, unsigned int qlen);
 

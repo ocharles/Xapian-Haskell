@@ -16,6 +16,7 @@ class Manageable a where
 -- ---------------------------------------------------------
 
 data CDatabase
+type DatabasePtr = ForeignPtr CDatabase
 
 instance Manageable CDatabase where
     manage = newForeignPtr cx_database_delete
@@ -173,6 +174,10 @@ foreign import ccall "database_get_uuid"
 -- ---------------------------------------------------------
 
 type DbAction = Int
+newtype WritableDatabasePtr = WritableDatabasePtr (DatabasePtr)
+
+-- FIXME: should be instance of Writable
+manageWritableDatabase = fmap WritableDatabasePtr . manage
 
 foreign import ccall "DB_CREATE_OR_OPEN"
   cx_database_DB_CREATE_OR_OPEN :: DbAction
@@ -267,12 +272,13 @@ foreign import ccall "database_set_metadata"
         -> IO ()
 
 foreign import ccall "database_writable_get_description"
-    cx_database_writable_get_description :: Ptr CDatabase -> IO (CString)
+    cx_database_writable_get_description :: Ptr CDatabase -> IO CString
 
 -- Document
 -- ---------------------------------------------------------
 
 data CDocument
+type DocumentPtr = ForeignPtr CDocument
 
 instance Manageable CDocument where
     manage = newForeignPtr cx_document_delete
@@ -365,8 +371,14 @@ foreign import ccall "document_get_description"
 
 data CEnquire
 
-foreign import ccall "enquire.h enquire_new"
+instance Manageable CEnquire where
+    manage = newForeignPtr cx_enquire_delete
+
+foreign import ccall "enquire_new"
     cx_enquire_new :: Ptr CDatabase -> IO (Ptr CEnquire)
+
+foreign import ccall "&enquire_delete"
+    cx_enquire_delete :: FunPtr (Ptr CEnquire -> IO ())
 
 foreign import ccall "enquire_set_query"
     cx_enquire_set_query
@@ -392,8 +404,8 @@ foreign import ccall "mset_new"
 foreign import ccall "mset_copy"
     cx_mset_copy :: Ptr CMSet -> IO (Ptr CMSet)
 
-foreign import ccall "mset_delete"
-    cx_mset_delete :: Ptr CMSet -> IO ()
+foreign import ccall "&mset_delete"
+    cx_mset_delete :: FunPtr (Ptr CMSet -> IO ())
 
 foreign import ccall "mset_fetch_all"
     cx_mset_fetch_all :: Ptr CMSet -> IO ()
@@ -560,6 +572,9 @@ foreign import ccall "query_get_description"
 
 data CStem
 
+instance Manageable CStem where
+    manage = newForeignPtr cx_stem_delete
+
 foreign import ccall "stem_copy"
     cx_stem_copy :: Ptr CStem -> IO (Ptr CStem)
 
@@ -588,14 +603,17 @@ data CStopper
 
 data CMSetIterator
 
+instance Manageable CMSetIterator where
+    manage = newForeignPtr cx_msetiterator_delete
+
 foreign import ccall "msetiterator_new"
     cx_msetiterator_new :: IO (Ptr CMSetIterator)
 
 foreign import ccall "msetiterator_copy"
     cx_msetiterator_copy :: Ptr CMSetIterator -> IO (Ptr CMSetIterator)
 
-foreign import ccall "msetiterator_delete"
-    cx_msetiterator_delete :: Ptr CMSetIterator -> IO ()
+foreign import ccall "&msetiterator_delete"
+    cx_msetiterator_delete :: FunPtr (Ptr CMSetIterator -> IO ())
 
 foreign import ccall "msetiterator_next"
     cx_msetiterator_next :: Ptr CMSetIterator -> IO ()
@@ -636,6 +654,9 @@ foreign import ccall "msetiterator_get_description"
 
 data CPositionIterator
 
+instance Manageable CPositionIterator where
+    manage = newForeignPtr cx_positioniterator_delete
+
 foreign import ccall "positioniterator_new"
     cx_positioniterator_new :: IO (Ptr CPositionIterator)
 
@@ -643,8 +664,8 @@ foreign import ccall "positioniterator_copy"
     cx_positioniterator_copy :: Ptr CPositionIterator
                              -> IO (Ptr CPositionIterator)
 
-foreign import ccall "positioniterator_delete"
-    cx_positioniterator_delete :: Ptr CPositionIterator -> IO ()
+foreign import ccall "&positioniterator_delete"
+    cx_positioniterator_delete :: FunPtr (Ptr CPositionIterator -> IO ())
 
 foreign import ccall "positioniterator_skip_to"
     cx_positioniterator_skip_to :: Ptr CPositionIterator -> CUInt -> IO ()
@@ -658,14 +679,17 @@ foreign import ccall "positioniterator_get_description"
 
 data CPostingIterator
 
+instance Manageable CPostingIterator where
+    manage = newForeignPtr cx_postingiterator_delete
+
 foreign import ccall "postingiterator_new"
     cx_postingiterator_new :: IO (Ptr CPostingIterator)
 
 foreign import ccall "postingiterator_copy"
     cx_postingiterator_copy :: Ptr CPostingIterator -> IO (Ptr CPostingIterator)
 
-foreign import ccall "postingiterator_delete"
-    cx_postingiterator_delete :: Ptr CPostingIterator -> IO ()
+foreign import ccall "&postingiterator_delete"
+    cx_postingiterator_delete :: FunPtr (Ptr CPostingIterator -> IO ())
 
 foreign import ccall "postingiterator_get"
     cx_postingiterator_get :: Ptr CPostingIterator -> IO CUInt
@@ -698,14 +722,17 @@ foreign import ccall "postingiterator_get_description"
 
 data CTermIterator
 
+instance Manageable CTermIterator where
+    manage = newForeignPtr cx_termiterator_delete
+
 foreign import ccall "termiterator_new"
     cx_termiterator_new :: IO (Ptr CTermIterator)
 
 foreign import ccall "termiterator_copy"
     cx_termiterator_copy :: Ptr CTermIterator -> IO (Ptr CTermIterator)
 
-foreign import ccall "termiterator_delete"
-    cx_termiterator_delete :: Ptr CTermIterator -> IO ()
+foreign import ccall "&termiterator_delete"
+    cx_termiterator_delete :: FunPtr (Ptr CTermIterator -> IO ())
 
 foreign import ccall "termiterator_next"
     cx_termiterator_next :: Ptr CTermIterator -> IO ()
@@ -742,14 +769,17 @@ foreign import ccall "termiterator_positionlist_end"
 
 data CValueIterator
 
+instance Manageable CValueIterator where
+    manage = newForeignPtr cx_valueiterator_delete
+
 foreign import ccall "valueiterator_new"
     cx_valueiterator_new :: IO (Ptr CValueIterator)
 
 foreign import ccall "valueiterator_copy"
     cx_valueiterator_copy :: Ptr CValueIterator -> IO (Ptr CValueIterator)
 
-foreign import ccall "valueiterator_delete"
-    cx_valueiterator_delete :: Ptr CValueIterator -> IO ()
+foreign import ccall "&valueiterator_delete"
+    cx_valueiterator_delete :: FunPtr (Ptr CValueIterator -> IO ())
 
 foreign import ccall "valueiterator_get"
     cx_valueiterator_get :: Ptr CValueIterator -> IO CString

@@ -10,6 +10,13 @@ enquire_new (database *db)
 }
 
 void
+enquire_delete (enquire *self)
+{
+    delete self->get;
+    delete self;
+}
+
+void
 enquire_set_query (enquire *self, query *query, unsigned int qlen)
 {
     self->get->set_query(*query->get, qlen);

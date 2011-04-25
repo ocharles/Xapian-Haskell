@@ -59,8 +59,6 @@ module Search.Xapian.Types
 import Data.Either
 import Data.ByteString (ByteString)
 import qualified Data.ByteString as BS
-import Data.Map (Map)
-import Data.IntMap (IntMap)
 import Data.Serialize
 import Data.Word
 import Search.Xapian.Internal.Types
@@ -118,56 +116,3 @@ data QueryRange = QueryRange
     { rangeOffset :: Int
     , rangeSize :: Int
     } deriving (Show)
-
--- * Document related types
--- --------------------------------------------------------------------
-
-class Ord fields => Prefixable fields where
-    getPrefix   :: fields -> ByteString
-    stripPrefix :: fields -> ByteString -> Maybe ByteString
-
-data Fieldless = Fieldless deriving (Show, Ord, Eq)
-
--- | This instance allows to combine fields
---   (Caution: prefixes may collide)
-instance (Prefixable a, Prefixable b) => Prefixable (Either a b) where
-  getPrefix (Left a) = getPrefix a
-  getPrefix (Right b) = getPrefix b
-  stripPrefix (Left a) = stripPrefix a
-  stripPrefix (Right b) = stripPrefix b
-
-instance Prefixable Fieldless where
-    getPrefix   Fieldless = BS.empty
-    stripPrefix Fieldless = const Nothing
-
--- | A @Document@
-data Document fields dat = Document
-    { documentId    :: Maybe DocumentId       -- ^ might have an @DocumentId@
-                                              --   given by the database
-    , documentStem  :: Maybe Stemmer          -- ^ might use a @Stemmer@
-    , documentValues :: IntMap Value          -- ^ might have @Values@
-                                              --   (metadata) associated
-                                              --   with it in order to
-                                              --   refine queries
-    , documentTerms :: [Term]                 -- ^ has raw @Term@s associated
-                                              --   with it
-    , documentFields :: Map fields [ByteString]-- ^ has prefixed @Term@s,
-                                               --   known as fields
-    , documentData  :: dat    -- ^ contains data representing or pointing to
-                              --   the original document
-    } deriving (Show)
-
-type SimpleDocument = Document Fieldless
-
--- | doc_id == 0 is invalid; what is the range of
-newtype DocumentId = DocId { getDocId :: Word32 }
-    deriving (Show, Eq)
-
-type Pos  = Word32
-
-
-data Term = Term    ByteString     -- ^ a single term
-          | Posting Pos ByteString -- ^ a term with information
-                                   --   about its position
-          | RawText ByteString     -- ^ a text to be parsed as terms
-  deriving (Eq, Show)

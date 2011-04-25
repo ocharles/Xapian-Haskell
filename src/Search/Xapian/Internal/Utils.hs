@@ -17,6 +17,10 @@ module Search.Xapian.Internal.Utils
      , createStemmer
      , stemWord
      , stemToDocument
+
+       -- * Debug
+     , nullify
+     , unnullify
      ) where
 
 import Foreign
@@ -26,6 +30,8 @@ import Data.Monoid
 import qualified Data.ByteString as BS
 import Data.ByteString.Char8 (pack, ByteString, packCString, useAsCString)
 import Data.Serialize
+
+import System.IO.Unsafe (unsafeInterleaveIO)
 
 import Search.Xapian.Internal.Types
 import Search.Xapian.Types
@@ -115,32 +121,20 @@ addValue docFPtr valno val =
     withForeignPtr docFPtr $ \docPtr ->
     cx_document_add_value docPtr (fromIntegral valno) cval
 
+-- | FIXME wrong implementation
 getDocumentTerms :: DocumentPtr -> IO [Term]
-getDocumentTerms docFPtr =
-    withForeignPtr docFPtr $ \docPtr ->
-     do begin <- cx_document_termlist_begin docPtr
-        end   <- cx_document_termlist_end docPtr
-        cterms <- collectTerms begin end
-        mapM (fmap Term . BS.packCString) cterms
+getDocumentTerms docFPtr = undefined
 
 setDocumentData :: Serialize dat
                 => DocumentPtr
                 -> dat
                 -> IO ()
-setDocumentData docFPtr docData =
-    withForeignPtr docFPtr $ \docPtr ->
-    BS.useAsCString (unnullify $ encode docData) $ \encodedData ->
-        cx_document_set_data docPtr encodedData
+setDocumentData docFPtr docData = undefined
 
 getDocumentData :: Serialize dat
                 => DocumentPtr
                 -> IO (Either Error dat)
-getDocumentData docFPtr =
-    withForeignPtr docFPtr $ \docPtr ->
-     do dat <- BS.packCString =<< cx_document_get_data docPtr
-        return $ case decode $ nullify dat of
-                      Left msg   -> Left $ Error Nothing msg
-                      Right dat' -> Right dat'
+getDocumentData docFPtr = undefined
 
 -- * handling NULL values
 -- because cstrings can't contain any NULL value, we have to store 7 bytes of

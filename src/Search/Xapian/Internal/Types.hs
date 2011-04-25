@@ -16,6 +16,14 @@ module Search.Xapian.Internal.Types
        , DocumentPtr
        , ValueNumber
        , Value
+       , Document (..)
+       , SimpleDocument
+       , DocumentDiff (..)
+       , Prefixable (..)
+       , Fieldless
+       , DocumentId (..)
+       , Term (..)
+       , Pos
 
        , StemPtr
        , Stemmer (..)
@@ -23,7 +31,11 @@ module Search.Xapian.Internal.Types
 
 import Foreign
 import Foreign.C.Types
-import Data.ByteString.Char8 (ByteString)
+import Data.ByteString (ByteString)
+import qualified Data.ByteString as BS
+import Data.Map (Map)
+import Data.IntMap (IntMap)
+import Data.Sequence (Seq)
 
 import Search.Xapian.Internal.FFI
 
@@ -67,11 +79,11 @@ data Query
     = MatchNothing        -- ^ does not match anything
     | MatchAll            -- ^ matches everything
     | Atom ByteString
-    | Parsed  {-# UNPACK #-} !Stemmer ByteString -- ^ parsed natively by Xapian
-    | Nullary {-# UNPACK #-} !OpNullary
-    | Unary   {-# UNPACK #-} !OpUnary   Query
-    | Binary  {-# UNPACK #-} !OpBinary  Query  Query
-    | Multi   {-# UNPACK #-} !OpMulti  [Query]
+    | Parsed  Stemmer ByteString -- ^ parsed natively by Xapian
+    | Nullary OpNullary
+    | Unary   OpUnary   Query
+    | Binary  OpBinary  Query  Query
+    | Multi   OpMulti  [Query]
     deriving (Show)
 
 data OpNullary
@@ -107,6 +119,59 @@ data OpMulti
 -- * document fields
 type ValueNumber = CUInt
 type Value       = ByteString
+
+class Ord fields => Prefixable fields where
+    getPrefix   :: fields -> ByteString
+    stripPrefix :: fields -> ByteString -> Maybe ByteString
+
+data Fieldless = Fieldless deriving (Show, Ord, Eq)
+
+instance Prefixable Fieldless where
+    getPrefix   Fieldless = BS.empty
+    stripPrefix Fieldless = const Nothing
+
+type SimpleDocument = Document Fieldless
+
+-- | doc_id == 0 is invalid; what is the range of
+newtype DocumentId = DocId { getDocId :: Word32 }
+    deriving (Show, Eq)
+
+-- | A @Document@
+data Document fields dat = Document
+    { documentPtr   :: Maybe DocumentPtr            
+    , documentId    :: Maybe DocumentId       
+    , documentLazyStem  :: Maybe Stemmer      -- ^ the stemmer is being committed as well
+    , documentLazyValues :: IntMap Value          
+    , documentLazyTerms :: [Term]                 
+    , documentLazyFields :: Map fields [ByteString]
+    , documentLazyData  :: dat
+    , documentDiffs :: Seq (DocumentDiff fields dat)
+    } deriving (Show)
+
+-- FIXME: unpack stuff to save space
+data DocumentDiff fields dat
+    = AddTerm ByteString {-# UNPACK #-} !Int
+    | DelTerm ByteString {-# UNPACK #-} !Int
+    | AddTerms [(ByteString, Int)]
+    | DelTerms [(ByteString, Int)]
+    | AddPosting ByteString {-# UNPACK #-} !Int {-# UNPACK #-} !Int
+    | DelPosting ByteString {-# UNPACK #-} !Int {-# UNPACK #-} !Int
+    | AddPostings [(ByteString, Int, Int)]
+    | DelPostings [(ByteString, Int, Int)]
+    | AddValue {-# UNPACK #-} !Int ByteString
+    | DelValue {-# UNPACK #-} !Int
+    | SetData dat
+    | ClearTerms
+    | ClearValues
+    deriving (Show)
+
+type Pos  = Word32
+
+
+data Term = Term    ByteString [Pos] -- ^ a single term w/ or wo/
+                                     --   positional information
+          | RawText ByteString       -- ^ a text to be parsed as terms
+  deriving (Eq, Show)
 
 -- * Stemming related types
 -- --------------------------------------------------------------------

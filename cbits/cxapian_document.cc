@@ -100,7 +100,7 @@ termiterator *
 document_termlist_begin (document *doc)
 {
     termiterator *termit = new termiterator();
-    *termit->iter = doc->get->termlist_begin();
+    termit->iter = new Xapian::TermIterator(doc->get->termlist_begin());
     return termit;
 }
 
@@ -108,7 +108,7 @@ termiterator *
 document_termlist_end (document *doc)
 {
     termiterator *termit = new termiterator();
-    *termit->iter = doc->get->termlist_end();
+    termit->iter = new Xapian::TermIterator(doc->get->termlist_end());
     return termit;
 }
 

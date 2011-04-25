@@ -49,7 +49,7 @@ instance ReadableDatabase Database where
                 Right dat ->
                  do terms <- getDocumentTerms docFPtr
                     return . Right $
-                        (document dat){documentTerms = terms
+                        (document dat){documentLazyTerms = terms
                                       , documentId = Just docId}
     where
       handleError dbPtr action =
@@ -119,42 +119,7 @@ addDocument :: (Serialize dat, Prefixable fields)
             => WritableDatabase fields dat
             -> Document fields dat
             -> IO DocumentId
-addDocument (WritableDatabase (Database db))
-            doc@Document{documentStem = maybeStemmer} =
- do docFPtr <- newDocumentPtr 
-    withForeignPtr db $ \dbPtr ->
-     do stemFPtr <- sequenceA $ createStemmer <$> maybeStemmer
-        add_terms docFPtr stemFPtr
-        add_values docFPtr (documentValues doc)
-        add_fields docFPtr (documentFields doc)
-        setDocumentData docFPtr (documentData doc)
-        withForeignPtr docFPtr $ \docPtr ->
-            DocId . fromIntegral <$> cx_database_add_document dbPtr docPtr
-  where
-    stem maybeStemFPtr word =
-      case maybeStemFPtr of
-           Just stemFPtr -> stemWord stemFPtr word
-           Nothing -> return word
-
-    add_terms docFPtr stemFPtr =
-     do forM_ (documentTerms doc) $ \term ->
-          case term of
-               Term        term' -> stem stemFPtr term' >>= addTerm' docFPtr
-               Posting pos term' -> stem stemFPtr term' >>= (\term'' ->
-                                    addPosting' docFPtr term'' pos)
-               RawText bs        ->
-                  case maybeStemmer of
-                       Just stemmer -> stemToDocument stemmer docFPtr bs
-                       Nothing      -> mapM_ (addTerm' docFPtr) (words bs)
-
-    add_values docFPtr values =
-        let values' = map (fromIntegral *** id) $ IntMap.toList values
-        in  mapM_ (uncurry $ addValue docFPtr) values'
-
-    add_fields docFPtr fields =
-        forM_ (Map.toList fields) $ \(key, values) ->
-            forM_ values $ \value ->
-                addTerm' docFPtr (getPrefix key `BS.append` value)
+addDocument = undefined
 
 
                 

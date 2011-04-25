@@ -191,14 +191,14 @@ stemToDocument :: Stemmer      -- ^ The stemming algorithm to use
 stemToDocument stemmer document text =
   undefined  -- need to write the FFI to Xapian::TermGenerator first
 
-stemWord :: StemmerPtr -> ByteString -> IO ByteString
+stemWord :: StemPtr -> ByteString -> IO ByteString
 stemWord stemFPtr word =
     withForeignPtr stemFPtr $ \stemPtr ->
     useAsCString word $ \cword ->
     cx_stem_word stemPtr cword >>= packCString
 
 
-createStemmer :: Stemmer -> IO StemmerPtr
+createStemmer :: Stemmer -> IO StemPtr
 createStemmer stemmer =
     let lang = case stemmer of
                     Danish  -> "danish"

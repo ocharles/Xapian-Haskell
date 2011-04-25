@@ -17,7 +17,7 @@ module Search.Xapian.Internal.Types
        , ValueNumber
        , Value
 
-       , StemmerPtr
+       , StemPtr
        , Stemmer (..)
        ) where
 
@@ -61,29 +61,27 @@ newtype WritableDatabase fields dat = WritableDatabase (Database fields dat)
 -- * Query related types
 -- --------------------------------------------------------------------
 
-type QueryPtr = ForeignPtr CEnquire
-
 -- Internal Representation of Queries
 
 data Query
     = MatchNothing        -- ^ does not match anything
     | MatchAll            -- ^ matches everything
     | Atom ByteString
-    | Parsed  {-# UNPACK #-} Stemmer ByteString -- ^ parsed natively by Xapian
-    | Nullary {-# UNPACK #-} OpNullary
-    | Unary   {-# UNPACK #-} OpUnary   Query
-    | Binary  {-# UNPACK #-} OpBinary  Query  Query
-    | Multi   {-# UNPACK #-} OpMulti  [Query]
+    | Parsed  {-# UNPACK #-} !Stemmer ByteString -- ^ parsed natively by Xapian
+    | Nullary {-# UNPACK #-} !OpNullary
+    | Unary   {-# UNPACK #-} !OpUnary   Query
+    | Binary  {-# UNPACK #-} !OpBinary  Query  Query
+    | Multi   {-# UNPACK #-} !OpMulti  [Query]
     deriving (Show)
 
 data OpNullary
-    = OpValueGE {-# UNPACK #-} ValueNumber Value
-    | OpValueLE {-# UNPACK #-} ValueNumber Value
-    | OpValueRange {-# UNPACK #-} ValueNumber [Value]
+    = OpValueGE {-# UNPACK #-} !ValueNumber Value
+    | OpValueLE {-# UNPACK #-} !ValueNumber Value
+    | OpValueRange {-# UNPACK #-} !ValueNumber [Value]
     deriving (Show)
 
 data OpUnary
-    = OpScaleWeight {-# UNPACK #-} Double -- Xapian::InvalidArgumentError if scale is negative
+    = OpScaleWeight {-# UNPACK #-} !Double -- Xapian::InvalidArgumentError if scale is negative
     deriving (Show)
 
 data OpBinary
@@ -99,14 +97,12 @@ data OpBinary
 
 data OpMulti
     = OpSynonym
-    | OpPhrase {-# UNPACK #-} Int
+    | OpPhrase {-# UNPACK #-} !Int
     deriving (Show)
 
 
 -- * Document related types
 -- --------------------------------------------------------------------
-
-type DocumentPtr = ForeignPtr CDocument
 
 -- * document fields
 type ValueNumber = CUInt
@@ -114,8 +110,6 @@ type Value       = ByteString
 
 -- * Stemming related types
 -- --------------------------------------------------------------------
-
-type StemmerPtr = ForeignPtr CStem
 
 data Stemmer = Danish
              | Dutch

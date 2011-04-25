@@ -370,6 +370,7 @@ foreign import ccall "document_get_description"
 -- ---------------------------------------------------------
 
 data CEnquire
+type EnquirePtr = ForeignPtr CEnquire
 
 instance Manageable CEnquire where
     manage = newForeignPtr cx_enquire_delete
@@ -490,6 +491,7 @@ foreign import ccall "mset_get_description"
 -- ---------------------------------------------------------
 
 data CQuery
+type QueryPtr = ForeignPtr CQuery
 type Op = Int
 
 instance Manageable CQuery where
@@ -571,6 +573,7 @@ foreign import ccall "query_get_description"
 -- ---------------------------------------------------------
 
 data CStem
+type StemPtr = ForeignPtr CStem
 
 instance Manageable CStem where
     manage = newForeignPtr cx_stem_delete

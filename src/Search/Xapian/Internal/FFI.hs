@@ -17,6 +17,9 @@ class Manageable a where
 
 data CDatabase
 
+instance Manageable CDatabase where
+    manage = newForeignPtr cx_database_delete
+
 -- Read-only databases
 
 foreign import ccall "database_new"
@@ -195,8 +198,8 @@ foreign import ccall "database_writable_new_from_path"
 foreign import ccall "database_writable_copy"
     cx_database_writable_copy :: Ptr CDatabase -> IO (Ptr CDatabase)
 
-foreign import ccall "database_writable_delete"
-    cx_database_writable_delete :: Ptr CDatabase -> IO ()
+foreign import ccall "&database_writable_delete"
+    cx_database_writable_delete :: FunPtr (Ptr CDatabase -> IO ())
 
 foreign import ccall "database_commit"
     cx_database_commit :: Ptr CDatabase -> IO ()
@@ -214,7 +217,7 @@ foreign import ccall "database_cancel_transaction"
     cx_database_cancel_transaction :: Ptr CDatabase -> IO ()
 
 foreign import ccall "database_add_document"
-    cx_database_add_document :: Ptr CDatabase -> Ptr CDocument -> IO ()
+    cx_database_add_document :: Ptr CDatabase -> Ptr CDocument -> IO CUInt
 
 foreign import ccall "database_delete_document_by_id"
     cx_database_delete_document_by_id :: Ptr CDatabase -> CUInt -> IO ()
@@ -271,14 +274,17 @@ foreign import ccall "database_writable_get_description"
 
 data CDocument
 
+instance Manageable CDocument where
+    manage = newForeignPtr cx_document_delete
+
 foreign import ccall "document_new"
     cx_document_new :: IO (Ptr CDocument)
 
 foreign import ccall "document_copy"
     cx_document_copy :: Ptr CDocument -> IO (Ptr CDocument)
 
-foreign import ccall "document_delete"
-    cx_document_delete :: Ptr CDocument -> IO ()
+foreign import ccall "&document_delete"
+    cx_document_delete :: FunPtr (Ptr CDocument -> IO ())
 
 foreign import ccall "document_get_value"
     cx_document_get_value :: Ptr CDocument -> IO CString
@@ -363,13 +369,17 @@ foreign import ccall "enquire.h enquire_new"
     cx_enquire_new :: Ptr CDatabase -> IO (Ptr CEnquire)
 
 foreign import ccall "enquire_set_query"
-    cx_enquire_set_query :: Ptr CEnquire -> IO ()
+    cx_enquire_set_query
+        :: Ptr CEnquire
+        -> Ptr CQuery
+        -> CUInt          -- ^ query length
+        -> IO ()
 
 foreign import ccall "enquire_get_mset"
-    cx_get_mset :: Ptr CEnquire
-                -> CUInt        -- ^ skip n items
-                -> CUInt        -- ^ maximum amount of items
-                -> IO (Ptr CMSet)
+    cx_enquire_get_mset :: Ptr CEnquire
+                        -> CUInt        -- ^ skip n items
+                        -> CUInt        -- ^ maximum amount of items
+                        -> IO (Ptr CMSet)
 
 -- MSet
 -- ---------------------------------------------------------
@@ -470,6 +480,9 @@ foreign import ccall "mset_get_description"
 data CQuery
 type Op = Int
 
+instance Manageable CQuery where
+    manage = newForeignPtr cx_query_delete
+
 foreign import ccall "OP_AND" cx_query_OP_AND :: Int
 foreign import ccall "OP_OR" cx_query_OP_OR :: Int
 foreign import ccall "OP_AND_NOT" cx_query_OP_AND_NOT :: Int
@@ -491,8 +504,8 @@ foreign import ccall "query_new"
 foreign import ccall "query_copy"
     cx_query_copy :: Ptr CQuery -> IO (Ptr CQuery)
   
-foreign import ccall "query_delete"
-    cx_query_delete :: Ptr CQuery -> IO ()
+foreign import ccall "&query_delete"
+    cx_query_delete :: FunPtr (Ptr CQuery -> IO ())
 
 foreign import ccall "query_new_0"
     cx_query_new_0 :: CString -> CUInt -> CUInt -> IO (Ptr CQuery)
@@ -590,8 +603,11 @@ foreign import ccall "msetiterator_next"
 foreign import ccall "msetiterator_prev"
     cx_msetiterator_prev :: Ptr CMSetIterator -> IO ()
 
+foreign import ccall "msetiterator_is_end"
+    cx_msetiterator_is_end :: Ptr CMSetIterator -> Ptr CMSetIterator -> IO Bool
+
 foreign import ccall "msetiterator_get"
-    cx_msetiterator_get :: Ptr CMSetIterator -> IO CUInt
+    cx_msetiterator_get :: Ptr CMSetIterator -> IO Word32
 
 foreign import ccall "msetiterator_get_document"
     cx_msetiterator_get_document :: Ptr CMSetIterator -> IO (Ptr CDocument)

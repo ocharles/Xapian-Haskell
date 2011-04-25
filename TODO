@@ -1,6 +1,8 @@
 TODO
 ----
 
+* some objects are not being deleted such as iterators. can we reconcile this
+  with lazy IO (unsafeInterleaveIO)?
 * make Cabal link the c++ object files
 * unpack Op-datatypes in module Query
 * make sure, that any exception in the c bindings is caught

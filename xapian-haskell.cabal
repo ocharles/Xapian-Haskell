@@ -13,7 +13,6 @@ category:       Search, Database
 extra-source-files: examples/QuickStartIndex.hs
                     examples/QuickStartSearch.hs
                     examples/Test.hs
-                    cbits/cxapian.h
                     cbits/cxapian_database.h
                     cbits/cxapian_document.h
                     cbits/cxapian_enquire.h
@@ -29,7 +28,6 @@ extra-source-files: examples/QuickStartIndex.hs
                     cbits/cxapian_types.h
                     cbits/cxapian_valueiterator.h
                     cbits/Makefile
-                    cbits/cxapian.cc
                     cbits/cxapian_database.cc
                     cbits/cxapian_document.cc
                     cbits/cxapian_enquire.cc
@@ -71,8 +69,7 @@ library
   extensions:         EmptyDataDecls,
                       ForeignFunctionInterface,
                       TypeSynonymInstances
-  x-cc-sources:       cbits/cxapian.cc
-                      cbits/cxapian_database.cc
+  x-cc-sources:       cbits/cxapian_database.cc
                       cbits/cxapian_document.cc
                       cbits/cxapian_enquire.cc
                       cbits/cxapian_mset.cc

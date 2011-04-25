@@ -64,6 +64,7 @@ import Data.IntMap (IntMap)
 import Data.Serialize
 import Data.Word
 import Search.Xapian.Internal.Types
+import Search.Xapian.Internal.FFI
 
 -- * Database related types
 -- --------------------------------------------------------------------
@@ -101,10 +102,10 @@ type SimpleWritableDatabase = WritableDatabase Fieldless
 packInitDBOption :: InitDBOption -> Int
 packInitDBOption option =
   case option of
-       CreateOrOpen      -> 1
-       Create            -> 2
-       CreateOrOverwrite -> 3
-       Open              -> 4
+       CreateOrOpen      -> cx_database_DB_CREATE_OR_OPEN
+       Create            -> cx_database_DB_CREATE
+       CreateOrOverwrite -> cx_database_DB_CREATE_OR_OVERWRITE
+       Open              -> cx_database_DB_OPEN
 
 -- * Query related types
 -- --------------------------------------------------------------------

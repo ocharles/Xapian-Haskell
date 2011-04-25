@@ -22,9 +22,10 @@ module Search.Xapian.Internal.Types
        ) where
 
 import Foreign
+import Foreign.C.Types
 import Data.ByteString.Char8 (ByteString)
 
-import Search.Xapian.FFI
+import Search.Xapian.Internal.FFI
 
 -- * Error types
 -- --------------------------------------------------------------------
@@ -51,7 +52,7 @@ data NativeError = DocNotFoundError | GenericError
 -- * Database related types
 -- --------------------------------------------------------------------
 
-data Database fields dat = Database !(ForeignPtr XapianDatabase)
+data Database fields dat = Database !(ForeignPtr CDatabase)
   deriving (Eq, Show)
 
 newtype WritableDatabase fields dat = WritableDatabase (Database fields dat)
@@ -60,12 +61,13 @@ newtype WritableDatabase fields dat = WritableDatabase (Database fields dat)
 -- * Query related types
 -- --------------------------------------------------------------------
 
-type QueryPtr = ForeignPtr XapianEnquire
+type QueryPtr = ForeignPtr CEnquire
 
 -- Internal Representation of Queries
 
 data Query
-    = EmptyQuery        -- ^ does not match anything
+    = MatchNothing        -- ^ does not match anything
+    | MatchAll            -- ^ matches everything
     | Atom ByteString
     | Parsed Stemmer ByteString -- ^ parsed natively by Xapian
     | Nullary OpNullary
@@ -104,16 +106,16 @@ data OpMulti
 -- * Document related types
 -- --------------------------------------------------------------------
 
-type DocumentPtr = ForeignPtr XapianDocument
+type DocumentPtr = ForeignPtr CDocument
 
 -- * document fields
-type ValueNumber = Int
+type ValueNumber = CUInt
 type Value       = ByteString
 
 -- * Stemming related types
 -- --------------------------------------------------------------------
 
-type StemmerPtr = ForeignPtr XapianStem
+type StemmerPtr = ForeignPtr CStem
 
 data Stemmer = Danish
              | Dutch

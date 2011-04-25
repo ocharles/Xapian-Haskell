@@ -23,7 +23,7 @@ import Data.ByteString.Char8 (pack, useAsCString, ByteString)
 import Search.Xapian.Types
 import Search.Xapian.Internal.Types
 import Search.Xapian.Internal.Utils
-import Search.Xapian.FFI
+import Search.Xapian.Internal.FFI
 import Search.Xapian.Query.Combinators as Q
 
 
@@ -61,11 +61,11 @@ paging :: Int -> Int -> QueryRange
 paging page amount = QueryRange (amount * page) amount
 
 queryAll :: Queryable s =>  [s] -> Query
-queryAll [] = EmptyQuery
+queryAll [] = MatchAll
 queryAll xs = foldr1 Q.and $ map query xs
 
 queryAny :: Queryable s => [s] -> Query
-queryAny [] = EmptyQuery
+queryAny [] = MatchNothing
 queryAny xs = foldr1 Q.eliteSet $ map query xs
 
 -- * Low-level stuff
@@ -75,38 +75,40 @@ class GetOpCode t where
 
 -- TODO: write proper bindings to access opcodes, bugs incoming
 instance GetOpCode OpNullary where
-    opcode (OpValueGE _ _) = 11
-    opcode (OpValueLE _ _) = 12
-    opcode (OpValueRange _ _) = 8
+    opcode (OpValueGE _ _)    = cx_query_OP_VALUE_GE
+    opcode (OpValueLE _ _)    = cx_query_OP_VALUE_LE
+    opcode (OpValueRange _ _) = cx_query_OP_VALUE_RANGE
 
 instance GetOpCode OpUnary where
     opcode (OpScaleWeight _) = 9
 
 instance GetOpCode OpBinary where
-    opcode OpOr = 1
-    opcode OpAnd = 0
-    opcode OpXor = 3
-    opcode OpAndMaybe = 4
-    opcode OpAndNot = 2
-    opcode OpFilter = 5
-    opcode (OpNear _) = 6
-    opcode OpEliteSet = 10
+    opcode OpOr       = cx_query_OP_OR
+    opcode OpAnd      = cx_query_OP_AND
+    opcode OpXor      = cx_query_OP_XOR
+    opcode OpAndMaybe = cx_query_OP_AND_MAYBE
+    opcode OpAndNot   = cx_query_OP_AND_NOT
+    opcode OpFilter   = cx_query_OP_FILTER
+    opcode (OpNear _) = cx_query_OP_NEAR
+    opcode OpEliteSet = cx_query_OP_ELITE_SET
 
 instance GetOpCode OpMulti where
-    opcode OpSynonym = 13
-    opcode (OpPhrase _) = 7
+    opcode OpSynonym    = cx_query_OP_SYNONYM
+    opcode (OpPhrase _) = cx_query_OP_PHRASE
 
-compileQuery :: Query -> IO QueryPtr
+compileQuery :: Query -> IO (ForeignPtr CQuery)
 compileQuery query' =
     case query' of
-         EmptyQuery -> c_xapian_query_empty >>= manage
+         MatchAll   -> cx_query_match_all >>= manage
+         MatchNothing -> cx_query_match_nothing >>= manage
          Atom bs    -> useAsCString bs $ \cs ->
-                       c_xapian_query_new cs >>= manage
+                       cx_query_new_0 cs 1 0 >>= manage
          Parsed stemmer bs
                     -> useAsCString bs $ \cs ->
                        (createStemmer stemmer >>=) $
                        (flip withForeignPtr) $ \stemPtr ->
-                       c_xapian_parse_query cs stemPtr >>= manage
+                       -- FIXME: write FFI for Xapian::QueryParser
+                       error "cx_parse_query cs stemPtr >>= manage"
          Nullary op -> compileNullary op
          Unary op q -> do cq <- compileQuery q
                           compileUnary op cq
@@ -118,16 +120,16 @@ compileQuery query' =
   where
     compileNullary op@(OpValueGE valno val) =
         useAsCString val $ \cs ->
-        c_xapian_query_new_value (opcode op) valno cs >>= manage
+        cx_query_new_6 (opcode op) valno cs >>= manage
     compileNullary op@(OpValueLE valno val) =
         useAsCString val $ \cs ->
-        c_xapian_query_new_value (opcode op) valno cs >>= manage
+        cx_query_new_6 (opcode op) valno cs >>= manage
     compileNullary op@(OpValueRange valno vals) =
         undefined -- TODO
 
     compileUnary op@(OpScaleWeight s) q =
         withForeignPtr q $ \cq ->
-        c_xapian_query_new_double (opcode op) cq s >>= manage
+        cx_query_new_4 (opcode op) cq s >>= manage
 
     compileBinary (OpNear distance) q q' =
      do undefined -- TODO
@@ -138,22 +140,23 @@ compileQuery query' =
     compileMulti op@(OpPhrase windowSize) qs =
         undefined -- TODO
 
-    merge :: Int -> QueryPtr -> QueryPtr -> IO QueryPtr 
+    merge :: Int
+          -> ForeignPtr CQuery
+          -> ForeignPtr CQuery
+          -> IO (ForeignPtr CQuery)
     merge opcode a b =
         withForeignPtr a $ \queryA ->
         withForeignPtr b $ \queryB ->
-            c_xapian_query_combine opcode queryA queryB >>= manage
+            cx_query_new_1 opcode queryA queryB >>= manage
 
 -- * Helper functions
 
-manage :: Ptr XapianQuery -> IO QueryPtr
-manage = newForeignPtr c_xapian_query_delete
 
 -- | @describeQuery query@ will result in a plain text description
 -- of @query@. Note, this is not really meant for human consumption, but
 -- may help for debugging.
 --
-describeQuery :: QueryPtr -> IO String
+describeQuery :: ForeignPtr CQuery -> IO String
 describeQuery q =
   withForeignPtr q $ \query' ->
-  peekCString $ c_xapian_query_describe query'
+  peekCString =<< cx_query_get_description query'

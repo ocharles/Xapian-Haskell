@@ -21,6 +21,9 @@ msetiterator_next (msetiterator *);
 void // I ise void to emphasize the mutation involved
 msetiterator_prev (msetiterator *);
 
+bool
+msetiterator_is_end (msetiterator *, msetiterator *other);
+
 unsigned int
 msetiterator_get (msetiterator *);
 

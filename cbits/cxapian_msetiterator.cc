@@ -36,6 +36,12 @@ msetiterator_prev (msetiterator *mi)
     (*mi->iter)--; // TODO: does this work?
 }
 
+bool
+msetiterator_is_end (msetiterator *self, msetiterator *other)
+{
+    return (*self->iter == *other->iter);
+}
+
 unsigned int
 msetiterator_get (msetiterator *mi)
 {

@@ -2,9 +2,11 @@ module Search.Xapian.Database where
 
 import Prelude hiding (words)
 import Foreign
+import Foreign.C.Types
 import Foreign.C.String
 import Control.Monad (forM_)
 import Control.Applicative
+import Control.Arrow ((***))
 import qualified Data.ByteString as BS
 import Data.ByteString.Char8 (pack, useAsCString, words)
 import Data.Either (rights)
@@ -17,7 +19,7 @@ import Search.Xapian.Document
 import Search.Xapian.Types
 import Search.Xapian.Internal.Types
 import Search.Xapian.Internal.Utils
-import Search.Xapian.FFI
+import Search.Xapian.Internal.FFI
 import qualified Search.Xapian.Query as Q
 
 
@@ -28,23 +30,19 @@ instance ReadableDatabase Database where
    do queryFPtr <- Q.compileQuery query
       withForeignPtr dbFPtr $ \dbPtr ->
           withForeignPtr queryFPtr $ \queryPtr ->
-           do enquire <- c_xapian_enquire_new dbPtr
-              let msets = c_xapian_enquire_query enquire queryPtr off lim
-              MSet . rights <$> collect c_xapian_msets_valid
-                                        c_xapian_msets_next
-                                        get_as_document
-                                        msets
-    where
-      get_as_document msets =
-       do mset <- c_xapian_msets_get msets
-          let docId = DocId $ fromIntegral mset
-          getDocument database docId
-          
+           do enquire <- cx_enquire_new dbPtr
+              cx_enquire_set_query enquire queryPtr 0
+              mset <- cx_enquire_get_mset
+                          enquire (fromIntegral off) (fromIntegral lim)
+              begin <- cx_mset_begin mset
+              end   <- cx_mset_end   mset
+              (MSet . rights) <$>
+                  (mapM (getDocument database) =<< collectDocIds begin end)
 
   getDocument (Database database) docId@(DocId id') =
        withForeignPtr database $ \dbPtr ->
        handleError dbPtr $ \docPtr ->
-        do docFPtr <- newForeignPtr c_xapian_document_delete docPtr
+        do docFPtr <- newForeignPtr cx_document_delete docPtr
            eitherDocDat  <- getDocumentData docFPtr
            case eitherDocDat of
                 Left err  -> return (Left err)
@@ -55,12 +53,14 @@ instance ReadableDatabase Database where
                                       , documentId = Just docId}
     where
       handleError dbPtr action =
-        alloca $ \errorPtr ->
-         do handle <- c_xapian_get_document dbPtr (fromIntegral id') errorPtr
-            if handle == nullPtr
-               then do err <- peekCString =<< peek errorPtr
-                       return . Left $ Error (Just DocNotFoundError) err
-               else do action handle
+--        alloca $ \errorPtr ->
+         do handle <- cx_database_get_document dbPtr (fromIntegral id') -- errorPtr
+            action handle
+-- FIXME: handle exceptions
+--            if handle == nullPtr
+--               then do err <- peekCString =<< peek errorPtr
+--                       return . Left $ Error (Just DocNotFoundError) err
+--               else do action handle
 
 instance ReadableDatabase WritableDatabase where
   search (WritableDatabase db) = search db
@@ -77,13 +77,15 @@ openDatabase :: (Serialize dat, Prefixable fields)
              -> IO (Either Error (Database fields dat))
 openDatabase path =
   useAsCString (pack path) $ \cpath ->
-  alloca $ \errorPtr ->
-   do dbHandle <- c_xapian_database_new cpath errorPtr
-      if dbHandle == nullPtr
-         then do err <- peekCString =<< peek errorPtr
-                 return (Left $ Error (Just GenericError) err)
-         else do managed <- newForeignPtr c_xapian_database_delete dbHandle
-                 return (Right $ Database managed)
+--  alloca $ \errorPtr ->
+   do dbHandle <- cx_database_from_path cpath -- errorPtr
+      manage dbHandle >>= return . Right . Database
+-- FIXME: handle exceptions
+--      if dbHandle == nullPtr
+--         then do err <- peekCString =<< peek errorPtr
+--                 return (Left $ Error (Just GenericError) err)
+--         else do managed <- newForeignPtr cx_database_delete dbHandle
+--                 return (Right $ Database managed)
 
 -- FIXME 'mode' is a bad term here...
 -- | @openWritableDatabase mode filename@ will open the database at @filename@
@@ -96,14 +98,18 @@ openWritableDatabase :: (Serialize dat, Prefixable fields)
                      -> IO (Either Error (WritableDatabase fields dat))
 openWritableDatabase option path =
   useAsCString (pack path) $ \cpath ->
-  alloca $ \errorPtr ->
+--  alloca $ \errorPtr ->
    do let option' = packInitDBOption option
-      dbHandle <- c_xapian_writable_db_new cpath option' errorPtr
-      if dbHandle == nullPtr
-         then do err <- peekCString =<< peek errorPtr
-                 return (Left $ Error (Just GenericError) err)
-         else do managed <- newForeignPtr c_xapian_database_delete dbHandle
-                 return (Right $ WritableDatabase $ Database managed)
+      dbHandle <- cx_database_writable_new_from_path cpath option' -- errorPtr
+      -- FIXME: is there a way to use 'manage' here?
+      newForeignPtr cx_database_writable_delete dbHandle >>=
+          return . Right . WritableDatabase . Database
+-- FIXME: handle exceptions
+--      if dbHandle == nullPtr
+--         then do err <- peekCString =<< peek errorPtr
+--                 return (Left $ Error (Just GenericError) err)
+--         else do managed <- newForeignPtr cx_database_delete dbHandle
+--                 return (Right $ WritableDatabase $ Database managed)
 
 -- * document handling
 
@@ -123,7 +129,7 @@ addDocument (WritableDatabase (Database db))
         add_fields docFPtr (documentFields doc)
         setDocumentData docFPtr (documentData doc)
         withForeignPtr docFPtr $ \docPtr ->
-            DocId . fromIntegral <$> c_xapian_database_add_document dbPtr docPtr
+            DocId . fromIntegral <$> cx_database_add_document dbPtr docPtr
   where
     stem maybeStemFPtr word =
       case maybeStemFPtr of
@@ -142,7 +148,8 @@ addDocument (WritableDatabase (Database db))
                        Nothing      -> mapM_ (addTerm' docFPtr) (words bs)
 
     add_values docFPtr values =
-        mapM_ (uncurry $ addValue docFPtr) (IntMap.toList values)
+        let values' = map (fromIntegral *** id) $ IntMap.toList values
+        in  mapM_ (uncurry $ addValue docFPtr) values'
 
     add_fields docFPtr fields =
         forM_ (Map.toList fields) $ \(key, values) ->

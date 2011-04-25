@@ -258,11 +258,18 @@ database_keep_alive (database *db)
 }
 
 document *
-database_get_document (database *db, unsigned int docid)
+database_get_document (database *db, unsigned int docid, const char **error)
 {
     document *doc = new document();
-    doc->get = new Xapian::Document( db->get->get_document(docid) );
-    return doc;
+    try {
+        doc->get = new Xapian::Document( db->get->get_document(docid) );
+        return doc;
+    }
+    catch (const Xapian::Error &e) {
+        *error = e.get_msg().c_str();
+        delete doc;
+        return NULL;
+    }
 }
 
 const char * // max_edit_distance defaults to 2

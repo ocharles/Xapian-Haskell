@@ -56,28 +56,48 @@ import Search.Xapian.Internal.FFI
 collect :: (Ptr a -> IO ()) -- next
         -> (Ptr a -> IO b)  -- get
         -> (Ptr a -> Ptr a -> IO Bool) -- finished?
-        -> Ptr a -- current position
-        -> Ptr a -- end
+        -> ForeignPtr a -- current position
+        -> ForeignPtr a -- end
         -> IO [b]
-collect next get finished pos end =
- do exit <- finished pos end
-    if exit
-       then do return []
-       else do elem <- get pos
-               next pos
-               rest <- collect next get finished pos end
-               return (elem : rest)
+collect next' get' finished' pos' end' =
+    withForeignPtr pos' $ \posPtr ->
+    withForeignPtr end' $ \endPtr ->
+    collect' next' get' finished' posPtr endPtr
+  where
+    collect' next get finished pos end =
+     do exit <- finished pos end
+        if exit
+           then do return []
+           else do elem <- get pos
+                   next pos
+                   rest <- collect' next get finished pos end
+                   return (elem : rest)
 
+collectPositions :: ForeignPtr CPositionIterator
+                 -> ForeignPtr CPositionIterator
+                 -> IO [Pos]
+collectPositions = collect cx_positioniterator_next
+                           cx_positioniterator_get
+                           cx_positioniterator_is_end
 
-collectTerms :: Ptr CTermIterator -- current position
-             -> Ptr CTermIterator -- end
-             -> IO [CString]
-collectTerms = collect cx_termiterator_next
-                       cx_termiterator_get
-                       cx_termiterator_is_end
+collectTerms :: ForeignPtr CTermIterator -- current position
+             -> ForeignPtr CTermIterator -- end
+             -> IO [Term]
+collectTerms b e = collect cx_termiterator_next getter cx_termiterator_is_end b e
+  where
+    getter ptr =
+     do term <- BS.packCString =<< cx_termiterator_get ptr
+        positions_len <- cx_termiterator_positionlist_count ptr
+        if positions_len < 0
+           then do return $ Term term []
+           else do positions <- unsafeInterleaveIO $
+                    do b_pos <- manage =<< cx_termiterator_positionlist_begin ptr
+                       e_pos <- manage =<< cx_termiterator_positionlist_end ptr
+                       collectPositions b_pos e_pos
+                   return $ Term term positions
 
-collectDocIds :: Ptr CMSetIterator
-              -> Ptr CMSetIterator
+collectDocIds :: ForeignPtr CMSetIterator
+              -> ForeignPtr CMSetIterator
               -> IO [DocumentId]
 collectDocIds = collect cx_msetiterator_next
                         (fmap DocId . cx_msetiterator_get)
@@ -123,7 +143,12 @@ addValue docFPtr valno val =
 
 -- | FIXME wrong implementation
 getDocumentTerms :: DocumentPtr -> IO [Term]
-getDocumentTerms docFPtr = undefined
+getDocumentTerms docFPtr =
+    unsafeInterleaveIO $
+    withForeignPtr docFPtr $ \docPtr ->
+     do b <- manage =<< cx_document_termlist_begin docPtr
+        e <- manage =<< cx_document_termlist_end docPtr
+        collectTerms b e
 
 setDocumentData :: Serialize dat
                 => DocumentPtr

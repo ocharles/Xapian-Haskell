@@ -141,11 +141,11 @@ newtype DocumentId = DocId { getDocId :: Word32 }
 
 -- | A @Document@
 data Document fields dat = Document
-    { documentPtr   :: Maybe DocumentPtr            
-    , documentId    :: Maybe DocumentId       
+    { documentPtr   :: Maybe DocumentPtr
+    , documentId    :: Maybe DocumentId
     , documentLazyStem  :: Maybe Stemmer      -- ^ the stemmer is being committed as well
-    , documentLazyValues :: IntMap Value          
-    , documentLazyTerms :: [Term]                 
+    , documentLazyValues :: IntMap Value
+    , documentLazyTerms :: [Term]
     , documentLazyFields :: Map fields [ByteString]
     , documentLazyData  :: dat
     , documentDiffs :: Seq (DocumentDiff fields dat)
@@ -167,9 +167,6 @@ data DocumentDiff fields dat
     | ClearTerms
     | ClearValues
     deriving (Show)
-
-type Pos  = Word32
-
 
 data Term = Term    ByteString [Pos] -- ^ a single term w/ or wo/
                                      --   positional information

@@ -34,8 +34,8 @@ instance ReadableDatabase Database where
               cx_enquire_set_query enquire queryPtr 0
               mset <- cx_enquire_get_mset
                           enquire (fromIntegral off) (fromIntegral lim)
-              begin <- cx_mset_begin mset
-              end   <- cx_mset_end   mset
+              begin <- manage =<< cx_mset_begin mset
+              end   <- manage =<< cx_mset_end   mset
               (MSet . rights) <$>
                   (mapM (getDocument database) =<< collectDocIds begin end)
 
@@ -53,14 +53,12 @@ instance ReadableDatabase Database where
                                       , documentId = Just docId}
     where
       handleError dbPtr action =
---        alloca $ \errorPtr ->
-         do handle <- cx_database_get_document dbPtr (fromIntegral id') -- errorPtr
-            action handle
--- FIXME: handle exceptions
---            if handle == nullPtr
---               then do err <- peekCString =<< peek errorPtr
---                       return . Left $ Error (Just DocNotFoundError) err
---               else do action handle
+        alloca $ \errorPtr ->
+         do handle <- cx_database_get_document dbPtr (fromIntegral id') errorPtr
+            if handle == nullPtr
+               then do err <- peekCString =<< peek errorPtr
+                       return . Left $ Error (Just DocNotFoundError) err
+               else do action handle
 
 instance ReadableDatabase WritableDatabase where
   search (WritableDatabase db) = search db

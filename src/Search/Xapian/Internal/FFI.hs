@@ -124,7 +124,11 @@ foreign import ccall "database_keep_alive"
     cx_database_keep_alive :: Ptr CDatabase -> IO ()
 
 foreign import ccall "database_get_document"
-    cx_database_get_document :: Ptr CDatabase -> CUInt -> IO (Ptr CDocument)
+    cx_database_get_document
+        :: Ptr CDatabase
+        -> CUInt               -- ^ document id
+        -> Ptr CString         -- ^ string for error messages
+        -> IO (Ptr CDocument)
 
 foreign import ccall "database_get_spelling_suggestion"
     cx_database_get_spelling_suggestion
@@ -663,12 +667,25 @@ foreign import ccall "msetiterator_get_description"
 -- ---------------------------------------------------------
 
 data CPositionIterator
+type Pos = Word32
 
 instance Manageable CPositionIterator where
     manage = newForeignPtr cx_positioniterator_delete
 
 foreign import ccall "positioniterator_new"
     cx_positioniterator_new :: IO (Ptr CPositionIterator)
+
+foreign import ccall "positioniterator_next"
+    cx_positioniterator_next :: Ptr CPositionIterator -> IO ()
+
+foreign import ccall "positioniterator_get"
+    cx_positioniterator_get :: Ptr CPositionIterator -> IO Pos
+
+foreign import ccall "positioniterator_is_end"
+    cx_positioniterator_is_end
+        :: Ptr CPositionIterator -- ^ current iterator position
+        -> Ptr CPositionIterator -- ^ end
+        -> IO Bool
 
 foreign import ccall "positioniterator_copy"
     cx_positioniterator_copy :: Ptr CPositionIterator

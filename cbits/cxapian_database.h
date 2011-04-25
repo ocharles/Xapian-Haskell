@@ -114,7 +114,7 @@ void
 database_keep_alive (database *);
 
 document *
-database_get_document (database *, unsigned int docid);
+database_get_document (database *, unsigned int docid, const char **error);
 
 const char * // max_edit_distance defaults to 2
 database_get_spelling_suggestion (database *, const char *word,

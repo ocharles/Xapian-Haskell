@@ -9,6 +9,24 @@ positioniterator_new ()
     return self;
 }
 
+void
+positioniterator_next (positioniterator *self)
+{
+    (*self->iter)++;
+}
+
+unsigned int
+positioniterator_get (positioniterator *self)
+{
+    return (**self->iter);
+}
+
+bool
+positioniterator_is_end (positioniterator *self, positioniterator* end)
+{
+    return (*self->iter == *end->iter);
+}
+
 positioniterator *
 positioniterator_copy (positioniterator *original)
 {

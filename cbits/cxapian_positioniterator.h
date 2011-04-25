@@ -9,6 +9,15 @@ extern "C" {
 positioniterator *
 positioniterator_new ();
 
+void
+positioniterator_next (positioniterator *);
+
+unsigned int
+positioniterator_get (positioniterator *);
+
+bool
+positioniterator_is_end (positioniterator *, positioniterator *end);
+
 positioniterator *
 positioniterator_copy (positioniterator *original);
 

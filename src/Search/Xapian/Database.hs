@@ -77,15 +77,12 @@ openDatabase :: (Serialize dat, Prefixable fields)
              -> IO (Either Error (Database fields dat))
 openDatabase path =
   useAsCString (pack path) $ \cpath ->
---  alloca $ \errorPtr ->
-   do dbHandle <- cx_database_from_path cpath -- errorPtr
-      manage dbHandle >>= return . Right . Database
--- FIXME: handle exceptions
---      if dbHandle == nullPtr
---         then do err <- peekCString =<< peek errorPtr
---                 return (Left $ Error (Just GenericError) err)
---         else do managed <- newForeignPtr cx_database_delete dbHandle
---                 return (Right $ Database managed)
+  alloca $ \errorPtr ->
+   do dbHandle <- cx_database_new_from_path cpath errorPtr
+      if dbHandle == nullPtr
+         then do err <- peekCString =<< peek errorPtr
+                 return (Left $ Error (Just DatabaseOpeningError) err)
+         else do fmap (Right . Database) (manage dbHandle)
 
 -- FIXME 'mode' is a bad term here...
 -- | @openWritableDatabase mode filename@ will open the database at @filename@
@@ -98,18 +95,14 @@ openWritableDatabase :: (Serialize dat, Prefixable fields)
                      -> IO (Either Error (WritableDatabase fields dat))
 openWritableDatabase option path =
   useAsCString (pack path) $ \cpath ->
---  alloca $ \errorPtr ->
+  alloca $ \errorPtr ->
    do let option' = packInitDBOption option
-      dbHandle <- cx_database_writable_new_from_path cpath option' -- errorPtr
-      -- FIXME: is there a way to use 'manage' here?
-      newForeignPtr cx_database_writable_delete dbHandle >>=
-          return . Right . WritableDatabase . Database
--- FIXME: handle exceptions
---      if dbHandle == nullPtr
---         then do err <- peekCString =<< peek errorPtr
---                 return (Left $ Error (Just GenericError) err)
---         else do managed <- newForeignPtr cx_database_delete dbHandle
---                 return (Right $ WritableDatabase $ Database managed)
+      dbHandle <- cx_database_writable_new_from_path cpath option' errorPtr
+      if dbHandle == nullPtr
+         then do err <- peekCString =<< peek errorPtr
+                 return (Left $ Error (Just DatabaseOpeningError) err)
+         else do managed <- newForeignPtr cx_database_delete dbHandle
+                 return (Right $ WritableDatabase $ Database managed)
 
 -- * document handling
 

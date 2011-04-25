@@ -27,7 +27,10 @@ foreign import ccall "database_new"
     cx_database_new :: IO (Ptr CDatabase)
 
 foreign import ccall "database_new_from_path"
-    cx_database_from_path :: CString -> IO (Ptr CDatabase)
+    cx_database_new_from_path
+        :: CString            -- ^ database path
+        -> Ptr CString        -- ^ string for error messages to be filled in
+        -> IO (Ptr CDatabase)
 
 foreign import ccall "database_copy"
     cx_database_copy :: Ptr CDatabase -> IO (Ptr CDatabase)
@@ -198,7 +201,11 @@ foreign import ccall "database_writable_new"
     cx_database_writable_new :: IO (Ptr CDatabase)
 
 foreign import ccall "database_writable_new_from_path"
-    cx_database_writable_new_from_path :: CString -> DbAction -> IO (Ptr CDatabase)
+    cx_database_writable_new_from_path
+        :: CString            -- ^ database path
+        -> DbAction           -- ^ how to open the database
+        -> Ptr CString        -- ^ string for error messages to be filled in
+        -> IO (Ptr CDatabase)
 
 foreign import ccall "database_writable_copy"
     cx_database_writable_copy :: Ptr CDatabase -> IO (Ptr CDatabase)

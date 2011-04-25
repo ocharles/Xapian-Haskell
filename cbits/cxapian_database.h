@@ -12,7 +12,7 @@ database *
 database_new ();
 
 database *
-database_new_from_path (const char *path);
+database_new_from_path (const char *path, const char **error);
 
 database *
 database_copy (database *other);
@@ -161,7 +161,7 @@ database *
 database_writable_new ();
 
 database *
-database_writable_new_from_path (const char *path, int action);
+database_writable_new_from_path (const char *path, int action, const char **error);
 
 database *
 database_writable_copy (database *other);

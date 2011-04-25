@@ -57,7 +57,10 @@ data Error = Error { xeNativeError :: Maybe NativeError
                    , seErrorMsg :: String
                    } deriving (Show)
 
-data NativeError = DocNotFoundError | GenericError
+data NativeError
+    = DatabaseOpeningError
+    | DocNotFoundError
+    | GenericError
   deriving (Eq, Show)
 
 

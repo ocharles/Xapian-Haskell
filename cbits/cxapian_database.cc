@@ -10,11 +10,18 @@ database_new ()
 }
 
 database *
-database_new_from_path (const char *path)
+database_new_from_path (const char *path, const char **error)
 {
     database *db = new database();
-    db->get = new Xapian::Database(std::string(path));
-    return db;
+    try {
+        db->get = new Xapian::Database(std::string(path));
+        return db;
+    }
+    catch (const Xapian::Error &e) {
+        *error = e.get_msg().c_str();
+        delete db;
+        return NULL;
+    }
 }
 
 database *
@@ -375,12 +382,19 @@ database_writable_new ()
 }
 
 database *
-database_writable_new_from_path (const char *path, int action)
+database_writable_new_from_path (const char *path, int action, const char **error)
 {
     database *db = new database();
-    db->get = (Xapian::Database *) new Xapian::WritableDatabase(
-            std::string(path), action );
-    return db;
+    try {
+        db->get = (Xapian::Database *) new Xapian::WritableDatabase(
+                std::string(path), action );
+        return db;
+    }
+    catch (const Xapian::Error & e) {
+        *error = e.get_msg().c_str();
+        delete db;
+        return NULL;
+    }
 }
 
 database *

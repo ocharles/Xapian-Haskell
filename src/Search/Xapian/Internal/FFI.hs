@@ -242,7 +242,7 @@ foreign import ccall "database_delete_document_by_term"
     cx_database_delete_document_by_term :: Ptr CDatabase -> CString -> IO ()
 
 foreign import ccall "database_replace_document"
-    cx_database_replace_document :: Ptr CDatabase -> Word32 -> IO (Ptr CDocument)
+    cx_database_replace_document :: Ptr CDatabase -> Word32 -> Ptr CDocument -> IO ()
 
 foreign import ccall "database_add_spelling"
     cx_database_add_spelling

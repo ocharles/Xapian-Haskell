@@ -12,7 +12,6 @@ module Search.Xapian.Internal.Utils
      , getDocumentTerms
      , getDocumentValues
      , getDocumentData
-     , setDocumentData
 
        -- * Stemmer related
      , createStemmer
@@ -171,12 +170,6 @@ getDocumentTerms docFPtr =
      do b <- manage =<< cx_document_termlist_begin docPtr
         e <- manage =<< cx_document_termlist_end docPtr
         collectTerms b e
-
-setDocumentData :: Serialize dat
-                => DocumentPtr
-                -> dat
-                -> IO ()
-setDocumentData docFPtr docData = undefined
 
 getDocumentData :: Serialize dat
                 => DocumentPtr

@@ -8,7 +8,7 @@ import Control.Monad (forM_)
 import Control.Applicative
 import Control.Arrow ((***))
 import qualified Data.ByteString as BS
-import Data.ByteString.Char8 (pack, useAsCString, words)
+import Data.ByteString.Char8 (ByteString, pack, useAsCString, words)
 import Data.Either (rights)
 import qualified Data.IntMap as IntMap
 import qualified Data.Map as Map
@@ -115,22 +115,33 @@ addDocument :: (Serialize dat, Prefixable fields)
             => WritableDatabase fields dat
             -> Document fields dat
             -> IO DocumentId
-addDocument = undefined
+addDocument (WritableDatabase (Database dbFPtr)) document =
+    withForeignPtr dbFPtr $ \dbPtr ->
+     do docFPtr <- applyAccumulatedChanges document
+        withForeignPtr docFPtr $ \docPtr ->
+         do fmap DocId $ cx_database_add_document dbPtr docPtr
 
-
-                
 deleteDocumentById :: (Serialize dat, Prefixable fields)
-                   => Database fields dat -> DocumentId -> IO ()
-deleteDocumentById = undefined
+                   => WritableDatabase fields dat -> DocumentId -> IO ()
+deleteDocumentById (WritableDatabase (Database dbFPtr)) (DocId id') =
+    withForeignPtr dbFPtr $ \dbPtr ->
+        cx_database_delete_document_by_id dbPtr id'
 
 deleteDocumentByTerm :: (Serialize dat, Prefixable fields)
-                     => Database fields dat -> Term -> IO ()
-deleteDocumentByTerm = undefined
+                     => WritableDatabase fields dat -> ByteString -> IO ()
+deleteDocumentByTerm (WritableDatabase (Database dbFPtr)) term =
+    withForeignPtr dbFPtr $ \dbPtr ->
+    useAsCString term     $ \cterm ->
+        cx_database_delete_document_by_term dbPtr cterm
      
 
 replaceDocument :: (Serialize dat, Prefixable fields)
-                => Database fields dat
+                => WritableDatabase fields dat
                 -> DocumentId
                 -> Document fields dat
                 -> IO ()
-replaceDocument = undefined
+replaceDocument (WritableDatabase (Database dbFPtr)) (DocId id') document =
+    withForeignPtr dbFPtr $ \dbPtr ->
+     do docFPtr <- applyAccumulatedChanges document
+        withForeignPtr docFPtr $ \docPtr ->
+            cx_database_replace_document dbPtr id' docPtr

@@ -155,16 +155,17 @@ data Document fields dat = Document
 
 -- FIXME: unpack stuff to save space
 data DocumentDiff fields dat
-    = AddTerm ByteString {-# UNPACK #-} !Int
-    | DelTerm ByteString {-# UNPACK #-} !Int
-    | AddTerms [(ByteString, Int)]
-    | DelTerms [(ByteString, Int)]
-    | AddPosting ByteString {-# UNPACK #-} !Int {-# UNPACK #-} !Int
-    | DelPosting ByteString {-# UNPACK #-} !Int {-# UNPACK #-} !Int
-    | AddPostings [(ByteString, Int, Int)]
-    | DelPostings [(ByteString, Int, Int)]
-    | AddValue {-# UNPACK #-} !Int ByteString
-    | DelValue {-# UNPACK #-} !Int
+    = AddTerm ByteString {-# UNPACK #-} !Word32
+    | DelTerm ByteString
+    | AddTerms [(ByteString, Word32)]
+    | DelTerms [ByteString]
+    | AddPosting ByteString {-# UNPACK #-} !Word32 {-# UNPACK #-} !Word32
+    | DelPosting ByteString {-# UNPACK #-} !Word32 {-# UNPACK #-} !Word32
+    | AddPostings [(ByteString, Word32, Word32)]
+    | DelPostings [(ByteString, Word32, Word32)]
+    | AddValue {-# UNPACK #-} !Word32 ByteString
+    | DelValue {-# UNPACK #-} !Word32
+    | AddRawText ByteString
     | SetData dat
     | ClearTerms
     | ClearValues

@@ -36,6 +36,8 @@ instance ReadableDatabase Database where
                           enquire (fromIntegral off) (fromIntegral lim)
               begin <- manage =<< cx_mset_begin mset
               end   <- manage =<< cx_mset_end   mset
+              -- FIXME: should the user be notified if some documents cannot be
+                                                       -- opened?
               (MSet . rights) <$>
                   (mapM (getDocument database) =<< collectDocIds begin end)
 
@@ -48,9 +50,12 @@ instance ReadableDatabase Database where
                 Left err  -> return (Left err)
                 Right dat ->
                  do terms <- getDocumentTerms docFPtr
+                    values <- getDocumentValues docFPtr
                     return . Right $
-                        (document dat){documentLazyTerms = terms
-                                      , documentId = Just docId}
+                        (document dat){ documentLazyTerms = terms
+                                      , documentLazyValues = values
+                                      , documentLazyFields = fieldsFromTerms terms
+                                      , documentId = Just docId }
     where
       handleError dbPtr action =
         alloca $ \errorPtr ->

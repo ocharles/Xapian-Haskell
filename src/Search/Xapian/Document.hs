@@ -9,11 +9,14 @@ module Search.Xapian.Document
      , addField, addFields, getField
      , getValue, setValue
      , clearValues, clearTerms
+     , fieldsFromTerms
      ) where
 
 
+import Control.Arrow ((&&&))
 import Data.ByteString.Char8 (ByteString)
-import qualified Data.ByteString as BS
+import qualified Data.ByteString.Char8 as BS
+import Data.Maybe (fromJust)
 import Data.Map (Map)
 import qualified Data.IntMap as IntMap
 import qualified Data.Map as Map
@@ -78,3 +81,14 @@ getValue = undefined
 setValue = undefined
 removeValue = undefined
 clearValues = queueDiff ClearValues
+
+-- FIXME: I am a stupid algorithm :D
+fieldsFromTerms :: Prefixable fields => [Term] -> Map fields [ByteString]
+fieldsFromTerms = Map.fromListWith (++) . go
+  where
+    go (Term term []:rest) =
+        head [(f, [fromJust $ stripPrefix f term]) | (f,pre) <- prefixes, pre `BS.isPrefixOf` term] :
+        go rest
+    go (_:rest) = go rest
+    go [] = []
+    prefixes = map (id &&& getPrefix) allFields

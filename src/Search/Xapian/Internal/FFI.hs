@@ -86,39 +86,39 @@ foreign import ccall "database_allterms_with_prefix_end"
         :: Ptr CDatabase -> IO (Ptr CTermIterator)
 
 foreign import ccall "database_get_doccount"
-    cx_database_get_doccount :: Ptr CDatabase -> IO CUInt
+    cx_database_get_doccount :: Ptr CDatabase -> IO Word32
 
 foreign import ccall "database_get_lastdocid"
-    cx_database_get_lastdocid :: Ptr CDatabase -> IO CUInt
+    cx_database_get_lastdocid :: Ptr CDatabase -> IO Word32
 
 foreign import ccall "database_get_avlength"
     cx_database_get_avlength :: Ptr CDatabase -> IO Double
 
 foreign import ccall "database_get_termfreq"
-    cx_database_get_termfreq :: Ptr CDatabase -> CString -> IO CUInt
+    cx_database_get_termfreq :: Ptr CDatabase -> CString -> IO Word32
 
 foreign import ccall "database_get_value_freq"
-    cx_database_get_value_freq :: Ptr CDatabase -> CString -> IO CUInt
+    cx_database_get_value_freq :: Ptr CDatabase -> CString -> IO Word32
 
 foreign import ccall "database_get_value_lower_bound"
-    cx_database_get_value_lower_bound :: Ptr CDatabase -> CUInt -> IO CUInt
+    cx_database_get_value_lower_bound :: Ptr CDatabase -> Word32 -> IO Word32
 
 foreign import ccall "database_get_doclength_lower_bound"
-    cx_database_get_doclength_lower_bound :: Ptr CDatabase -> CUInt -> IO CUInt
+    cx_database_get_doclength_lower_bound :: Ptr CDatabase -> Word32 -> IO Word32
 
 foreign import ccall "database_get_wdf_upper_bound"
-    cx_database_wdf_upper_bound :: Ptr CDatabase -> CString -> IO CUInt
+    cx_database_wdf_upper_bound :: Ptr CDatabase -> CString -> IO Word32
 
 foreign import ccall "database_valuestream_begin"
     cx_database_valuestream_begin
-        :: Ptr CDatabase -> CUInt -> IO (Ptr CValueIterator)
+        :: Ptr CDatabase -> Word32 -> IO (Ptr CValueIterator)
 
 foreign import ccall "database_valuestream_end"
     cx_database_valuestream_end
-        :: Ptr CDatabase -> CUInt -> IO (Ptr CValueIterator)
+        :: Ptr CDatabase -> Word32 -> IO (Ptr CValueIterator)
 
 foreign import ccall "database_get_doclength"
-    cx_database_get_doclength :: Ptr CDatabase -> CUInt -> CUInt
+    cx_database_get_doclength :: Ptr CDatabase -> Word32 -> Word32
 
 foreign import ccall "database_keep_alive"
     cx_database_keep_alive :: Ptr CDatabase -> IO ()
@@ -126,7 +126,7 @@ foreign import ccall "database_keep_alive"
 foreign import ccall "database_get_document"
     cx_database_get_document
         :: Ptr CDatabase
-        -> CUInt               -- ^ document id
+        -> Word32               -- ^ document id
         -> Ptr CString         -- ^ string for error messages
         -> IO (Ptr CDocument)
 
@@ -134,7 +134,7 @@ foreign import ccall "database_get_spelling_suggestion"
     cx_database_get_spelling_suggestion
         :: Ptr CDatabase
         -> CString       -- ^ word
-        -> CUInt         -- ^ maximum edit distance
+        -> Word32         -- ^ maximum edit distance
         -> IO CString    -- ^ suggested word
 
 foreign import ccall "database_spellings_begin"
@@ -233,29 +233,29 @@ foreign import ccall "database_cancel_transaction"
     cx_database_cancel_transaction :: Ptr CDatabase -> IO ()
 
 foreign import ccall "database_add_document"
-    cx_database_add_document :: Ptr CDatabase -> Ptr CDocument -> IO CUInt
+    cx_database_add_document :: Ptr CDatabase -> Ptr CDocument -> IO Word32
 
 foreign import ccall "database_delete_document_by_id"
-    cx_database_delete_document_by_id :: Ptr CDatabase -> CUInt -> IO ()
+    cx_database_delete_document_by_id :: Ptr CDatabase -> Word32 -> IO ()
 
 foreign import ccall "database_delete_document_by_term"
     cx_database_delete_document_by_term :: Ptr CDatabase -> CString -> IO ()
 
 foreign import ccall "database_replace_document"
-    cx_database_replace_document :: Ptr CDatabase -> CUInt -> IO (Ptr CDocument)
+    cx_database_replace_document :: Ptr CDatabase -> Word32 -> IO (Ptr CDocument)
 
 foreign import ccall "database_add_spelling"
     cx_database_add_spelling
         :: Ptr CDatabase
         -> CString       -- ^ word
-        -> CUInt         -- ^ frequency increase
+        -> Word32         -- ^ frequency increase
         -> IO ()
 
 foreign import ccall "database_remove_spelling"
     cx_database_remove_spelling
         :: Ptr CDatabase
         -> CString       -- ^ word
-        -> CUInt         -- ^ frequency decrease
+        -> Word32         -- ^ frequency decrease
         -> IO ()
 
 foreign import ccall "database_add_synonym"
@@ -307,10 +307,10 @@ foreign import ccall "document_get_value"
     cx_document_get_value :: Ptr CDocument -> IO CString
 
 foreign import ccall "document_add_value"
-    cx_document_add_value :: Ptr CDocument -> CUInt -> CString -> IO ()
+    cx_document_add_value :: Ptr CDocument -> Word32 -> CString -> IO ()
 
 foreign import ccall "document_remove_value"
-    cx_document_remove_value :: Ptr CDocument -> CUInt -> IO ()
+    cx_document_remove_value :: Ptr CDocument -> Word32 -> IO ()
 
 foreign import ccall "document_clear_values"
     cx_document_clear_values :: Ptr CDocument -> IO ()
@@ -324,14 +324,14 @@ foreign import ccall "document_set_data"
 foreign import ccall "document_add_posting"
     cx_document_add_posting :: Ptr CDocument
                             -> CString       -- term
-                            -> CUInt         -- term position
-                            -> CUInt         -- within-document frequency increment
+                            -> Word32         -- term position
+                            -> Word32         -- within-document frequency increment
                             -> IO ()
 
 foreign import ccall "document_add_term"
     cx_document_add_term :: Ptr CDocument
                          -> CString       -- term
-                         -> CUInt         -- wdf increment
+                         -> Word32         -- wdf increment
                          -> IO ()
 
 foreign import ccall "document_add_boolean_term"
@@ -342,8 +342,8 @@ foreign import ccall "document_add_boolean_term"
 foreign import ccall "document_remove_posting"
     cx_document_remove_posting :: Ptr CDocument
                                -> CString       -- term
-                               -> CUInt         -- term position
-                               -> CUInt         -- wdf decrement
+                               -> Word32         -- term position
+                               -> Word32         -- wdf decrement
                                -> IO ()
 
 foreign import ccall "document_remove_term"
@@ -353,7 +353,7 @@ foreign import ccall "document_clear_terms"
     cx_document_clear_terms :: Ptr CDocument -> IO ()
 
 foreign import ccall "document_termlist_count"
-    cx_document_termlist_count :: Ptr CDocument -> IO CUInt
+    cx_document_termlist_count :: Ptr CDocument -> IO Word32
 
 foreign import ccall "document_termlist_begin"
     cx_document_termlist_begin :: Ptr CDocument -> IO (Ptr CTermIterator)
@@ -362,7 +362,7 @@ foreign import ccall "document_termlist_end"
     cx_document_termlist_end :: Ptr CDocument -> IO (Ptr CTermIterator)
   
 foreign import ccall "document_values_count"
-    cx_document_values_count :: Ptr CDocument -> IO CUInt
+    cx_document_values_count :: Ptr CDocument -> IO Word32
 
 foreign import ccall "document_values_begin"
     cx_document_values_begin :: Ptr CDocument -> IO (Ptr CValueIterator)
@@ -371,7 +371,7 @@ foreign import ccall "document_values_end"
     cx_document_values_end :: Ptr CDocument -> IO (Ptr CValueIterator)
 
 foreign import ccall "document_get_docid"
-    cx_document_get_docid :: Ptr CDocument -> IO CUInt
+    cx_document_get_docid :: Ptr CDocument -> IO Word32
 
 foreign import ccall "document_get_description"
     cx_document_get_description :: Ptr CDocument -> IO CString
@@ -396,13 +396,13 @@ foreign import ccall "enquire_set_query"
     cx_enquire_set_query
         :: Ptr CEnquire
         -> Ptr CQuery
-        -> CUInt          -- ^ query length
+        -> Word32          -- ^ query length
         -> IO ()
 
 foreign import ccall "enquire_get_mset"
     cx_enquire_get_mset :: Ptr CEnquire
-                        -> CUInt        -- ^ skip n items
-                        -> CUInt        -- ^ maximum amount of items
+                        -> Word32        -- ^ skip n items
+                        -> Word32        -- ^ maximum amount of items
                         -> IO (Ptr CMSet)
 
 -- MSet
@@ -439,31 +439,31 @@ foreign import ccall "mset_convert_document_to_percent"
         :: Ptr CMSet -> Ptr CMSetIterator -> IO Int
 
 foreign import ccall "mset_get_termfreq"
-    cx_mset_get_termfreq :: Ptr CMSet -> CString -> IO CUInt
+    cx_mset_get_termfreq :: Ptr CMSet -> CString -> IO Word32
 
 foreign import ccall "mset_get_termweight"
     cx_mset_get_termweight :: Ptr CMSet -> CString -> IO Double
 
 foreign import ccall "mset_get_firstitem"
-    cx_mset_get_firstitem :: Ptr CMSet -> IO CUInt
+    cx_mset_get_firstitem :: Ptr CMSet -> IO Word32
 
 foreign import ccall "mset_get_matches_lower_bound"
-    cx_mset_get_matches_lower_bound :: Ptr CMSet -> IO CUInt
+    cx_mset_get_matches_lower_bound :: Ptr CMSet -> IO Word32
 
 foreign import ccall "mset_get_matches_estimated"
-    cx_mset_get_matches_estimated :: Ptr CMSet -> IO CUInt
+    cx_mset_get_matches_estimated :: Ptr CMSet -> IO Word32
 
 foreign import ccall "mset_get_matches_upper_bound"
-    cx_mset_get_matches_upper_bound :: Ptr CMSet -> IO CUInt
+    cx_mset_get_matches_upper_bound :: Ptr CMSet -> IO Word32
 
 foreign import ccall "mset_get_uncollapsed_matches_lower_bound"
-    cx_mset_get_uncollapsed_matches_lower_bound :: Ptr CMSet -> IO CUInt  
+    cx_mset_get_uncollapsed_matches_lower_bound :: Ptr CMSet -> IO Word32  
 
 foreign import ccall "mset_get_uncollapsed_matches_estimated"
-    cx_mset_get_uncollapsed_matches_estimated :: Ptr CMSet -> IO CUInt
+    cx_mset_get_uncollapsed_matches_estimated :: Ptr CMSet -> IO Word32
 
 foreign import ccall "mset_get_uncollapsed_matches_upper_bound"
-    cx_mset_get_uncollapsed_matches_upper_bound :: Ptr CMSet -> IO CUInt
+    cx_mset_get_uncollapsed_matches_upper_bound :: Ptr CMSet -> IO Word32
 
 foreign import ccall "mset_get_max_possible"
     cx_mset_get_max_possible :: Ptr CMSet -> IO Double
@@ -472,10 +472,10 @@ foreign import ccall "mset_get_max_attained"
     cx_mset_get_max_attained :: Ptr CMSet -> IO Double
 
 foreign import ccall "mset_size"
-    cx_mset_size :: Ptr CMSet -> IO CUInt
+    cx_mset_size :: Ptr CMSet -> IO Word32
 
 foreign import ccall "mset_max_size"
-    cx_mset_max_size :: Ptr CMSet -> IO CUInt
+    cx_mset_max_size :: Ptr CMSet -> IO Word32
 
 foreign import ccall "mset_empty"
     cx_mset_empty :: Ptr CMSet -> IO Bool
@@ -493,7 +493,7 @@ foreign import ccall "mset_back"
     cx_mset_back :: Ptr CMSet -> IO (Ptr CMSetIterator)
 
 foreign import ccall "mset_index"
-    cx_mset_index :: Ptr CMSet -> CUInt -> IO (Ptr CMSetIterator)
+    cx_mset_index :: Ptr CMSet -> Word32 -> IO (Ptr CMSetIterator)
 
 foreign import ccall "mset_get_description"
     cx_mset_get_description :: Ptr CMSet -> IO (CString)
@@ -533,7 +533,7 @@ foreign import ccall "&query_delete"
     cx_query_delete :: FunPtr (Ptr CQuery -> IO ())
 
 foreign import ccall "query_new_0"
-    cx_query_new_0 :: CString -> CUInt -> CUInt -> IO (Ptr CQuery)
+    cx_query_new_0 :: CString -> Word32 -> Word32 -> IO (Ptr CQuery)
 
 foreign import ccall "query_new_1"
     cx_query_new_1 :: Op -> Ptr CQuery -> Ptr CQuery -> IO (Ptr CQuery)
@@ -551,7 +551,7 @@ foreign import ccall "query_new_4"
 --    cx_query_new_5 :: Op -> CString -> CString -> IO (Ptr CQuery)
 
 foreign import ccall "query_new_6"
-    cx_query_new_6 :: Op -> CUInt -> CString -> IO (Ptr CQuery)
+    cx_query_new_6 :: Op -> Word32 -> CString -> IO (Ptr CQuery)
 
 -- foreign import ccall "query_new_7"
 
@@ -562,7 +562,7 @@ foreign import ccall "query_match_nothing"
     cx_query_match_nothing :: IO (Ptr CQuery)
 
 foreign import ccall "query_get_length"
-    cx_query_get_length :: Ptr CQuery -> IO CUInt
+    cx_query_get_length :: Ptr CQuery -> IO Word32
 
 foreign import ccall "query_empty"
     cx_query_empty :: Ptr CQuery -> IO Bool
@@ -645,16 +645,16 @@ foreign import ccall "msetiterator_get_document"
     cx_msetiterator_get_document :: Ptr CMSetIterator -> IO (Ptr CDocument)
 
 foreign import ccall "msetiterator_get_rank"
-    cx_msetiterator_get_rank :: Ptr CMSetIterator -> IO CUInt
+    cx_msetiterator_get_rank :: Ptr CMSetIterator -> IO Word32
 
 foreign import ccall "msetiterator_get_weight"
-    cx_msetiterator_get_weight :: Ptr CMSetIterator -> IO CUInt
+    cx_msetiterator_get_weight :: Ptr CMSetIterator -> IO Word32
 
 foreign import ccall "msetiterator_get_collapse_key"
     cx_msetiterator_get_collapse_key :: Ptr CMSetIterator -> IO CString
 
 foreign import ccall "msetiterator_get_collapse_count"
-    cx_msetiterator_get_collapse_count :: Ptr CMSetIterator -> IO CUInt
+    cx_msetiterator_get_collapse_count :: Ptr CMSetIterator -> IO Word32
 
 foreign import ccall "msetiterator_get_percent"
     cx_msetiterator_get_percent :: Ptr CMSetIterator -> IO Int
@@ -695,7 +695,7 @@ foreign import ccall "&positioniterator_delete"
     cx_positioniterator_delete :: FunPtr (Ptr CPositionIterator -> IO ())
 
 foreign import ccall "positioniterator_skip_to"
-    cx_positioniterator_skip_to :: Ptr CPositionIterator -> CUInt -> IO ()
+    cx_positioniterator_skip_to :: Ptr CPositionIterator -> Word32 -> IO ()
 
 foreign import ccall "positioniterator_get_description"
     cx_positioniterator_get_description :: Ptr CPositionIterator
@@ -719,19 +719,19 @@ foreign import ccall "&postingiterator_delete"
     cx_postingiterator_delete :: FunPtr (Ptr CPostingIterator -> IO ())
 
 foreign import ccall "postingiterator_get"
-    cx_postingiterator_get :: Ptr CPostingIterator -> IO CUInt
+    cx_postingiterator_get :: Ptr CPostingIterator -> IO Word32
 
 foreign import ccall "postingiterator_skip_to"
     cx_postingiterator_skip_to
         :: Ptr CPostingIterator
-        -> CUInt                 -- ^ document ID
+        -> Word32                 -- ^ document ID
         -> IO ()
 
 foreign import ccall "postingiterator_get_doclength"
-    cx_postingiterator_get_doclength :: Ptr CPostingIterator -> IO CUInt
+    cx_postingiterator_get_doclength :: Ptr CPostingIterator -> IO Word32
 
 foreign import ccall "postingiterator_get_wdf"
-    cx_postingiterator_get_wdf :: Ptr CPostingIterator -> IO CUInt
+    cx_postingiterator_get_wdf :: Ptr CPostingIterator -> IO Word32
 
 foreign import ccall "postingiterator_positionlist_begin"
     cx_postingiterator_positionlist_begin
@@ -775,13 +775,13 @@ foreign import ccall "termiterator_skip_to"
     cx_termiterator_skip_to :: Ptr CTermIterator -> CString -> IO ()
 
 foreign import ccall "termiterator_get_wdf"
-    cx_termiterator_get_wdf :: Ptr CTermIterator -> IO CUInt
+    cx_termiterator_get_wdf :: Ptr CTermIterator -> IO Word32
 
 foreign import ccall "termiterator_get_termfreq"
-    cx_termiterator_get_termfreq :: Ptr CTermIterator -> IO CUInt
+    cx_termiterator_get_termfreq :: Ptr CTermIterator -> IO Word32
 
 foreign import ccall "termiterator_positionlist_count"
-    cx_termiterator_positionlist_count :: Ptr CTermIterator -> IO CUInt
+    cx_termiterator_positionlist_count :: Ptr CTermIterator -> IO Word32
 
 foreign import ccall "termiterator_positionlist_begin"
     cx_termiterator_positionlist_begin :: Ptr CTermIterator
@@ -814,20 +814,26 @@ foreign import ccall "valueiterator_get"
 foreign import ccall "valueiterator_next"
     cx_valueiterator_next :: Ptr CValueIterator -> IO ()
 
+foreign import ccall "valueiterator_is_end"
+    cx_valueiterator_is_end
+        :: Ptr CValueIterator -- ^ current position
+        -> Ptr CValueIterator -- ^ end
+        -> IO Bool
+
 foreign import ccall "valueiterator_get_docid"
-    cx_valueiterator_get_docid :: Ptr CValueIterator -> IO CUInt
+    cx_valueiterator_get_docid :: Ptr CValueIterator -> IO Word32
 
 foreign import ccall "valueiterator_get_valueno"
-    cx_valueiterator_get_valueno :: Ptr CValueIterator -> IO CUInt
+    cx_valueiterator_get_valueno :: Ptr CValueIterator -> IO Word32
 
 foreign import ccall "valueiterator_skip_to"
     cx_valueiterator_skip_to :: Ptr CValueIterator
-                             -> CUInt -- docid or slot
+                             -> Word32 -- docid or slot
                              -> IO ()
 
 foreign import ccall "valueiterator_check"
     cx_valueiterator_check :: Ptr CValueIterator
-                           -> CUInt              -- docid
+                           -> Word32              -- docid
                            -> IO Bool
 
 foreign import ccall "valueiterator_get_description"

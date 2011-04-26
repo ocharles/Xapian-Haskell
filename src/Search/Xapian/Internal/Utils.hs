@@ -10,6 +10,7 @@ module Search.Xapian.Internal.Utils
      , addTerm'
      , addValue
      , getDocumentTerms
+     , getDocumentValues
      , getDocumentData
      , setDocumentData
 
@@ -29,6 +30,8 @@ import Blaze.ByteString.Builder as Blaze
 import Data.Monoid
 import qualified Data.ByteString as BS
 import Data.ByteString.Char8 (pack, ByteString, packCString, useAsCString)
+import Data.IntMap (IntMap)
+import qualified Data.IntMap as IntMap
 import Data.Serialize
 
 import System.IO.Unsafe (unsafeInterleaveIO)
@@ -103,6 +106,17 @@ collectDocIds = collect cx_msetiterator_next
                         (fmap DocId . cx_msetiterator_get)
                         cx_msetiterator_is_end
 
+collectValues :: ForeignPtr CValueIterator
+              -> ForeignPtr CValueIterator
+              -> IO [(Int, Value)]
+collectValues = collect cx_valueiterator_next
+                        getter
+                        cx_valueiterator_is_end
+  where
+    getter ptr = do value <- BS.packCString =<< cx_valueiterator_get ptr
+                    valno <- cx_valueiterator_get_valueno ptr
+                    return (fromIntegral valno, value)
+
 -- * Document related
 
 newDocumentPtr :: IO DocumentPtr
@@ -141,6 +155,14 @@ addValue docFPtr valno val =
     withForeignPtr docFPtr $ \docPtr ->
     cx_document_add_value docPtr (fromIntegral valno) cval
 
+getDocumentValues :: DocumentPtr -> IO (IntMap Value)
+getDocumentValues docFPtr =
+    unsafeInterleaveIO $
+    withForeignPtr docFPtr $ \docPtr ->
+     do b <- manage =<< cx_document_values_begin docPtr
+        e <- manage =<< cx_document_values_end docPtr
+        fmap IntMap.fromList $ collectValues b e
+
 -- | FIXME wrong implementation
 getDocumentTerms :: DocumentPtr -> IO [Term]
 getDocumentTerms docFPtr =
@@ -159,8 +181,17 @@ setDocumentData docFPtr docData = undefined
 getDocumentData :: Serialize dat
                 => DocumentPtr
                 -> IO (Either Error dat)
-getDocumentData docFPtr = undefined
-
+getDocumentData docFPtr =
+    unsafeInterleaveIO $
+    withForeignPtr docFPtr $ \docPtr ->
+     do dat <- BS.packCString =<< cx_document_get_data docPtr
+        return $ case nullify dat of
+                      Left msg -> Left $ Error Nothing msg
+                      Right nullified ->
+                          case decode nullified of
+                               Left msg   -> Left $ Error Nothing msg
+                               Right dat' -> Right dat'
+  
 -- * handling NULL values
 -- because cstrings can't contain any NULL value, we have to store 7 bytes of
 -- date as 8 bytes of data
@@ -178,7 +209,7 @@ unnullify = Blaze.toByteString . go
     go bs =
       let (xs,xss) = BS.span (\x -> x /= 0 && x /= z) bs
           replacement = if BS.head xss == 0 then z0
-                                            else zz
+                                            else zz -- this part is still not failsafe
       in if BS.null xss
             then Blaze.fromByteString xs
             else Blaze.fromByteString xs `mappend`
@@ -186,20 +217,25 @@ unnullify = Blaze.toByteString . go
                  go (BS.tail xss)
 
 -- | nullify is the inverse of unnullify
-nullify :: ByteString -> ByteString
-nullify = Blaze.toByteString . go
+nullify :: ByteString -> Either String ByteString
+nullify bs = case go bs of
+                  Right builder -> Right $ Blaze.toByteString builder
+                  Left error    -> Left error
   where
+    go :: ByteString -> Either String Blaze.Builder
     go bs =
         let (xs,xss) = BS.span (/= z) bs
             replacement = if xss `BS.index` 1 == _zero then 0 :: Word8
-                                                       else z
+                                                       else z -- this part is still not failsafe
         in  if BS.null xss
-               then Blaze.fromByteString xs
+               then Right $ Blaze.fromByteString xs
                else if BS.length xss == 1
-                       then error $ "nullify: failed to decode document data" -- FIXME
-                       else Blaze.fromByteString xs `mappend`
-                            Blaze.fromStorable replacement `mappend`
-                            go (BS.drop 2 xss)
+                       then Left "nullify: failed to decode document data"
+                       else case go (BS.drop 2 xss) of
+                                 Right rest -> Right $ Blaze.fromByteString xs `mappend`
+                                                       Blaze.fromStorable replacement `mappend`
+                                                       rest
+                                 error      -> error
 
 -- | @stemToDocument stemmer document text@ adds stemmed posting terms derived from
 -- @text@ using the stemming algorith @stemmer@ to @doc@

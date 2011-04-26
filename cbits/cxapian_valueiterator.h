@@ -21,6 +21,9 @@ valueiterator_get (valueiterator *);
 void  // I use void to emphasize the mutation involved
 valueiterator_next (valueiterator *);
 
+bool
+valueiterator_is_end (valueiterator *self, valueiterator *end);
+
 unsigned int
 valueiterator_get_docid (valueiterator *);
 

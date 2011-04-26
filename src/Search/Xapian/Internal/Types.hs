@@ -120,18 +120,20 @@ data OpMulti
 -- --------------------------------------------------------------------
 
 -- * document fields
-type ValueNumber = CUInt
+type ValueNumber = Word32
 type Value       = ByteString
 
 class Ord fields => Prefixable fields where
     getPrefix   :: fields -> ByteString
     stripPrefix :: fields -> ByteString -> Maybe ByteString
+    allFields   :: [fields]
 
 data Fieldless = Fieldless deriving (Show, Ord, Eq)
 
 instance Prefixable Fieldless where
     getPrefix   Fieldless = BS.empty
     stripPrefix Fieldless = const Nothing
+    allFields   = []
 
 type SimpleDocument = Document Fieldless
 
@@ -143,7 +145,7 @@ newtype DocumentId = DocId { getDocId :: Word32 }
 data Document fields dat = Document
     { documentPtr   :: Maybe DocumentPtr
     , documentId    :: Maybe DocumentId
-    , documentLazyStem  :: Maybe Stemmer      -- ^ the stemmer is being committed as well
+    , documentLazyStem  :: Maybe Stemmer
     , documentLazyValues :: IntMap Value
     , documentLazyTerms :: [Term]
     , documentLazyFields :: Map fields [ByteString]

@@ -36,6 +36,12 @@ valueiterator_next (valueiterator *vi)
     (*vi->iter)++; // TODO:does ++ mutate state? does this work as expected?
 }
 
+bool
+valueiterator_is_end (valueiterator *self, valueiterator *end)
+{
+    return (*self->iter == *end->iter);
+}
+
 unsigned int
 valueiterator_get_docid (valueiterator *vi)
 {

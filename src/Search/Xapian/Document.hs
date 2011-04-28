@@ -1,9 +1,9 @@
 module Search.Xapian.Document
      ( -- * Constructor
-       document
-     , simpleDocument
+       emptyDocument
      
        -- * Terms, Fields, and Postings
+     , addData
      , addTerm, addTerms, getTerms
      , addPosting, addPostings
      , addField, addFields, getField
@@ -34,14 +34,12 @@ import Search.Xapian.Internal.Types
 import Search.Xapian.Internal.Utils
 import Search.Xapian.Internal.FFI
 
--- | @document@ constructs a @Document@ which contains only document data.
-document :: (Serialize dat, Prefixable fields) => dat -> Document fields dat
-document dat = Document Nothing Nothing Nothing IntMap.empty [] Map.empty dat Seq.empty
+emptyDocument :: Document fields dat
+emptyDocument = Document Nothing Nothing Nothing Nothing Nothing Nothing Nothing Seq.empty
 
--- | @simpleDocument@ constructs a @SimpleDocument@ which contains only
--- document data. A SimpleDocument does not contain any fields.
-simpleDocument :: Serialize dat => dat -> SimpleDocument dat
-simpleDocument = document
+-- | @setData@ adds data to a document
+addData :: (Serialize dat, Prefixable fields) => dat -> Document fields dat -> Document fields dat
+addData dat = queueDiff $ SetData dat
 
 queueDiff :: DocumentDiff fields dat
           -> (Document fields dat -> Document fields dat)
@@ -50,7 +48,7 @@ queueDiff diff =
 
 
 -- FIXME: this does not return terms manually added ... for now
-getTerms :: Document fields dat -> [Term]
+getTerms :: Document fields dat -> Maybe [Term]
 getTerms = documentLazyTerms
 
 addTerm :: ByteString -> Document fields dat -> Document fields dat
@@ -82,7 +80,9 @@ addFields fieldsMap = addTerms $ map mapper $ Map.toList fieldsMap
     where mapper (field, value) = getPrefix field `BS.append` value
 
 getField :: Prefixable fields => fields -> Document fields dat -> Maybe [ByteString]
-getField field doc = Map.lookup field $ documentLazyFields doc
+getField field doc =
+ do fieldsMap <- documentLazyFields doc
+    Map.lookup field fieldsMap
 
 getValue = undefined
 setValue = undefined

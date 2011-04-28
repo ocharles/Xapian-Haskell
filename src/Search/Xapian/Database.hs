@@ -52,10 +52,11 @@ instance ReadableDatabase Database where
                  do terms <- getDocumentTerms docFPtr
                     values <- getDocumentValues docFPtr
                     return . Right $
-                        (document dat){ documentLazyTerms = terms
-                                      , documentLazyValues = values
-                                      , documentLazyFields = fieldsFromTerms terms
-                                      , documentId = Just docId }
+                        emptyDocument { documentLazyTerms = Just terms
+                                      , documentLazyValues = Just values
+                                      , documentLazyFields = Just $ fieldsFromTerms terms
+                                      , documentId = Just docId
+                                      , documentLazyData = Just dat}
     where
       handleError dbPtr action =
         alloca $ \errorPtr ->

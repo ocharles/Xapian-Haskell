@@ -122,7 +122,7 @@ valueiterator *
 document_values_begin (document *doc)
 {
     valueiterator *valit = new valueiterator();
-    *valit->iter = doc->get->values_begin();
+    valit->iter = new Xapian::ValueIterator(doc->get->values_begin());
     return valit;
 }
 
@@ -130,7 +130,7 @@ valueiterator *
 document_values_end (document *doc)
 {
     valueiterator *valit = new valueiterator();
-    *valit->iter = doc->get->values_end();
+    valit->iter = new Xapian::ValueIterator(doc->get->values_end());
     return valit;
 }
 

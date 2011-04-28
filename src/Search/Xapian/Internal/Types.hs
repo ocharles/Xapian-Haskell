@@ -146,10 +146,10 @@ data Document fields dat = Document
     { documentPtr   :: Maybe DocumentPtr
     , documentId    :: Maybe DocumentId
     , documentLazyStem  :: Maybe Stemmer
-    , documentLazyValues :: IntMap Value
-    , documentLazyTerms :: [Term]
-    , documentLazyFields :: Map fields [ByteString]
-    , documentLazyData  :: dat
+    , documentLazyValues :: Maybe (IntMap Value)
+    , documentLazyTerms :: Maybe [Term]
+    , documentLazyFields :: Maybe (Map fields [ByteString])
+    , documentLazyData  :: Maybe dat
     , documentDiffs :: Seq (DocumentDiff fields dat)
     } deriving (Show)
 

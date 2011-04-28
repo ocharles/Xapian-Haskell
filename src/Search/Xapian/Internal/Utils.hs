@@ -90,11 +90,11 @@ collectTerms b e = collect cx_termiterator_next getter cx_termiterator_is_end b 
     getter ptr =
      do term <- BS.packCString =<< cx_termiterator_get ptr
         positions_len <- cx_termiterator_positionlist_count ptr
-        if positions_len < 0
+        b_pos <- manage =<< cx_termiterator_positionlist_begin ptr
+        e_pos <- manage =<< cx_termiterator_positionlist_end ptr
+        if positions_len <= 0
            then do return $ Term term []
            else do positions <- unsafeInterleaveIO $
-                    do b_pos <- manage =<< cx_termiterator_positionlist_begin ptr
-                       e_pos <- manage =<< cx_termiterator_positionlist_end ptr
                        collectPositions b_pos e_pos
                    return $ Term term positions
 

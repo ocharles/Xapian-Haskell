@@ -7,6 +7,6 @@ main = do
   (dbPath:store:terms) <- getArgs
   (Right db) <- openWritableDatabase CreateOrOpen dbPath
   let doc :: SimpleDocument String
-      doc = addPostings (zip [1..] $ map pack terms) $ document store
+      doc = addPostings ((map pack terms) `zip` [1..]) $ addData store $ emptyDocument
   addDocument db doc
   return ()

@@ -44,7 +44,7 @@ instance ReadableDatabase Database where
   getDocument (Database database) docId@(DocId id') =
        withForeignPtr database $ \dbPtr ->
        handleError dbPtr $ \docPtr ->
-        do docFPtr <- newForeignPtr cx_document_delete docPtr
+        do docFPtr <- manage docPtr
            eitherDocDat  <- getDocumentData docFPtr
            case eitherDocDat of
                 Left err  -> return (Left err)
@@ -56,7 +56,8 @@ instance ReadableDatabase Database where
                                       , documentLazyValues = Just values
                                       , documentLazyFields = Just $ fieldsFromTerms terms
                                       , documentId = Just docId
-                                      , documentLazyData = Just dat}
+                                      , documentLazyData = Just dat
+                                      , documentPtr = Just docFPtr}
     where
       handleError dbPtr action =
         alloca $ \errorPtr ->

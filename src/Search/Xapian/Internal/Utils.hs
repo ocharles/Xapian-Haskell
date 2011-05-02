@@ -16,7 +16,7 @@ module Search.Xapian.Internal.Utils
        -- * Stemmer related
      , createStemmer
      , stemWord
-     , stemToDocument
+     , indexToDocument
 
        -- * Debug
      , nullify
@@ -26,7 +26,9 @@ module Search.Xapian.Internal.Utils
 import Foreign
 import Foreign.C.String
 import Blaze.ByteString.Builder as Blaze
+import Control.Monad
 import Data.Monoid
+import Data.Maybe (maybe)
 import qualified Data.ByteString as BS
 import Data.ByteString.Char8 (pack, ByteString, packCString, useAsCString)
 import Data.IntMap (IntMap)
@@ -230,14 +232,28 @@ nullify bs = case go bs of
                                                        rest
                                  error      -> error
 
--- | @stemToDocument stemmer document text@ adds stemmed posting terms derived from
+-- | @indexToDocument stemmer document text@ adds stemmed posting terms derived from
 -- @text@ using the stemming algorith @stemmer@ to @doc@
-stemToDocument :: Stemmer      -- ^ The stemming algorithm to use
-               -> ForeignPtr CDocument  -- ^ The document to add terms to
-               -> ByteString    -- ^ The text to stem and index
-               -> IO ()
-stemToDocument stemmer document text =
-  undefined  -- need to write the FFI to Xapian::TermGenerator first
+indexToDocument
+    :: Ptr CDocument  -- ^ The document to add terms to
+    -> Maybe Stemmer  -- ^ The stemming algorithm to use
+    -> ByteString     -- ^ The text to stem and index
+    -> IO ()
+indexToDocument docPtr mStemmer text =
+ do termgenFPtr <- manage =<< cx_termgenerator_new
+    withForeignPtr termgenFPtr $ \termgen ->
+     do maybe (return ())
+              (\stemmer ->
+               do stemFPtr <- createStemmer stemmer
+                  withForeignPtr stemFPtr $ \stemPtr ->
+                      cx_termgenerator_set_stemmer termgen stemPtr)
+              mStemmer
+        useAsCString text $ \ctext ->
+         do prefix <- newCString ""
+            let weight = 1
+            cx_termgenerator_set_document termgen docPtr
+            cx_termgenerator_get_description termgen >>= peekCString >>= putStrLn
+            cx_termgenerator_index_text termgen ctext weight prefix
 
 stemWord :: StemPtr -> ByteString -> IO ByteString
 stemWord stemFPtr word =

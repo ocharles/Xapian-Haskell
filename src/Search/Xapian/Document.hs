@@ -3,9 +3,10 @@ module Search.Xapian.Document
        emptyDocument
      
        -- * Terms, Fields, and Postings
-     , addData
+     , setData
      , addTerm, addTerms, getTerms
      , addPosting, addPostings
+     , addRawText
      , addField, addFields, getField
      , getValue, setValue
      , clearValues, clearTerms
@@ -37,9 +38,12 @@ import Search.Xapian.Internal.FFI
 emptyDocument :: Document fields dat
 emptyDocument = Document Nothing Nothing Nothing Nothing Nothing Nothing Nothing Seq.empty
 
+setStem :: Stemmer -> Document fields dat -> Document fields dat
+setStem stemmer doc = doc{documentLazyStem = Just stemmer}
+
 -- | @setData@ adds data to a document
-addData :: (Serialize dat, Prefixable fields) => dat -> Document fields dat -> Document fields dat
-addData dat = queueDiff $ SetData dat
+setData :: (Serialize dat, Prefixable fields) => dat -> Document fields dat -> Document fields dat
+setData dat = queueDiff $ SetData dat
 
 queueDiff :: DocumentDiff fields dat
           -> (Document fields dat -> Document fields dat)
@@ -70,6 +74,9 @@ addPostings terms = queueDiff $ AddPostings (map (\(term,pos) -> (term,pos,1)) t
 removePosting = undefined
 removePostings = undefined
 
+addRawText :: ByteString -> Document fields dat -> Document fields dat
+addRawText = queueDiff . AddRawText
+
 addField :: Prefixable field => field -> ByteString
          -> Document fields dat -> Document fields dat
 addField field value = addTerm $ getPrefix field `BS.append` value
@@ -94,8 +101,9 @@ fieldsFromTerms :: Prefixable fields => [Term] -> Map fields [ByteString]
 fieldsFromTerms = Map.fromListWith (++) . go
   where
     go (Term term []:rest) =
-        head [(f, [fromJust $ stripPrefix f term]) | (f,pre) <- prefixes, pre `BS.isPrefixOf` term] :
-        go rest
+        case [(f, [fromJust $ stripPrefix f term]) | (f,pre) <- prefixes, pre `BS.isPrefixOf` term] of
+             field:_ -> field : go rest
+             _       -> go rest
     go (_:rest) = go rest
     go [] = []
     prefixes = map (id &&& getPrefix) allFields
@@ -150,8 +158,8 @@ applyAccumulatedChanges document =
                  forM_ terms $ \(term,pos,wdfdec) ->
                  useAsCString term $ \cterm ->
                  cx_document_remove_posting docPtr cterm pos wdfdec
-             AddRawText _ ->
-                 undefined -- | TODO: write termgenerator FFI first
+             AddRawText rawtext ->
+                 indexToDocument docPtr (documentLazyStem document) rawtext
              SetData dat ->
                  useAsCString (unnullify $ encode dat) $ \cDat ->
                  cx_document_set_data docPtr cDat

@@ -612,6 +612,24 @@ foreign import ccall "stem_get_available_languages"
 
 data CStopper
 
+foreign import ccall "stopper_simple_stopper_new"
+    cx_stopper_simple_stopper_new :: IO (Ptr CStopper)
+
+foreign import ccall "&stopper_delete"
+    cx_stopper_delete :: FunPtr (Ptr CStopper -> IO ())
+
+foreign import ccall "stopper_check"
+    cx_stopper_check :: Ptr CStopper -> CString -> IO Bool
+
+foreign import ccall "stopper_get_description"
+    cx_stopper_get_description :: Ptr CStopper -> IO CString
+
+-- | make sure you call this on a Xapian::SimpleStopper
+foreign import ccall "stopper_simple_stopper_add"
+    cx_stopper_simple_stopper_add :: Ptr CStopper -> CString -> IO ()
+
+
+
 -- MSetIterator
 -- ---------------------------------------------------------
 
@@ -838,3 +856,72 @@ foreign import ccall "valueiterator_check"
 
 foreign import ccall "valueiterator_get_description"
     cx_valueiterator_get_description :: Ptr CValueIterator -> IO CString
+
+
+-- TermGenerator
+-- ---------------------------------------------------------
+
+data CTermGenerator
+
+instance Manageable CTermGenerator where
+    manage = newForeignPtr cx_termgenerator_delete
+
+foreign import ccall "termgenerator_new"
+    cx_termgenerator_new :: IO (Ptr CTermGenerator)
+
+foreign import ccall "&termgenerator_delete"
+    cx_termgenerator_delete :: FunPtr (Ptr CTermGenerator -> IO ())
+
+foreign import ccall "termgenerator_set_stemmer"
+    cx_termgenerator_set_stemmer :: Ptr CTermGenerator -> Ptr CStem -> IO ()
+
+foreign import ccall "termgenerator_set_stopper"
+    cx_termgenerator_set_stopper :: Ptr CTermGenerator -> Ptr CStopper -> IO ()
+
+foreign import ccall "termgenerator_set_document"
+    cx_termgenerator_set_document :: Ptr CTermGenerator -> Ptr CDocument -> IO ()
+
+foreign import ccall "termgenerator_get_document"
+    cx_termgenerator_get_document :: Ptr CTermGenerator -> IO (Ptr CDocument)
+
+-- | database must be writable
+foreign import ccall "termgenerator_set_database"
+    cx_termgenerator_set_database :: Ptr CTermGenerator -> Ptr CDatabase -> IO ()
+
+foreign import ccall "termgenerator_set_flags"
+    cx_termgenerator_set_flags
+        :: Ptr CTermGenerator
+        -> Int -- ^toggle
+        -> Int -- ^mask
+        -> Int
+
+foreign import ccall "termgenerator_index_text"
+    cx_termgenerator_index_text
+        :: Ptr CTermGenerator
+        -> CString -- ^text
+        -> Word32  -- ^weight
+        -> CString -- ^prefix
+        -> IO ()
+
+foreign import ccall "termgenerator_index_text_wo_positions"
+    cx_termgenerator_index_text_wo_positions
+        :: Ptr CTermGenerator
+        -> CString -- ^text
+        -> Word32  -- ^weight
+        -> CString -- ^prefix
+        -> IO ()
+
+foreign import ccall "termgenerator_increase_termpos"
+    cx_termgenerator_increase_termpos
+        :: Ptr CTermGenerator
+        -> Word32  -- ^delta
+        -> IO ()
+
+foreign import ccall "termgenerator_get_termpos"
+    cx_termgenerator_get_termpos :: Ptr CTermGenerator -> IO Word32
+
+foreign import ccall "termgenerator_set_termpos"
+    cx_termgenerator_set_termpos :: Ptr CTermGenerator -> Word32 -> IO ()
+
+foreign import ccall "termgenerator_get_description"
+    cx_termgenerator_get_description :: Ptr CTermGenerator -> IO CString

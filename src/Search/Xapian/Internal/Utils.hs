@@ -252,7 +252,6 @@ indexToDocument docPtr mStemmer text =
          do prefix <- newCString ""
             let weight = 1
             cx_termgenerator_set_document termgen docPtr
-            cx_termgenerator_get_description termgen >>= peekCString >>= putStrLn
             cx_termgenerator_index_text termgen ctext weight prefix
 
 stemWord :: StemPtr -> ByteString -> IO ByteString

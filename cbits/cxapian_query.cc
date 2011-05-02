@@ -130,7 +130,7 @@ query_get_terms_end (query *q)
     return termiter;
 }
 
-bool
+cbool
 query_empty (query *q)
 {
     return q->get->empty();

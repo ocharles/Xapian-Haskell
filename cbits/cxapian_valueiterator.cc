@@ -36,7 +36,7 @@ valueiterator_next (valueiterator *vi)
     (*vi->iter)++; // TODO:does ++ mutate state? does this work as expected?
 }
 
-bool
+cbool
 valueiterator_is_end (valueiterator *self, valueiterator *end)
 {
     return (*self->iter == *end->iter);
@@ -60,7 +60,7 @@ valueiterator_skip_to (valueiterator *vi, unsigned int docid_or_slot)
     vi->iter->skip_to( docid_or_slot );
 }
 
-bool
+cbool
 valueiterator_check (valueiterator *vi, unsigned int docid)
 {
     return vi->iter->check((Xapian::docid)docid);

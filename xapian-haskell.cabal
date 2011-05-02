@@ -28,19 +28,6 @@ extra-source-files: examples/QuickStartIndex.hs
                     cbits/cxapian_types.h
                     cbits/cxapian_valueiterator.h
                     cbits/Makefile
-                    cbits/cxapian_database.cc
-                    cbits/cxapian_document.cc
-                    cbits/cxapian_enquire.cc
-                    cbits/cxapian_mset.cc
-                    cbits/cxapian_msetiterator.cc
-                    cbits/cxapian_positioniterator.cc
-                    cbits/cxapian_postingiterator.cc
-                    cbits/cxapian_query.cc
-                    cbits/cxapian_stem.cc
-                    cbits/cxapian_stopper.cc
-                    cbits/cxapian_termgenerator.cc
-                    cbits/cxapian_termiterator.cc
-                    cbits/cxapian_valueiterator.cc
 
 source-repository HEAD
   type: git
@@ -68,7 +55,7 @@ library
   extensions:         EmptyDataDecls,
                       ForeignFunctionInterface,
                       TypeSynonymInstances
-  x-cc-sources:       cbits/cxapian_database.cc
+  c-sources:          cbits/cxapian_database.cc
                       cbits/cxapian_document.cc
                       cbits/cxapian_enquire.cc
                       cbits/cxapian_mset.cc
@@ -81,7 +68,5 @@ library
                       cbits/cxapian_termgenerator.cc
                       cbits/cxapian_termiterator.cc
                       cbits/cxapian_valueiterator.cc
-  x-cc-options:       -Wall -c
-  x-cc-includeDirs:   cbits/
-  x-cc-compiler:      c++
+  cc-options:         -Wall -c
   extra-libraries:    xapian

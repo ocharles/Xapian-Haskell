@@ -44,7 +44,7 @@ database_termlist_begin (database *, unsigned int docid);
 termiterator *
 database_termlist_end (database *, unsigned docid);
 
-bool
+cbool
 database_has_positions (database *);
 
 positioniterator *
@@ -77,7 +77,7 @@ database_get_avlength (database *);
 unsigned int
 database_get_termfreq (database *, const char *tname);
 
-bool
+cbool
 database_term_exists (database *, const char *tname);
 
 unsigned int
@@ -173,7 +173,7 @@ void
 database_commit (database *);
 
 void
-database_begin_transaction (database *, bool flushed);
+database_begin_transaction (database *, cbool flushed);
 
 void
 database_commit_transaction (database *);

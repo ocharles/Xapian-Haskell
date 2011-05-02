@@ -36,7 +36,7 @@ msetiterator_prev (msetiterator *mi)
     (*mi->iter)--; // TODO: does this work?
 }
 
-bool
+cbool
 msetiterator_is_end (msetiterator *self, msetiterator *other)
 {
     return (*self->iter == *other->iter);

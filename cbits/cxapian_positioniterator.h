@@ -15,7 +15,7 @@ positioniterator_next (positioniterator *);
 unsigned int
 positioniterator_get (positioniterator *);
 
-bool
+cbool
 positioniterator_is_end (positioniterator *, positioniterator *end);
 
 positioniterator *

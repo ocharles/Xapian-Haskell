@@ -11,6 +11,7 @@ import qualified Data.ByteString as BS
 class Manageable a where
     manage :: Ptr a -> IO (ForeignPtr a)
 
+type CBool = CInt
 
 -- Generic Database
 -- ---------------------------------------------------------
@@ -63,7 +64,7 @@ foreign import ccall unsafe "database_termlist_end"
     cx_database_termlist_end :: Ptr CDatabase -> IO (Ptr CTermIterator)
 
 foreign import ccall unsafe "database_has_positions"
-    cx_database_has_positions :: Ptr CDatabase -> IO Bool
+    cx_database_has_positions :: Ptr CDatabase -> IO CBool
 
 foreign import ccall unsafe "database_positionlist_begin"
     cx_database_positionlist_begin :: Ptr CDatabase -> IO (Ptr CPositionIterator)
@@ -223,7 +224,7 @@ foreign import ccall unsafe "database_commit"
 foreign import ccall unsafe "database_begin_transaction"
     cx_database_begin_transaction
         :: Ptr CDatabase
-        -> Bool          -- ^ flushed
+        -> CBool          -- ^ flushed
         -> IO ()
 
 foreign import ccall unsafe "database_commit_transaction"
@@ -478,7 +479,7 @@ foreign import ccall unsafe "mset_max_size"
     cx_mset_max_size :: Ptr CMSet -> IO Word32
 
 foreign import ccall unsafe "mset_empty"
-    cx_mset_empty :: Ptr CMSet -> IO Bool
+    cx_mset_empty :: Ptr CMSet -> IO CBool
 
 foreign import ccall unsafe "mset_swap"
     cx_mset_swap :: Ptr CMSet -> Ptr CMSet -> IO ()
@@ -565,7 +566,7 @@ foreign import ccall unsafe "query_get_length"
     cx_query_get_length :: Ptr CQuery -> IO Word32
 
 foreign import ccall unsafe "query_empty"
-    cx_query_empty :: Ptr CQuery -> IO Bool
+    cx_query_empty :: Ptr CQuery -> IO CBool
  
 foreign import ccall unsafe "query_serialise"
     cx_query_serialise :: Ptr CQuery -> IO CString
@@ -619,7 +620,7 @@ foreign import ccall unsafe "&stopper_delete"
     cx_stopper_delete :: FunPtr (Ptr CStopper -> IO ())
 
 foreign import ccall unsafe "stopper_check"
-    cx_stopper_check :: Ptr CStopper -> CString -> IO Bool
+    cx_stopper_check :: Ptr CStopper -> CString -> IO CBool
 
 foreign import ccall unsafe "stopper_get_description"
     cx_stopper_get_description :: Ptr CStopper -> IO CString
@@ -654,7 +655,7 @@ foreign import ccall unsafe "msetiterator_prev"
     cx_msetiterator_prev :: Ptr CMSetIterator -> IO ()
 
 foreign import ccall unsafe "msetiterator_is_end"
-    cx_msetiterator_is_end :: Ptr CMSetIterator -> Ptr CMSetIterator -> IO Bool
+    cx_msetiterator_is_end :: Ptr CMSetIterator -> Ptr CMSetIterator -> IO CBool
 
 foreign import ccall unsafe "msetiterator_get"
     cx_msetiterator_get :: Ptr CMSetIterator -> IO Word32
@@ -703,7 +704,7 @@ foreign import ccall unsafe "positioniterator_is_end"
     cx_positioniterator_is_end
         :: Ptr CPositionIterator -- ^ current iterator position
         -> Ptr CPositionIterator -- ^ end
-        -> IO Bool
+        -> IO CBool
 
 foreign import ccall unsafe "positioniterator_copy"
     cx_positioniterator_copy :: Ptr CPositionIterator
@@ -784,7 +785,7 @@ foreign import ccall unsafe "termiterator_next"
 
 foreign import ccall unsafe "termiterator_is_end"
     cx_termiterator_is_end :: Ptr CTermIterator -> Ptr CTermIterator
-                           -> IO Bool
+                           -> IO CBool
 
 foreign import ccall unsafe "termiterator_get"
     cx_termiterator_get :: Ptr CTermIterator -> IO CString
@@ -836,7 +837,7 @@ foreign import ccall unsafe "valueiterator_is_end"
     cx_valueiterator_is_end
         :: Ptr CValueIterator -- ^ current position
         -> Ptr CValueIterator -- ^ end
-        -> IO Bool
+        -> IO CBool
 
 foreign import ccall unsafe "valueiterator_get_docid"
     cx_valueiterator_get_docid :: Ptr CValueIterator -> IO Word32
@@ -852,7 +853,7 @@ foreign import ccall unsafe "valueiterator_skip_to"
 foreign import ccall unsafe "valueiterator_check"
     cx_valueiterator_check :: Ptr CValueIterator
                            -> Word32              -- docid
-                           -> IO Bool
+                           -> IO CBool
 
 foreign import ccall unsafe "valueiterator_get_description"
     cx_valueiterator_get_description :: Ptr CValueIterator -> IO CString

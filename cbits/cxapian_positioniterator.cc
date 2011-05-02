@@ -21,7 +21,7 @@ positioniterator_get (positioniterator *self)
     return (**self->iter);
 }
 
-bool
+cbool
 positioniterator_is_end (positioniterator *self, positioniterator* end)
 {
     return (*self->iter == *end->iter);

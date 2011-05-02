@@ -18,7 +18,7 @@ stopper_simple_stopper_add (stopper *, const char *word);
 void
 stopper_delete (stopper *);
 
-bool
+cbool
 stopper_check (stopper *, const char *term); // operator()
 
 const char *

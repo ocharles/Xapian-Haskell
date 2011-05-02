@@ -99,7 +99,7 @@ database_termlist_end (database *db, unsigned int docid)
     return ti;
 }
 
-bool
+cbool
 database_has_positions (database *db)
 {
     return db->get->has_positions();
@@ -181,7 +181,7 @@ database_get_termfreq (database *db, const char *tname)
     return db->get->get_termfreq( std::string(tname) );
 }
 
-bool
+cbool
 database_term_exists (database *db, const char *tname)
 {
     return db->get->term_exists( std::string(tname) );
@@ -428,7 +428,7 @@ database_commit (database *db)
 }
 
 void
-database_begin_transaction (database *db, bool flushed)
+database_begin_transaction (database *db, cbool flushed)
 {
     (__writable_db(db->get))->begin_transaction();
 }

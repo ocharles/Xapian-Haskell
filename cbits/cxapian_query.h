@@ -78,7 +78,7 @@ query_get_terms_begin (query *);
 termiterator *
 query_get_terms_end (query *);
 
-bool
+cbool
 query_empty (query *);
 
 const char *

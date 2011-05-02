@@ -132,7 +132,7 @@ mset_max_size (mset *m)
     return m->get->max_size();
 }
 
-bool
+cbool
 mset_empty (mset *m)
 {
     return m->get->empty();

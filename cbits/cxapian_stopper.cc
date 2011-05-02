@@ -26,7 +26,7 @@ stopper_delete (stopper *s)
     delete s;
 }
 
-bool
+cbool
 stopper_check (stopper *s, const char *term)
 {
     return (*s->get)(std::string(term));

@@ -31,7 +31,7 @@ termiterator_next (termiterator *self)
     (*self->iter)++;
 }
 
-bool
+cbool
 termiterator_is_end (termiterator *self, termiterator *end)
 {
     return (*self->iter == *end->iter);

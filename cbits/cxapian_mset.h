@@ -69,7 +69,7 @@ mset_size (mset *);
 unsigned int
 mset_max_size (mset *);
 
-bool
+cbool
 mset_empty (mset *);
 
 void

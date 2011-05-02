@@ -59,7 +59,7 @@ import Search.Xapian.Internal.FFI
 -- effectful computation
 collect :: (Ptr a -> IO ()) -- next
         -> (Ptr a -> IO b)  -- get
-        -> (Ptr a -> Ptr a -> IO Bool) -- finished?
+        -> (Ptr a -> Ptr a -> IO CBool) -- finished?
         -> ForeignPtr a -- current position
         -> ForeignPtr a -- end
         -> IO [b]
@@ -70,7 +70,7 @@ collect next' get' finished' pos' end' =
   where
     collect' next get finished pos end =
      do exit <- finished pos end
-        if exit
+        if exit /= 0
            then do return []
            else do elem <- get pos
                    next pos

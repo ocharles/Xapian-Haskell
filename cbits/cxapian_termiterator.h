@@ -18,7 +18,7 @@ termiterator_delete (termiterator *);
 void
 termiterator_next (termiterator *);
 
-bool
+cbool
 termiterator_is_end (termiterator *, termiterator *end);
 
 const char *

@@ -56,11 +56,7 @@ module Search.Xapian.Types
        , Stemmer (..)
        ) where
 
-import Data.Either
-import Data.ByteString (ByteString)
-import qualified Data.ByteString as BS
 import Data.Serialize
-import Data.Word
 import Search.Xapian.Internal.Types
 import Search.Xapian.Internal.FFI
 

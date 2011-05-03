@@ -29,17 +29,19 @@ instance ReadableDatabase Database where
   search database@(Database dbFPtr) query (QueryRange off lim) =
    do queryFPtr <- Q.compileQuery query
       withForeignPtr dbFPtr $ \dbPtr ->
+       do enquireFPtr <- manage =<< cx_enquire_new dbPtr
           withForeignPtr queryFPtr $ \queryPtr ->
-           do enquire <- cx_enquire_new dbPtr
-              cx_enquire_set_query enquire queryPtr 0
-              mset <- cx_enquire_get_mset
-                          enquire (fromIntegral off) (fromIntegral lim)
-              begin <- manage =<< cx_mset_begin mset
-              end   <- manage =<< cx_mset_end   mset
-              -- FIXME: should the user be notified if some documents cannot be
-                                                       -- opened?
-              (MSet . rights) <$>
-                  (mapM (getDocument database) =<< collectDocIds begin end)
+              withForeignPtr enquireFPtr $ \enquire ->
+               do cx_enquire_set_query enquire queryPtr 0
+                  msetFPtr <- manage =<< cx_enquire_get_mset
+                      enquire (fromIntegral off) (fromIntegral lim)
+                  withForeignPtr msetFPtr $ \mset ->
+                   do begin <- manage =<< cx_mset_begin mset
+                      end   <- manage =<< cx_mset_end   mset
+                      -- FIXME: should the user be notified if some documents cannot be
+                                                               -- opened?
+                      (MSet . rights) <$>
+                          (mapM (getDocument database) =<< collectDocIds begin end)
 
   getDocument (Database database) docId@(DocId id') =
        withForeignPtr database $ \dbPtr ->
@@ -65,11 +67,11 @@ instance ReadableDatabase Database where
             if handle == nullPtr
                then do err <- peekCString =<< peek errorPtr
                        return . Left $ Error (Just DocNotFoundError) err
-               else do action handle
+               else manage handle >>= flip withForeignPtr action
 
 instance ReadableDatabase WritableDatabase where
-  search (WritableDatabase db) = search db
-  getDocument (WritableDatabase db) id' = getDocument db id'
+  search (WritableDatabase db) = search (Database $ castForeignPtr db)
+  getDocument (WritableDatabase db) id' = getDocument (Database $ castForeignPtr db) id'
 
 -- * opening databases
 
@@ -106,8 +108,7 @@ openWritableDatabase option path =
       if dbHandle == nullPtr
          then do err <- peekCString =<< peek errorPtr
                  return (Left $ Error (Just DatabaseOpeningError) err)
-         else do managed <- newForeignPtr cx_database_delete dbHandle
-                 return (Right $ WritableDatabase $ Database managed)
+         else do fmap (Right . WritableDatabase) (manage dbHandle)
 
 -- * document handling
 
@@ -117,7 +118,7 @@ addDocument :: (Serialize dat, Prefixable fields)
             => WritableDatabase fields dat
             -> Document fields dat
             -> IO DocumentId
-addDocument (WritableDatabase (Database dbFPtr)) document =
+addDocument (WritableDatabase dbFPtr) document =
     withForeignPtr dbFPtr $ \dbPtr ->
      do docFPtr <- applyAccumulatedChanges document
         withForeignPtr docFPtr $ \docPtr ->
@@ -125,13 +126,13 @@ addDocument (WritableDatabase (Database dbFPtr)) document =
 
 deleteDocumentById :: (Serialize dat, Prefixable fields)
                    => WritableDatabase fields dat -> DocumentId -> IO ()
-deleteDocumentById (WritableDatabase (Database dbFPtr)) (DocId id') =
+deleteDocumentById (WritableDatabase dbFPtr) (DocId id') =
     withForeignPtr dbFPtr $ \dbPtr ->
         cx_database_delete_document_by_id dbPtr id'
 
 deleteDocumentByTerm :: (Serialize dat, Prefixable fields)
                      => WritableDatabase fields dat -> ByteString -> IO ()
-deleteDocumentByTerm (WritableDatabase (Database dbFPtr)) term =
+deleteDocumentByTerm (WritableDatabase dbFPtr) term =
     withForeignPtr dbFPtr $ \dbPtr ->
     useAsCString term     $ \cterm ->
         cx_database_delete_document_by_term dbPtr cterm
@@ -142,7 +143,7 @@ replaceDocument :: (Serialize dat, Prefixable fields)
                 -> DocumentId
                 -> Document fields dat
                 -> IO ()
-replaceDocument (WritableDatabase (Database dbFPtr)) (DocId id') document =
+replaceDocument (WritableDatabase dbFPtr) (DocId id') document =
     withForeignPtr dbFPtr $ \dbPtr ->
      do docFPtr <- applyAccumulatedChanges document
         withForeignPtr docFPtr $ \docPtr ->

@@ -8,4 +8,5 @@ main = do
   MSet results <- search db (queryAny terms) (QueryRange 0 10)
   forM_ (results :: [SimpleDocument String]) $ \result ->
    do putStr "You may be interested in document#"
-      print result
+      print (documentLazyData result)
+--      print result

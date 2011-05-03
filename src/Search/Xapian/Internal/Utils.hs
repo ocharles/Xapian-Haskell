@@ -284,5 +284,4 @@ createStemmer stemmer =
                     Swedish -> "swedish"
                     Turkish -> "turkish"
     in useAsCString (pack lang) $ \clang ->
-        do cx_stem_new_with_language clang
-           >>= newForeignPtr cx_stem_delete
+        do cx_stem_new_with_language clang >>= manage

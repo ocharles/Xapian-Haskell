@@ -5,6 +5,8 @@ module Search.Xapian.Internal.Types
 
        , WritableDatabase (..)
        , Database (..)
+       , castPtr
+       , castForeignPtr
 
        , Query (..)
        , OpNullary (..)
@@ -61,17 +63,17 @@ data NativeError
     = DatabaseOpeningError
     | DocNotFoundError
     | GenericError
-  deriving (Eq, Show)
+    deriving (Eq, Show)
 
 
 -- * Database related types
 -- --------------------------------------------------------------------
 
 data Database fields dat = Database !(ForeignPtr CDatabase)
-  deriving (Eq, Show)
+    deriving (Eq, Show)
 
-newtype WritableDatabase fields dat = WritableDatabase (Database fields dat)
-
+data WritableDatabase fields dat = WritableDatabase !(ForeignPtr CWritableDatabase)
+    deriving (Eq, Show)
 
 -- * Query related types
 -- --------------------------------------------------------------------

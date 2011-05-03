@@ -182,10 +182,6 @@ foreign import ccall unsafe "database_get_uuid"
 -- ---------------------------------------------------------
 
 type DbAction = Int
-newtype WritableDatabasePtr = WritableDatabasePtr (DatabasePtr)
-
--- FIXME: should be instance of Writable
-manageWritableDatabase = fmap WritableDatabasePtr . manage
 
 foreign import ccall unsafe "DB_CREATE_OR_OPEN"
   cx_database_DB_CREATE_OR_OPEN :: DbAction
@@ -199,92 +195,97 @@ foreign import ccall unsafe "DB_CREATE_OR_OVERWRITE"
 foreign import ccall unsafe "DB_OPEN"
   cx_database_DB_OPEN :: DbAction
 
--- ensure you only use following functions on writable databases, i.e.
--- databases constructed via database_new_writable
+
+data CWritableDatabase
+type WritableDatabasePtr = ForeignPtr CWritableDatabase
+
+instance Manageable CWritableDatabase where
+    manage = newForeignPtr cx_database_writable_delete
+
 
 foreign import ccall unsafe "database_writable_new"
-    cx_database_writable_new :: IO (Ptr CDatabase)
+    cx_database_writable_new :: IO (Ptr CWritableDatabase)
 
 foreign import ccall unsafe "database_writable_new_from_path"
     cx_database_writable_new_from_path
         :: CString            -- ^ database path
         -> DbAction           -- ^ how to open the database
         -> Ptr CString        -- ^ string for error messages to be filled in
-        -> IO (Ptr CDatabase)
+        -> IO (Ptr CWritableDatabase)
 
 foreign import ccall unsafe "database_writable_copy"
-    cx_database_writable_copy :: Ptr CDatabase -> IO (Ptr CDatabase)
+    cx_database_writable_copy :: Ptr CWritableDatabase -> IO (Ptr CWritableDatabase)
 
 foreign import ccall unsafe "&database_writable_delete"
-    cx_database_writable_delete :: FunPtr (Ptr CDatabase -> IO ())
+    cx_database_writable_delete :: FunPtr (Ptr CWritableDatabase -> IO ())
 
 foreign import ccall unsafe "database_commit"
-    cx_database_commit :: Ptr CDatabase -> IO ()
+    cx_database_commit :: Ptr CWritableDatabase -> IO ()
 
 foreign import ccall unsafe "database_begin_transaction"
     cx_database_begin_transaction
-        :: Ptr CDatabase
+        :: Ptr CWritableDatabase
         -> CBool          -- ^ flushed
         -> IO ()
 
 foreign import ccall unsafe "database_commit_transaction"
-    cx_database_commit_transaction :: Ptr CDatabase -> IO ()
+    cx_database_commit_transaction :: Ptr CWritableDatabase -> IO ()
 
 foreign import ccall unsafe "database_cancel_transaction"
-    cx_database_cancel_transaction :: Ptr CDatabase -> IO ()
+    cx_database_cancel_transaction :: Ptr CWritableDatabase -> IO ()
 
 foreign import ccall unsafe "database_add_document"
-    cx_database_add_document :: Ptr CDatabase -> Ptr CDocument -> IO Word32
+    cx_database_add_document :: Ptr CWritableDatabase -> Ptr CDocument -> IO Word32
 
 foreign import ccall unsafe "database_delete_document_by_id"
-    cx_database_delete_document_by_id :: Ptr CDatabase -> Word32 -> IO ()
+    cx_database_delete_document_by_id :: Ptr CWritableDatabase -> Word32 -> IO ()
 
 foreign import ccall unsafe "database_delete_document_by_term"
-    cx_database_delete_document_by_term :: Ptr CDatabase -> CString -> IO ()
+    cx_database_delete_document_by_term :: Ptr CWritableDatabase -> CString -> IO ()
 
 foreign import ccall unsafe "database_replace_document"
-    cx_database_replace_document :: Ptr CDatabase -> Word32 -> Ptr CDocument -> IO ()
+    cx_database_replace_document :: Ptr CWritableDatabase -> Word32 -> Ptr CDocument -> IO ()
 
 foreign import ccall unsafe "database_add_spelling"
     cx_database_add_spelling
-        :: Ptr CDatabase
+        :: Ptr CWritableDatabase
         -> CString       -- ^ word
         -> Word32         -- ^ frequency increase
         -> IO ()
 
 foreign import ccall unsafe "database_remove_spelling"
     cx_database_remove_spelling
-        :: Ptr CDatabase
+        :: Ptr CWritableDatabase
         -> CString       -- ^ word
         -> Word32         -- ^ frequency decrease
         -> IO ()
 
 foreign import ccall unsafe "database_add_synonym"
     cx_database_add_synonym
-        :: Ptr CDatabase
+        :: Ptr CWritableDatabase
         -> CString       -- ^ term
         -> CString       -- ^ synonym
         -> IO ()
 
 foreign import ccall unsafe "database_remove_synonym"
     cx_database_remove_synonym
-        :: Ptr CDatabase
+        :: Ptr CWritableDatabase
         -> CString       -- ^ term
         -> CString       -- ^ synonym
         -> IO ()
 
 foreign import ccall unsafe "database_clear_synonyms"
-    cx_database_clear_synonyms :: Ptr CDatabase -> CString -> IO ()
+    cx_database_clear_synonyms :: Ptr CWritableDatabase -> CString -> IO ()
 
 foreign import ccall unsafe "database_set_metadata"
     cx_database_set_metadata
-        :: Ptr CDatabase
+        :: Ptr CWritableDatabase
         -> CString       -- ^ key
         -> CString       -- ^ value
         -> IO ()
 
 foreign import ccall unsafe "database_writable_get_description"
-    cx_database_writable_get_description :: Ptr CDatabase -> IO CString
+    cx_database_writable_get_description :: Ptr CWritableDatabase -> IO CString
 
 -- Document
 -- ---------------------------------------------------------
@@ -410,6 +411,9 @@ foreign import ccall unsafe "enquire_get_mset"
 -- ---------------------------------------------------------
 
 data CMSet
+
+instance Manageable CMSet where
+    manage = newForeignPtr cx_mset_delete
 
 foreign import ccall unsafe "mset_new"
     cx_mset_new :: IO (Ptr CMSet)

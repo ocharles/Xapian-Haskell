@@ -1,20 +1,31 @@
 TODO
 ----
 
+* Exceptions:
+  * make sure, that any exception in the c bindings is caught
+  * document occurences of exceptions
+  * throw exceptions instead of returning `IO (Either Error value)` which
+      simplifies the API a lot
+  * redesign Error consequently
+  * is there a good practice regarding how to call 'exceptionable' functions?
+
+* Encoding:
+  * can we index Sanskrit?
+
+* Type Safety:
+  * (e.g. you cannot call functions for writable databases on read-only databases)
+
+* Testing:
+  * Uuuhh..
+
+* Writing 'withForeignPtr' all the time is *visually unpleasant*
 * reduce boilerplate in nullify/unnullify
-* unify terms and postings
 * some objects are not being deleted such as iterators. can we reconcile this
   with lazy IO (unsafeInterleaveIO)?
-* make Cabal link the c++ object files
 * unpack Op-datatypes in module Query
-* make sure, that any exception in the c bindings is caught
 * what is the best way to create iterators from Haskell to pass to C?
 * do we need to ensure a closed writable database on exit?
 * unsafePerformIO is bad.
-* data is stored as UTF8, which underlying text representation is appropriate?
-* databases may throw Xapian::DatabaseCorruptError or Xapian::DatabaseLockError
-  while opening
-* apply Tibell's style guide
 
 maybe...
 * allow for custom stem algorithms in Haskell

@@ -1,143 +1,130 @@
 #include <xapian.h>
 #include "cxapian_document.h"
 
-document *
+Xapian::Document *
 document_new ()
 {
-    document *doc = new document();
-    doc->get = new Xapian::Document();
-    return doc;
+    return new Xapian::Document();
 }
 
-document *
-document_copy (document *original)
+Xapian::Document *
+document_copy (Xapian::Document *original)
 {
-    document *doc = new document();
-    doc->get = new Xapian::Document(*original->get);
-    return doc;
+    return new Xapian::Document(*original);
 }
 
 void
-document_delete (document *doc)
+document_delete (Xapian::Document *doc)
 {
-    delete doc->get;
     delete doc;
 }
 
 const char *
-document_get_value (document *doc, unsigned int valueno)
+document_get_value (Xapian::Document *doc, unsigned int valueno)
 {
-    return doc->get->get_value((Xapian::valueno) valueno).c_str();
+    return doc->get_value((Xapian::valueno) valueno).c_str();
 }
 
 void
-document_add_value (document *doc, unsigned int valueno, const char *value)
+document_add_value (Xapian::Document *doc, unsigned int valueno, const char *value)
 {
-    doc->get->add_value((Xapian::valueno)valueno, std::string(value));
+    doc->add_value((Xapian::valueno)valueno, std::string(value));
 }
 
 void
-document_remove_value(document *doc, unsigned int valueno)
+document_remove_value(Xapian::Document *doc, unsigned int valueno)
 {
-    doc->get->remove_value((Xapian::valueno) valueno);
+    doc->remove_value((Xapian::valueno) valueno);
 }
 
 void
-document_clear_values (document *doc)
+document_clear_values (Xapian::Document *doc)
 {
-    doc->get->clear_values();
+    doc->clear_values();
 }
 
 const char *
-document_get_data (document *doc)
+document_get_data (Xapian::Document *doc)
 {
-    return doc->get->get_data().c_str();
+    return doc->get_data().c_str();
 }
 
 void
-document_set_data (document *doc, const char *data)
+document_set_data (Xapian::Document *doc, const char *data)
 {
-    doc->get->set_data(std::string(data));
+    doc->set_data(std::string(data));
 }
 
 void
-document_add_posting (document *doc, const char *tname, unsigned int tpos, unsigned int wdfinc)
+document_add_posting (Xapian::Document *doc, const char *tname, unsigned int tpos, unsigned int wdfinc)
 {
-    doc->get->add_posting(std::string(tname), (Xapian::termpos)tpos, (Xapian::termcount)wdfinc);
+    doc->add_posting(std::string(tname), (Xapian::termpos)tpos, (Xapian::termcount)wdfinc);
 }
 
 void
-document_add_term (document *doc, const char *tname, unsigned int wdfinc)
+document_add_term (Xapian::Document *doc, const char *tname, unsigned int wdfinc)
 {
-    doc->get->add_term(std::string(tname), (Xapian::termcount)wdfinc);
+    doc->add_term(std::string(tname), (Xapian::termcount)wdfinc);
 }
 
 void
-document_remove_posting (document *doc, const char *tname, unsigned int tpos, unsigned int wdfdec)
+document_remove_posting (Xapian::Document *doc, const char *tname, unsigned int tpos, unsigned int wdfdec)
 {
-    doc->get->remove_posting(std::string(tname), (Xapian::termpos)tpos, (Xapian::termcount)wdfdec);
+    doc->remove_posting(std::string(tname), (Xapian::termpos)tpos, (Xapian::termcount)wdfdec);
 }
 
 void
-document_remove_term (document *doc, const char *tname)
+document_remove_term (Xapian::Document *doc, const char *tname)
 {
-    doc->get->remove_term(std::string(tname));
+    doc->remove_term(std::string(tname));
 }
 
 void
-document_clear_terms (document *doc)
+document_clear_terms (Xapian::Document *doc)
 {
-    doc->get->clear_terms();
+    doc->clear_terms();
 }
 
 unsigned int
-document_termlist_count (document *doc)
+document_termlist_count (Xapian::Document *doc)
 {
-    return doc->get->termlist_count();
+    return doc->termlist_count();
 }
 
-termiterator *
-document_termlist_begin (document *doc)
+Xapian::TermIterator *
+document_termlist_begin (Xapian::Document *doc)
 {
-    termiterator *termit = new termiterator();
-    termit->iter = new Xapian::TermIterator(doc->get->termlist_begin());
-    return termit;
+    return new Xapian::TermIterator(doc->termlist_begin());
 }
 
-termiterator *
-document_termlist_end (document *doc)
+Xapian::TermIterator *
+document_termlist_end (Xapian::Document *doc)
 {
-    termiterator *termit = new termiterator();
-    termit->iter = new Xapian::TermIterator(doc->get->termlist_end());
-    return termit;
+    return new Xapian::TermIterator(doc->termlist_end());
 }
 
 unsigned int
-document_values_count (document *doc)
+document_values_count (Xapian::Document *doc)
 {
-    return doc->get->values_count();
+    return doc->values_count();
 }
 
-valueiterator *
-document_values_begin (document *doc)
+Xapian::ValueIterator *
+document_values_begin (Xapian::Document *doc)
 {
-    valueiterator *valit = new valueiterator();
-    valit->iter = new Xapian::ValueIterator(doc->get->values_begin());
-    return valit;
+    return new Xapian::ValueIterator(doc->values_begin());
 }
 
-valueiterator *
-document_values_end (document *doc)
+Xapian::ValueIterator *
+document_values_end (Xapian::Document *doc)
 {
-    valueiterator *valit = new valueiterator();
-    valit->iter = new Xapian::ValueIterator(doc->get->values_end());
-    return valit;
+    return new Xapian::ValueIterator(doc->values_end());
 }
 
 unsigned int
-document_get_docid (document *doc)
+document_get_docid (Xapian::Document *doc)
 {
-    return doc->get->get_docid();
+    return doc->get_docid();
 }
 
 // document_serialise
@@ -145,7 +132,7 @@ document_get_docid (document *doc)
 // document_unserialise
 
 const char *
-document_get_description (document *doc)
+document_get_description (Xapian::Document *doc)
 {
-    return doc->get->get_description().c_str();
+    return doc->get_description().c_str();
 }

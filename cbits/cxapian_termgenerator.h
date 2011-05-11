@@ -6,53 +6,53 @@
 
 extern "C" {
 
-termgenerator *
+Xapian::TermGenerator *
 termgenerator_new ();
 
 //termgenerator_copy
 
 void
-termgenerator_delete (termgenerator *tgen);
+termgenerator_delete (Xapian::TermGenerator *tgen);
 
 void
-termgenerator_set_stemmer (termgenerator *tgen, stem *stemmer);
+termgenerator_set_stemmer (Xapian::TermGenerator *tgen, stem *stemmer);
 
 void
-termgenerator_set_stopper (termgenerator *tgen, stopper *stop);
+termgenerator_set_stopper (Xapian::TermGenerator *tgen, stopper *stop);
 
 void
-termgenerator_set_document (termgenerator *tgen, document *doc);
+termgenerator_set_document (Xapian::TermGenerator *tgen, document *doc);
 
-const document *
-termgenerator_get_document (termgenerator *tgen);
+const Xapian::Document *
+termgenerator_get_document (Xapian::TermGenerator *tgen);
 
-void // ensure database is writable!
-termgenerator_set_database (termgenerator *tgen, database *db);
+void
+termgenerator_set_database (Xapian::TermGenerator *tgen, Xapian::WritableDatabase *db);
 
 int
-termgenerator_set_flags (termgenerator *tgen, int toggle, int mask);
+termgenerator_set_flags (Xapian::TermGenerator *tgen, int toggle, int mask);
 
 //termgenerator_index_text_utf8
 
 void
-termgenerator_index_text (termgenerator *tgen, const char *text, unsigned int weight, const char *prefix);
+termgenerator_index_text (Xapian::TermGenerator *tgen, const char *text, unsigned int weight, const char *prefix);
 
 //index_text_without_positions_utf8
 
 void
-termgenerator_index_text_wo_positions (termgenerator *tgen, const char *text, unsigned int weight, const char* prefix);
+termgenerator_index_text_wo_positions (Xapian::TermGenerator *tgen, const char *text, unsigned int weight, const char* prefix);
 
 void
-termgenerator_increase_termpos (termgenerator *tgen, unsigned int delta);
+termgenerator_increase_termpos (Xapian::TermGenerator *tgen, unsigned int delta);
 
 unsigned int
-termgenerator_get_termpos (termgenerator *tgen);
+termgenerator_get_termpos (Xapian::TermGenerator *tgen);
 
 void
-termgenerator_set_termpos (termgenerator *tgen, unsigned int termpos);
+termgenerator_set_termpos (Xapian::TermGenerator *tgen, unsigned int termpos);
 
 const char *
-termgenerator_get_description (termgenerator *tgen);
+termgenerator_get_description (Xapian::TermGenerator *tgen);
 
 }
 

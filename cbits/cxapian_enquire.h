@@ -6,29 +6,29 @@
 
 extern "C" {
 
-enquire * // no error handlers yet
-enquire_new (database *db);
+Xapian::Enquire * // no error handlers yet
+enquire_new (Xapian::Database *db);
 
-//enquire *
-//enquire_copy (enquire *other);
+//Xapian::Enquire *
+//enquire_copy (Xapian::Enquire *other);
 
 void
-enquire_delete (enquire *);
+enquire_delete (Xapian::Enquire *);
 
 void // qlen defaults to 0
-enquire_set_query (enquire *self, query *query, unsigned int qlen);
+enquire_set_query (Xapian::Enquire *self, query *query, unsigned int qlen);
 
 //query *
-//enquire_get_query (enquire *self)
+//enquire_get_query (Xapian::Enquire *self)
 
 //void
-//enquire_add_marchspy (enquire *self, matchspy *spy);
+//enquire_add_marchspy (Xapian::Enquire *self, matchspy *spy);
 
 //void
-//enquire_clear_matchspies (enquire *self);
+//enquire_clear_matchspies (Xapian::Enquire *self);
 
-mset *
-enquire_get_mset (enquire *self, unsigned int first, unsigned int maxitems);
+Xapian::MSet *
+enquire_get_mset (Xapian::Enquire *self, unsigned int first, unsigned int maxitems);
 
 }
 

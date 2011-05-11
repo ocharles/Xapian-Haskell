@@ -6,78 +6,78 @@
 
 extern "C" {
 
-document *
+Xapian::Document *
 document_new ();
 
-document *
-document_copy (document *);
+Xapian::Document *
+document_copy (Xapian::Document *);
 
 void
-document_delete (document *);
+document_delete (Xapian::Document *);
 
 const char *
-document_get_value (document *, unsigned int valueno);
+document_get_value (Xapian::Document *, unsigned int valueno);
 
 void
-document_add_value (document *, unsigned int valueno, const char *value);
+document_add_value (Xapian::Document *, unsigned int valueno, const char *value);
 
 void
-document_remove_value(document *, unsigned int valueno);
+document_remove_value(Xapian::Document *, unsigned int valueno);
 
 void
-document_clear_values (document *);
+document_clear_values (Xapian::Document *);
 
 const char *
-document_get_data (document *);
+document_get_data (Xapian::Document *);
 
 void
-document_set_data (document *, const char *data);
+document_set_data (Xapian::Document *, const char *data);
 
 void
-document_add_posting (document *, const char *tname, unsigned int tpos, unsigned int wdfinc);
+document_add_posting (Xapian::Document *, const char *tname, unsigned int tpos, unsigned int wdfinc);
 
 void
-document_add_term (document *, const char *tname, unsigned int wdfinc);
+document_add_term (Xapian::Document *, const char *tname, unsigned int wdfinc);
 
 void
-document_add_boolean_term (document * doc, const char *term) { document_add_term (doc, term, 0); }
+document_add_boolean_term (Xapian::Document * doc, const char *term) { document_add_term (doc, term, 0); }
 
 void
-document_remove_posting (document *, const char *tname, unsigned int tpos, unsigned int wdfdec);
+document_remove_posting (Xapian::Document *, const char *tname, unsigned int tpos, unsigned int wdfdec);
 
 void
-document_remove_term (document *, const char *tname);
+document_remove_term (Xapian::Document *, const char *tname);
 
 void
-document_clear_terms (document *);
+document_clear_terms (Xapian::Document *);
 
 unsigned int
-document_termlist_count (document *);
+document_termlist_count (Xapian::Document *);
 
-termiterator *
-document_termlist_begin (document *);
+Xapian::TermIterator *
+document_termlist_begin (Xapian::Document *);
 
-termiterator *
-document_termlist_end (document *);
-
-unsigned int
-document_values_count (document *);
-
-valueiterator *
-document_values_begin (document *);
-
-valueiterator *
-document_values_end (document *);
+Xapian::TermIterator *
+document_termlist_end (Xapian::Document *);
 
 unsigned int
-document_get_docid (document *);
+document_values_count (Xapian::Document *);
+
+Xapian::ValueIterator *
+document_values_begin (Xapian::Document *);
+
+Xapian::ValueIterator *
+document_values_end (Xapian::Document *);
+
+unsigned int
+document_get_docid (Xapian::Document *);
 
 // document_serialise
 
 // document_unserialise
 
 const char *
-document_get_description (document *);
+document_get_description (Xapian::Document *);
 
 }
 #endif //CXAPIAN_DOCUMENT

@@ -1,151 +1,126 @@
 #include <xapian.h>
 #include "cxapian_query.h"
 
-query *
+Xapian::Query *
 query_new ()
 {
-    query *q = new query();
-    q->get = new Xapian::Query();
-    return q;
+    return new Xapian::Query();
 }
 
-query *
-query_copy (query *original)
+Xapian::Query *
+query_copy (Xapian::Query *original)
 {
-    query *q = new query();
-    q->get = new Xapian::Query(*original->get);
-    return q;
+    return new Xapian::Query(*original);
 }
 
 void
-query_delete (query *q)
+query_delete (Xapian::Query *q)
 {
-    delete q->get;
     delete q;
 }
 
-query *
+Xapian::Query *
 query_new_0 (const char *tname, unsigned int wqf, unsigned int termpos)
 {
-    query *self = new query();
-    self->get = new Xapian::Query( std::string(tname), wqf, termpos );
-    return self;
+    return new Xapian::Query( std::string(tname), wqf, termpos );
 }
 
-query *
-query_new_1 (int op, query *left, query *right)
+Xapian::Query *
+query_new_1 (int op, Xapian::Query *left, Xapian::Query *right)
 {
-    query *self = new query();
-    self->get = new Xapian::Query((Xapian::Query::op) op,
-                               Xapian::Query(*left->get),
-                               Xapian::Query(*right->get));
-    return self;
+    return new Xapian::Query((Xapian::Query::op) op,
+                              Xapian::Query(*left),
+                              Xapian::Query(*right));
 }
 
-query *
+Xapian::Query *
 query_new_2 (int op, const char *left, const char *right)
 {
-    query *q = new query();
-    q->get = new Xapian::Query((Xapian::Query::op) op,
-                               std::string(left),
-                               std::string(right));
-    return q;
+    return new Xapian::Query((Xapian::Query::op) op,
+                              std::string(left),
+                              std::string(right));
 }
 
 /*
-query *
-query_new_3 (query *, int op, queryiterator *begin, queryiterator *end, unsigned int termcount);
+Xapian::Query *
+query_new_3 (Xapian::Query *, int op, queryiterator *begin, queryiterator *end, unsigned int termcount);
 */
 
-query *
-query_new_4 (int op, query *subquery, double parameter)
+Xapian::Query *
+query_new_4 (int op, Xapian::Query *subquery, double parameter)
 {
-    query *q = new query();
-    q->get = new Xapian::Query((Xapian::Query::op) op,
-                               *subquery->get,
-                               parameter);
-    return q;
+    return new Xapian::Query((Xapian::Query::op) op,
+                              *subquery,
+                              parameter);
 }
 
 /*
-query *
-query_new_5 (query *, int op, unsigned int valno, const char *begin...)
+Xapian::Query *
+query_new_5 (Xapian::Query *, int op, unsigned int valno, const char *begin...)
 
 	Query(Query::op op_, Xapian::valueno valno,
 	      const std::string &begin, const std::string &end);
 */
 
-query *
+Xapian::Query *
 query_new_6 (int op, unsigned int valno, const char *value)
 {
-    query *q = new query();
-    q->get = new Xapian::Query((Xapian::Query::op)op,
-                               (Xapian::valueno) valno,
-                               std::string(value));
-    return q;
+    return new Xapian::Query((Xapian::Query::op)op,
+                              (Xapian::valueno) valno,
+                              std::string(value));
 }
 
 /*
-query *
-query_new_7 (query *, postingsource *external_source);
+Xapian::Query *
+query_new_7 (Xapian::Query *, postingsource *external_source);
 */
 
-query *
+Xapian::Query *
 query_match_all ()
 {
-    query *q = new query();
-    q->get = new Xapian::Query(Xapian::Query::MatchAll);
-    return q;
+    return new Xapian::Query(Xapian::Query::MatchAll);
 }
 
-query *
+Xapian::Query *
 query_match_nothing ()
 {
-    query *q = new query();
-    q->get = new Xapian::Query(Xapian::Query::MatchNothing);
-    return q;
+    return new Xapian::Query(Xapian::Query::MatchNothing);
 }
 
 unsigned int
-query_get_length (query *q)
+query_get_length (Xapian::Query *q)
 {
-    return q->get->get_length();
+    return q->get_length();
 }
 
-termiterator *
-query_get_terms_begin (query *q)
+Xapian::TermIterator *
+query_get_terms_begin (Xapian::Query *q)
 {
-    termiterator *termiter = new termiterator();
-    termiter->iter = new Xapian::TermIterator(
-                            q->get->get_terms_begin());
-    return termiter;
+    return new Xapian::TermIterator(q->get_terms_begin());
 }
 
-termiterator *
-query_get_terms_end (query *q)
+Xapian::TermIterator *
+query_get_terms_end (Xapian::Query *q)
 {
-    termiterator *termiter = new termiterator();
-    termiter->iter = new Xapian::TermIterator(
-                            q->get->get_terms_end());
-    return termiter;
+    return new Xapian::TermIterator(q->get_terms_end());
 }
 
 cbool
-query_empty (query *q)
+query_empty (Xapian::Query *q)
 {
-    return q->get->empty();
+    return q->empty();
 }
 
 const char *
-query_serialise (query *q)
+query_serialise (Xapian::Query *q)
 {
-    return q->get->serialise().c_str();
+    return q->serialise().c_str();
 }
 
 /*query_unserialise*/
 
 const char *
-query_get_description (query *q)
+query_get_description (Xapian::Query *q)
 {
-    return q->get->get_description().c_str();
+    return q->get_description().c_str();
 }

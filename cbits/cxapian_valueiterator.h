@@ -6,38 +6,38 @@
 
 extern "C" {
 
-valueiterator *
+Xapian::ValueIterator *
 valueiterator_new ();
 
-valueiterator *
-valueiterator_copy (valueiterator *original);
+Xapian::ValueIterator *
+valueiterator_copy (Xapian::ValueIterator *original);
 
 void
-valueiterator_delete (valueiterator *);
+valueiterator_delete (Xapian::ValueIterator *);
 
 const char *
-valueiterator_get (valueiterator *);
+valueiterator_get (Xapian::ValueIterator *);
 
 void  // I use void to emphasize the mutation involved
-valueiterator_next (valueiterator *);
+valueiterator_next (Xapian::ValueIterator *);
 
 cbool
-valueiterator_is_end (valueiterator *self, valueiterator *end);
+valueiterator_is_end (Xapian::ValueIterator *self, Xapian::ValueIterator *end);
 
 unsigned int
-valueiterator_get_docid (valueiterator *);
+valueiterator_get_docid (Xapian::ValueIterator *);
 
 unsigned int
-valueiterator_get_valueno (valueiterator *);
+valueiterator_get_valueno (Xapian::ValueIterator *);
 
 void
-valueiterator_skip_to (valueiterator *, unsigned int docid_or_slot);
+valueiterator_skip_to (Xapian::ValueIterator *, unsigned int docid_or_slot);
 
 cbool
-valueiterator_check (valueiterator *, unsigned int docid);
+valueiterator_check (Xapian::ValueIterator *, unsigned int docid);
 
 const char *
-valueiterator_get_description (valueiterator *);
+valueiterator_get_description (Xapian::ValueIterator *);
 
 }
 

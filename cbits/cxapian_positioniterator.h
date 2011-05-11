@@ -6,29 +6,29 @@
 
 extern "C" {
 
-positioniterator *
+Xapian::PositionIterator *
 positioniterator_new ();
 
 void
-positioniterator_next (positioniterator *);
+positioniterator_next (Xapian::PositionIterator *);
 
 unsigned int
-positioniterator_get (positioniterator *);
+positioniterator_get (Xapian::PositionIterator *);
 
 cbool
-positioniterator_is_end (positioniterator *, positioniterator *end);
+positioniterator_is_end (Xapian::PositionIterator *, Xapian::PositionIterator *end);
 
-positioniterator *
-positioniterator_copy (positioniterator *original);
-
-void
-positioniterator_delete (positioniterator *);
+Xapian::PositionIterator *
+positioniterator_copy (Xapian::PositionIterator *original);
 
 void
-positioniterator_skip_to (positioniterator *, unsigned int pos);
+positioniterator_delete (Xapian::PositionIterator *);
+
+void
+positioniterator_skip_to (Xapian::PositionIterator *, unsigned int pos);
 
 const char *
-positioniterator_get_description (positioniterator *);
+positioniterator_get_description (Xapian::PositionIterator *);
 
 }
 

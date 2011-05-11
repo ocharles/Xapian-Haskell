@@ -8,146 +8,146 @@ extern "C" {
 
 /* Read-only database interface */
 
-database *
+Xapian::Database *
 database_new ();
 
-database *
+Xapian::Database *
 database_new_from_path (const char *path, const char **error);
 
-database *
-database_copy (database *other);
+Xapian::Database *
+database_copy (Xapian::Database *other);
 
 void
-database_delete (database *);
+database_delete (Xapian::Database *);
 
 void
-database_add_database (database *, database *other);
+database_add_database (Xapian::Database *, Xapian::Database *other);
 
 void
-database_reopen (database *);
+database_reopen (Xapian::Database *);
 
 void
-database_close (database *);
+database_close (Xapian::Database *);
 
 const char *
-database_get_description (database *);
+database_get_description (Xapian::Database *);
 
-postingiterator *
-database_postlist_begin (database *, const char *tname);
+Xapian::PostingIterator *
+database_postlist_begin (Xapian::Database *, const char *tname);
 
-postingiterator *
-database_postlist_end (database *, const char *tname);
+Xapian::PostingIterator *
+database_postlist_end (Xapian::Database *, const char *tname);
 
-termiterator *
-database_termlist_begin (database *, unsigned int docid);
+Xapian::TermIterator *
+database_termlist_begin (Xapian::Database *, unsigned int docid);
 
-termiterator *
-database_termlist_end (database *, unsigned docid);
+Xapian::TermIterator *
+database_termlist_end (Xapian::Database *, unsigned docid);
 
 cbool
-database_has_positions (database *);
+database_has_positions (Xapian::Database *);
 
-positioniterator *
-database_positionlist_begin (database *, unsigned int docid, const char *tname);
+Xapian::PositionIterator *
+database_positionlist_begin (Xapian::Database *, unsigned int docid, const char *tname);
 
-positioniterator *
-database_positionlist_end (database *, unsigned int docid, const char *tname);
+Xapian::PositionIterator *
+database_positionlist_end (Xapian::Database *, unsigned int docid, const char *tname);
 
-termiterator *
-database_allterms_begin (database *);
+Xapian::TermIterator *
+database_allterms_begin (Xapian::Database *);
 
-termiterator *
-database_allterms_end (database *);
+Xapian::TermIterator *
+database_allterms_end (Xapian::Database *);
 
-termiterator *
-database_allterms_with_prefix_begin (database *, const char *prefix);
+Xapian::TermIterator *
+database_allterms_with_prefix_begin (Xapian::Database *, const char *prefix);
 
-termiterator *
-database_allterms_with_prefix_end (database *, const char *prefix);
-
-unsigned int
-database_get_doccount (database *);
+Xapian::TermIterator *
+database_allterms_with_prefix_end (Xapian::Database *, const char *prefix);
 
 unsigned int
-database_get_lastdocid (database *);
+database_get_doccount (Xapian::Database *);
+
+unsigned int
+database_get_lastdocid (Xapian::Database *);
 
 double
-database_get_avlength (database *);
+database_get_avlength (Xapian::Database *);
 
 unsigned int
-database_get_termfreq (database *, const char *tname);
+database_get_termfreq (Xapian::Database *, const char *tname);
 
 cbool
-database_term_exists (database *, const char *tname);
+database_term_exists (Xapian::Database *, const char *tname);
 
 unsigned int
-database_get_collection_freq (database *, const char *tname);
+database_get_collection_freq (Xapian::Database *, const char *tname);
 
 unsigned int
-database_get_value_freq (database *, unsigned int valno);
+database_get_value_freq (Xapian::Database *, unsigned int valno);
 
 const char *
-database_get_value_lower_bound (database *, unsigned int valno);
+database_get_value_lower_bound (Xapian::Database *, unsigned int valno);
 
 const char *
-database_get_value_upper_bound (database *, unsigned int valno);
+database_get_value_upper_bound (Xapian::Database *, unsigned int valno);
 
 unsigned int
-database_get_doclength_lower_bound (database *);
+database_get_doclength_lower_bound (Xapian::Database *);
 
 unsigned int
-database_get_doclength_upper_bound (database *);
+database_get_doclength_upper_bound (Xapian::Database *);
 
 unsigned int
-database_get_wdf_upper_bound (database *, const char *term);
+database_get_wdf_upper_bound (Xapian::Database *, const char *term);
 
-valueiterator *
-database_valuestream_begin (database *, unsigned int valueno);
+Xapian::ValueIterator *
+database_valuestream_begin (Xapian::Database *, unsigned int valueno);
 
-valueiterator *
-database_valuestream_end (database *, unsigned int valueno);
+Xapian::ValueIterator *
+database_valuestream_end (Xapian::Database *, unsigned int valueno);
 
 unsigned int
-database_get_doclength (database *, unsigned int docid);
+database_get_doclength (Xapian::Database *, unsigned int docid);
 
 void
-database_keep_alive (database *);
+database_keep_alive (Xapian::Database *);
 
-document *
-database_get_document (database *, unsigned int docid, const char **error);
+Xapian::Document *
+database_get_document (Xapian::Database *, unsigned int docid, const char **error);
 
 const char * // max_edit_distance defaults to 2
-database_get_spelling_suggestion (database *, const char *word,
+database_get_spelling_suggestion (Xapian::Database *, const char *word,
                                   unsigned int max_edit_distance);
-termiterator *
-database_spellings_begin (database *);
+Xapian::TermIterator *
+database_spellings_begin (Xapian::Database *);
 
-termiterator *
-database_spellings_end (database *);
+Xapian::TermIterator *
+database_spellings_end (Xapian::Database *);
 
-termiterator *
-database_synonyms_begin (database *, const char *term);
+Xapian::TermIterator *
+database_synonyms_begin (Xapian::Database *, const char *term);
 
-termiterator *
-database_synonyms_end (database *, const char *term);
+Xapian::TermIterator *
+database_synonyms_end (Xapian::Database *, const char *term);
 
-termiterator *
-database_synonym_keys_begin (database *, const char *prefix);
+Xapian::TermIterator *
+database_synonym_keys_begin (Xapian::Database *, const char *prefix);
 
-termiterator *
-database_synonym_keys_end (database *, const char *prefix);
-
-const char *
-database_get_metadata (database *, const char *key);
-
-termiterator *
-database_metadata_keys_begin (database *, const char *prefix);
-
-termiterator *
-database_metadata_keys_end (database *, const char *prefix);
+Xapian::TermIterator *
+database_synonym_keys_end (Xapian::Database *, const char *prefix);
 
 const char *
-database_get_uuid (database *);
+database_get_metadata (Xapian::Database *, const char *key);
+
+Xapian::TermIterator *
+database_metadata_keys_begin (Xapian::Database *, const char *prefix);
+
+Xapian::TermIterator *
+database_metadata_keys_end (Xapian::Database *, const char *prefix);
+
+const char *
+database_get_uuid (Xapian::Database *);
 
 
 /* Writable database interface */
@@ -157,62 +157,62 @@ int DB_CREATE         () { return (int)Xapian::DB_CREATE; };
 int DB_CREATE_OR_OVERWRITE () { return (int)Xapian::DB_CREATE_OR_OVERWRITE; };
 int DB_OPEN           () { return (int)Xapian::DB_OPEN; };
 
-database *
+Xapian::WritableDatabase *
 database_writable_new ();
 
-database *
+Xapian::WritableDatabase *
 database_writable_new_from_path (const char *path, int action, const char **error);
 
-database *
-database_writable_copy (database *other);
+Xapian::WritableDatabase *
+database_writable_copy (Xapian::WritableDatabase *other);
 
 void
-database_writable_delete (database *);
+database_writable_delete (Xapian::WritableDatabase *);
 
 void
-database_commit (database *);
+database_commit (Xapian::WritableDatabase *);
 
 void
-database_begin_transaction (database *, cbool flushed);
+database_begin_transaction (Xapian::WritableDatabase *, cbool flushed);
 
 void
-database_commit_transaction (database *);
+database_commit_transaction (Xapian::WritableDatabase *);
 
 void
-database_cancel_transaction (database *);
+database_cancel_transaction (Xapian::WritableDatabase *);
 
 unsigned int
-database_add_document (database *, document *doc);
+database_add_document (Xapian::WritableDatabase *, document *doc);
 
 void
-database_delete_document_by_id (database *, unsigned int docid);
+database_delete_document_by_id (Xapian::WritableDatabase *, unsigned int docid);
 
 void
-database_delete_document_by_term (database *, const char *unique_term);
+database_delete_document_by_term (Xapian::WritableDatabase *, const char *unique_term);
 
 void
-database_replace_document (database *, unsigned int docid, document *doc);
+database_replace_document (Xapian::WritableDatabase *, unsigned int docid, document *doc);
 
 void
-database_add_spelling (database *, const char *word, unsigned int freqinc);
+database_add_spelling (Xapian::WritableDatabase *, const char *word, unsigned int freqinc);
 
 void
-database_remove_spelling (database *, const char *word, unsigned int freqdec);
+database_remove_spelling (Xapian::WritableDatabase *, const char *word, unsigned int freqdec);
 
 void
-database_add_synonym (database *, const char *term, const char *synonym);
+database_add_synonym (Xapian::WritableDatabase *, const char *term, const char *synonym);
 
 void
-database_remove_synonym (database *, const char *term, const char *synonym);
+database_remove_synonym (Xapian::WritableDatabase *, const char *term, const char *synonym);
 
 void
-database_clear_synonyms (database *, const char *term);
+database_clear_synonyms (Xapian::WritableDatabase *, const char *term);
 
 void
-database_set_metadata (database *, const char *key, const char *value);
+database_set_metadata (Xapian::WritableDatabase *, const char *key, const char *value);
 
 const char *
-database_writable_get_description (database *);
+database_writable_get_description (Xapian::WritableDatabase *);
 
 }
 

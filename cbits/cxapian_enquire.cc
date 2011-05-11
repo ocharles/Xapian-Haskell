@@ -1,40 +1,35 @@
 #include <xapian.h>
 #include "cxapian_enquire.h"
 
-enquire *
-enquire_new (database *db)
+Xapian::Enquire *
+enquire_new (Xapian::Database *db)
 {
-    enquire *self = new enquire();
-    self->get = new Xapian::Enquire(*db->get);
-    return self;
+    return new Xapian::Enquire(*db);
 }
 
 void
-enquire_delete (enquire *self)
+enquire_delete (Xapian::Enquire *self)
 {
-    delete self->get;
     delete self;
 }
 
 void
-enquire_set_query (enquire *self, query *query, unsigned int qlen)
+enquire_set_query (Xapian::Enquire *self, Xapian::Query *query, unsigned int qlen)
 {
-    self->get->set_query(*query->get, qlen);
+    self->set_query(*query, qlen);
 }
 
 //query *
-//enquire_get_query (enquire *self)
+//enquire_get_query (Xapian::Enquire *self)
 
 //void
-//enquire_add_marchspy (enquire *self, matchspy *spy);
+//enquire_add_marchspy (Xapian::Enquire *self, matchspy *spy);
 
 //void
-//enquire_clear_matchspies (enquire *self);
+//enquire_clear_matchspies (Xapian::Enquire *self);
 
-mset *
-enquire_get_mset (enquire *self, unsigned int first, unsigned int maxitems)
+Xapian::MSet *
+enquire_get_mset (Xapian::Enquire *self, unsigned int first, unsigned int maxitems)
 {
-    mset *m = new mset();
-    m->get = new Xapian::MSet( self->get->get_mset(first, maxitems) );
-    return m;
+    return new Xapian::MSet( self->get_mset(first, maxitems) );
 }

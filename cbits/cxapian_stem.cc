@@ -1,41 +1,36 @@
 #include <xapian.h>
 #include "cxapian_stem.h"
 
-stem *
-stem_copy (stem *original)
+Xapian::Stem *
+stem_copy (Xapian::Stem *original)
 {
-    stem *s = new stem();
-    s->get = new Xapian::Stem(*original->get);
-    return s;
+    return new Xapian::Stem(*original);
 }
 
-stem *
+Xapian::Stem *
 stem_new_with_language (const char *lang)
 {
-    stem *s = new stem();
-    s->get = new Xapian::Stem(std::string(lang));
-    return s;
+    return new Xapian::Stem(std::string(lang));
 }
 
 //stem_new_with_stemimplementation
 
 void
-stem_delete (stem *s)
+stem_delete (Xapian::Stem *s)
 {
-    delete s->get;
     delete s;
 }
 
 const char *
-stem_word (stem *s, const char *word)
+stem_word (Xapian::Stem *s, const char *word)
 {
-    return (*s->get)(std::string(word)).c_str();
+    return (*s)(std::string(word)).c_str();
 }
 
 const char *
-stem_get_description (stem *s)
+stem_get_description (Xapian::Stem *s)
 {
-    return s->get->get_description().c_str();
+    return s->get_description().c_str();
 }
 
 const char *

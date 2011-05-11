@@ -1,73 +1,68 @@
 #include <xapian.h>
 #include "cxapian_valueiterator.h"
 
-valueiterator *
+Xapian::ValueIterator *
 valueiterator_new ()
 {
-    valueiterator *vi = new valueiterator();
-    vi->iter = new Xapian::ValueIterator();
-    return vi;
+    return new Xapian::ValueIterator();
 }
 
-valueiterator *
-valueiterator_copy (valueiterator *original)
+Xapian::ValueIterator *
+valueiterator_copy (Xapian::ValueIterator *original)
 {
-    valueiterator *vi = new valueiterator();
-    vi->iter = new Xapian::ValueIterator(*original->iter);
-    return vi;
+    return new Xapian::ValueIterator(*original);
 }
 
 void
-valueiterator_delete (valueiterator *vi)
+valueiterator_delete (Xapian::ValueIterator *self)
 {
-    delete vi->iter;
-    delete vi;
+    delete self;
 }
 
 const char *
-valueiterator_get (valueiterator *vi)
+valueiterator_get (Xapian::ValueIterator *self)
 {
-    return (**vi->iter).c_str();
+    return (**self).c_str();
 }
 
 void
-valueiterator_next (valueiterator *vi)
+valueiterator_next (Xapian::ValueIterator *self)
 {
-    (*vi->iter)++; // TODO:does ++ mutate state? does this work as expected?
+    (*self)++;
 }
 
 cbool
-valueiterator_is_end (valueiterator *self, valueiterator *end)
+valueiterator_is_end (Xapian::ValueIterator *self, Xapian::ValueIterator *end)
 {
-    return (*self->iter == *end->iter);
+    return (*self== *end);
 }
 
 unsigned int
-valueiterator_get_docid (valueiterator *vi)
+valueiterator_get_docid (Xapian::ValueIterator *self)
 {
-    return vi->iter->get_docid();
+    return self->get_docid();
 }
 
 unsigned int
-valueiterator_get_valueno (valueiterator *vi)
+valueiterator_get_valueno (Xapian::ValueIterator *self)
 {
-    return vi->iter->get_valueno();
+    return self->get_valueno();
 }
 
 void
-valueiterator_skip_to (valueiterator *vi, unsigned int docid_or_slot)
+valueiterator_skip_to (Xapian::ValueIterator *self, unsigned int docid_or_slot)
 {
-    vi->iter->skip_to( docid_or_slot );
+    self->skip_to( docid_or_slot );
 }
 
 cbool
-valueiterator_check (valueiterator *vi, unsigned int docid)
+valueiterator_check (Xapian::ValueIterator *self, unsigned int docid)
 {
-    return vi->iter->check((Xapian::docid)docid);
+    return self->check((Xapian::docid)docid);
 }
 
 const char *
-valueiterator_get_description (valueiterator *vi)
+valueiterator_get_description (Xapian::ValueIterator *self)
 {
-    return vi->iter->get_description().c_str();
+    return self->get_description().c_str();
 }

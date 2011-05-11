@@ -6,47 +6,47 @@
 
 extern "C" {
 
-msetiterator *
+Xapian::MSetIterator *
 msetiterator_new ();
 
-msetiterator *
-msetiterator_copy (msetiterator *original);
+Xapian::MSetIterator *
+msetiterator_copy (Xapian::MSetIterator *original);
 
 void
-msetiterator_delete (msetiterator *);
+msetiterator_delete (Xapian::MSetIterator *);
 
 void  // I use void to emphasize the mutation involved
-msetiterator_next (msetiterator *);
+msetiterator_next (Xapian::MSetIterator *);
 
 void // I ise void to emphasize the mutation involved
-msetiterator_prev (msetiterator *);
+msetiterator_prev (Xapian::MSetIterator *);
 
 cbool
-msetiterator_is_end (msetiterator *, msetiterator *other);
+msetiterator_is_end (Xapian::MSetIterator *, Xapian::MSetIterator *other);
 
 unsigned int
-msetiterator_get (msetiterator *);
+msetiterator_get (Xapian::MSetIterator *);
 
-document *
-msetiterator_get_document (msetiterator *);
-
-unsigned int
-msetiterator_get_rank (msetiterator *);
+Xapian::Document *
+msetiterator_get_document (Xapian::MSetIterator *);
 
 unsigned int
-msetiterator_get_weight (msetiterator *);
+msetiterator_get_rank (Xapian::MSetIterator *);
+
+unsigned int
+msetiterator_get_weight (Xapian::MSetIterator *);
 
 const char *
-msetiterator_get_collapse_key (msetiterator *);
+msetiterator_get_collapse_key (Xapian::MSetIterator *);
 
 unsigned int
-msetiterator_get_collapse_count (msetiterator *);
+msetiterator_get_collapse_count (Xapian::MSetIterator *);
 
 int
-msetiterator_get_percent (msetiterator *);
+msetiterator_get_percent (Xapian::MSetIterator *);
 
 const char *
-msetiterator_get_description (msetiterator *);
+msetiterator_get_description (Xapian::MSetIterator *);
 
 }
 

@@ -2,91 +2,82 @@
 #include "cxapian_termiterator.h"
 
 
-termiterator *
+Xapian::TermIterator *
 termiterator_new ()
 {
-    termiterator *self = new termiterator();
-    self->iter = new Xapian::TermIterator();
-    return self;
+    return new Xapian::TermIterator();
 }
 
-termiterator *
-termiterator_copy (termiterator *other)
+Xapian::TermIterator *
+termiterator_copy (Xapian::TermIterator *other)
 {
-    termiterator *self = new termiterator();
-    self->iter = new Xapian::TermIterator(*other->iter);
-    return self;
+    return new Xapian::TermIterator(*other);
 }
 
 void
-termiterator_delete (termiterator *self)
+termiterator_delete (Xapian::TermIterator *self)
 {
-    delete self->iter;
     delete self;
 }
 
 void
-termiterator_next (termiterator *self)
+termiterator_next (Xapian::TermIterator *self)
 {
-    (*self->iter)++;
+    (*self)++;
 }
 
 cbool
-termiterator_is_end (termiterator *self, termiterator *end)
+termiterator_is_end (Xapian::TermIterator *self, Xapian::TermIterator *end)
 {
-    return (*self->iter == *end->iter);
+    return (*self == *end);
 }
 
 const char *
-termiterator_get (termiterator *self)
+termiterator_get (Xapian::TermIterator *self)
 {
-    return (**self->iter).c_str();
+    return (**self).c_str();
 }
 
 void
-termiterator_skip_to (termiterator *self, const char *tname)
+termiterator_skip_to (Xapian::TermIterator *self, const char *tname)
 {
-    self->iter->skip_to(std::string(tname));
+    self->skip_to(std::string(tname));
 }
 
 unsigned int
-termiterator_get_wdf (termiterator *self)
+termiterator_get_wdf (Xapian::TermIterator *self)
 {
-    return self->iter->get_wdf();
+    return self->get_wdf();
 }
 
 unsigned int
-termiterator_get_termfreq (termiterator *self)
+termiterator_get_termfreq (Xapian::TermIterator *self)
 {
-    return self->iter->get_termfreq();
+    return self->get_termfreq();
 }
 
 unsigned int
-termiterator_positionlist_count (termiterator *self)
+termiterator_positionlist_count (Xapian::TermIterator *self)
 {
-    return self->iter->positionlist_count();
+    return self->positionlist_count();
 }
 
-positioniterator *
-termiterator_positionlist_begin (termiterator *self)
+Xapian::PositionIterator *
+termiterator_positionlist_begin (Xapian::TermIterator *self)
 {
-    positioniterator *pi = new positioniterator();
-    pi->iter = new Xapian::PositionIterator(
-                        self->iter->positionlist_begin());
-    return pi;
+    return new Xapian::PositionIterator(
+                        self->positionlist_begin());
 }
 
-positioniterator *
-termiterator_positionlist_end (termiterator *self)
+Xapian::PositionIterator *
+termiterator_positionlist_end (Xapian::TermIterator *self)
 {
-    positioniterator *pi = new positioniterator();
-    pi->iter = new Xapian::PositionIterator(
-                        self->iter->positionlist_end());
-    return pi;
+    return new Xapian::PositionIterator(
+                        self->positionlist_end());
 }
 
 const char *
-termiterator_get_description (termiterator *self)
+termiterator_get_description (Xapian::TermIterator *self)
 {
-    return self->iter->get_description().c_str();
+    return self->get_description().c_str();
 }

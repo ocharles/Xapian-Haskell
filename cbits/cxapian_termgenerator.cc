@@ -1,102 +1,97 @@
 #include <xapian.h>
 #include "cxapian_termgenerator.h"
 
-termgenerator *
+Xapian::TermGenerator *
 termgenerator_new ()
 {
-    termgenerator *tgen = new termgenerator();
-    tgen->get = new Xapian::TermGenerator();
-    return tgen;
+    return new Xapian::TermGenerator();
 }
 
 //termgenerator_copy
 
 void
-termgenerator_delete (termgenerator *tgen)
+termgenerator_delete (Xapian::TermGenerator *self)
 {
-    delete tgen->get;
-    delete tgen;
+    delete self;
 }
 
 void
-termgenerator_set_stemmer (termgenerator *tgen, stem *stemmer)
+termgenerator_set_stemmer (Xapian::TermGenerator *self, stem *stemmer)
 {
-    tgen->get->set_stemmer(*stemmer->get);
+    self->set_stemmer(*stemmer->get);
 }
 
 void
-termgenerator_set_stopper (termgenerator *tgen, stopper *stop)
+termgenerator_set_stopper (Xapian::TermGenerator *self, stopper *stop)
 {
-    tgen->get->set_stopper(stop->get);
+    self->set_stopper(stop->get);
 }
 
 void
-termgenerator_set_document (termgenerator *tgen, document *doc)
+termgenerator_set_document (Xapian::TermGenerator *self, document *doc)
 {
-    tgen->get->set_document(*doc->get);
+    self->set_document(*doc->get);
 }
 
-const document *
-termgenerator_get_document (termgenerator *tgen)
+const Xapian::Document *
+termgenerator_get_document (Xapian::TermGenerator *self)
 {
-    document *doc = new document();
-    doc->get = new Xapian::Document(tgen->get->get_document());
-    return doc;
+    return new Xapian::Document(self->get_document());
 }
 
 void
-termgenerator_set_database (termgenerator *tgen, database *db)
+termgenerator_set_database (Xapian::TermGenerator *self, Xapian::WritableDatabase *db)
 {
-    tgen->get->set_database(*((Xapian::WritableDatabase*)db->get));
+    self->set_database(*db);
 }
 
 int
-termgenerator_set_flags (termgenerator *tgen, int toggle, int mask)
+termgenerator_set_flags (Xapian::TermGenerator *self, int toggle, int mask)
 {
-    return tgen->get->set_flags((Xapian::TermGenerator::flags) toggle,
-                                (Xapian::TermGenerator::flags) mask);
+    return self->set_flags((Xapian::TermGenerator::flags) toggle,
+                           (Xapian::TermGenerator::flags) mask);
 }
 
 //termgenerator_index_text_utf8
 
 void
-termgenerator_index_text (termgenerator *tgen, const char *text, unsigned int weight, const char *prefix)
+termgenerator_index_text (Xapian::TermGenerator *self, const char *text, unsigned int weight, const char *prefix)
 {
-    tgen->get->index_text(std::string(text),
-                          (Xapian::termcount) weight,
-                          std::string(prefix));
+    self->index_text(std::string(text),
+                     (Xapian::termcount) weight,
+                     std::string(prefix));
 }
 
 //index_text_without_positions_utf8
 
 void
-termgenerator_index_text_wo_positions (termgenerator *tgen, const char *text, unsigned int weight, const char* prefix)
+termgenerator_index_text_wo_positions (Xapian::TermGenerator *self, const char *text, unsigned int weight, const char* prefix)
 {
-    tgen->get->index_text_without_positions(std::string(text),
-                                            (Xapian::termcount) weight,
-                                            std::string(prefix));
+    self->index_text_without_positions(std::string(text),
+                                       (Xapian::termcount) weight,
+                                       std::string(prefix));
 }
 
 void
-termgenerator_increase_termpos (termgenerator *tgen, unsigned int delta)
+termgenerator_increase_termpos (Xapian::TermGenerator *self, unsigned int delta)
 {
-    tgen->get->increase_termpos((Xapian::termcount) delta);
+    self->increase_termpos((Xapian::termcount) delta);
 }
 
 unsigned int
-termgenerator_get_termpos (termgenerator *tgen)
+termgenerator_get_termpos (Xapian::TermGenerator *self)
 {
-    return tgen->get->get_termpos();
+    return self->get_termpos();
 }
 
 void
-termgenerator_set_termpos (termgenerator *tgen, unsigned int termpos)
+termgenerator_set_termpos (Xapian::TermGenerator *self, unsigned int termpos)
 {
-    tgen->get->set_termpos((Xapian::termcount) termpos);
+    self->set_termpos((Xapian::termcount) termpos);
 }
 
 const char *
-termgenerator_get_description (termgenerator *tgen)
+termgenerator_get_description (Xapian::TermGenerator *self)
 {
-    return tgen->get->get_description().c_str();
+    return self->get_description().c_str();
 }

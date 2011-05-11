@@ -1,55 +1,50 @@
 #include <xapian.h>
 #include "cxapian_positioniterator.h"
 
-positioniterator *
+Xapian::PositionIterator *
 positioniterator_new ()
 {
-    positioniterator *self = new positioniterator();
-    self->iter = new Xapian::PositionIterator();
-    return self;
+    return new Xapian::PositionIterator();
 }
 
 void
-positioniterator_next (positioniterator *self)
+positioniterator_next (Xapian::PositionIterator *self)
 {
-    (*self->iter)++;
+    (*self)++;
 }
 
 unsigned int
-positioniterator_get (positioniterator *self)
+positioniterator_get (Xapian::PositionIterator *self)
 {
-    return (**self->iter);
+    return (**self);
 }
 
 cbool
-positioniterator_is_end (positioniterator *self, positioniterator* end)
+positioniterator_is_end (Xapian::PositionIterator *self, Xapian::PositionIterator* end)
 {
-    return (*self->iter == *end->iter);
+    return (cbool)(*self == *end);
 }
 
-positioniterator *
-positioniterator_copy (positioniterator *original)
+Xapian::PositionIterator *
+positioniterator_copy (Xapian::PositionIterator *original)
 {
-    positioniterator *self = new positioniterator();
-    self->iter = new Xapian::PositionIterator(*original->iter);
-    return self;
+    return new Xapian::PositionIterator(*original);
 }
 
 void
-positioniterator_delete (positioniterator *self)
+positioniterator_delete (Xapian::PositionIterator *self)
 {
-    delete self->iter;
     delete self;
 }
 
 void
-positioniterator_skip_to (positioniterator *self, unsigned int pos)
+positioniterator_skip_to (Xapian::PositionIterator *self, unsigned int pos)
 {
-    self->iter->skip_to((Xapian::termpos)pos);
+    self->skip_to((Xapian::termpos)pos);
 }
 
 const char *
-positioniterator_get_description (positioniterator *self)
+positioniterator_get_description (Xapian::PositionIterator *self)
 {
-    return self->iter->get_description().c_str();
+    return self->get_description().c_str();
 }

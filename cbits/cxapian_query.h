@@ -21,73 +21,73 @@ int OP_VALUE_GE () {return (int)Xapian::Query::OP_VALUE_GE;};
 int OP_VALUE_LE () {return (int)Xapian::Query::OP_VALUE_LE;};
 int OP_SYNONYM () {return (int)Xapian::Query::OP_SYNONYM;};
 
-query *
+Xapian::Query *
 query_new ();
 
-query *
-query_copy (query *original);
+Xapian::Query *
+query_copy (Xapian::Query *original);
 
 void
-query_delete (query *);
+query_delete (Xapian::Query *);
 
-query * // wqf defaults to 1, termpos defaults to 0
+Xapian::Query * // wqf defaults to 1, termpos defaults to 0
 query_new_0 (const char *tname, unsigned int wqf, unsigned int termpos);
 
-query *
-query_new_1 (int op, query *left, query *right);
+Xapian::Query *
+query_new_1 (int op, Xapian::Query *left, Xapian::Query *right);
 
-query *
+Xapian::Query *
 query_new_2 (int op, const char *left, const char *right);
 
 /*
-query *
-query_new_3 (query *, int op, queryiterator *begin, queryiterator *end, unsigned int termcount);
+Xapian::Query *
+query_new_3 (Xapian::Query *, int op, queryiterator *begin, queryiterator *end, unsigned int termcount);
 */
 
-query *
-query_new_4 (int op, query *subquery, double parameter);
+Xapian::Query *
+query_new_4 (int op, Xapian::Query *subquery, double parameter);
 
 /*
-query *
-query_new_5 (query *, int op, unsigned int valno, const char *begin...)
+Xapian::Query *
+query_new_5 (Xapian::Query *, int op, unsigned int valno, const char *begin...)
 
 	Query(Query::op op_, Xapian::valueno valno,
 	      const std::string &begin, const std::string &end);
 */
 
-query *
+Xapian::Query *
 query_new_6 (int op, unsigned int valno, const char *value);
 
 /*
-query *
-query_new_7 (query *, postingsource *external_source);
+Xapian::Query *
+query_new_7 (Xapian::Query *, postingsource *external_source);
 */
 
-query *
+Xapian::Query *
 query_match_all ();
 
-query *
+Xapian::Query *
 query_match_nothing ();
 
 unsigned int
-query_get_length (query *);
+query_get_length (Xapian::Query *);
 
-termiterator *
-query_get_terms_begin (query *);
+Xapian::TermIterator *
+query_get_terms_begin (Xapian::Query *);
 
-termiterator *
-query_get_terms_end (query *);
+Xapian::TermIterator *
+query_get_terms_end (Xapian::Query *);
 
 cbool
-query_empty (query *);
+query_empty (Xapian::Query *);
 
 const char *
-query_serialise (query *);
+query_serialise (Xapian::Query *);
 
 /*query_unserialise*/
 
 const char *
-query_get_description (query *);
+query_get_description (Xapian::Query *);
 
 }
 

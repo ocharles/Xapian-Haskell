@@ -6,22 +6,22 @@
 
 extern "C" {
 
-stem *
-stem_copy (stem *original);
+Xapian::Stem *
+stem_copy (Xapian::Stem *original);
 
-stem *
+Xapian::Stem *
 stem_new_with_language (const char *lang);
 
 //stem_new_with_stemimplementation
 
 void
-stem_delete (stem *);
+stem_delete (Xapian::Stem *);
 
 const char *
-stem_word (stem *, const char *word);
+stem_word (Xapian::Stem *, const char *word);
 
 const char *
-stem_get_description (stem *);
+stem_get_description (Xapian::Stem *);
 
 const char *
 stem_get_available_languages ();

@@ -1,93 +1,86 @@
 #include <xapian.h>
 #include "cxapian_msetiterator.h"
 
-msetiterator *
+Xapian::MSetIterator *
 msetiterator_new ()
 {
-    msetiterator *mi = new msetiterator();
-    mi->iter = new Xapian::MSetIterator();
-    return mi;
+    return new Xapian::MSetIterator();
 }
 
-msetiterator *
-msetiterator_copy (msetiterator *original)
+Xapian::MSetIterator *
+msetiterator_copy (Xapian::MSetIterator *original)
 {
-    msetiterator *mi = new msetiterator();
-    mi->iter = new Xapian::MSetIterator(*original->iter);
-    return mi;
+    return new Xapian::MSetIterator(*original);
 }
 
 void
-msetiterator_delete (msetiterator *mi)
+msetiterator_delete (Xapian::MSetIterator *mi)
 {
-    delete mi->iter;
     delete mi;
 }
 
 void
-msetiterator_next (msetiterator *mi)
+msetiterator_next (Xapian::MSetIterator *mi)
 {
-    (*mi->iter)++; // TODO: does this work?
+    (*mi)++;
 }
 
 void
-msetiterator_prev (msetiterator *mi)
+msetiterator_prev (Xapian::MSetIterator *mi)
 {
-    (*mi->iter)--; // TODO: does this work?
+    (*mi)--;
 }
 
 cbool
-msetiterator_is_end (msetiterator *self, msetiterator *other)
+msetiterator_is_end (Xapian::MSetIterator *self, Xapian::MSetIterator *other)
 {
-    return (*self->iter == *other->iter);
+    return (*self == *other);
 }
 
 unsigned int
-msetiterator_get (msetiterator *mi)
+msetiterator_get (Xapian::MSetIterator *mi)
 {
-    return **mi->iter;
+    return **mi;
 }
 
-document *
-msetiterator_get_document (msetiterator *mi)
+    Xapian::Document *
+msetiterator_get_document (Xapian::MSetIterator *mi)
 {
-    document *doc = new document();
-    doc->get = new Xapian::Document(mi->iter->get_document());
-    return doc;
-}
-
-unsigned int
-msetiterator_get_rank (msetiterator *mi)
-{
-    return mi->iter->get_rank();
+    return new Xapian::Document(mi->get_document());
 }
 
 unsigned int
-msetiterator_get_weight (msetiterator *mi)
+msetiterator_get_rank (Xapian::MSetIterator *mi)
 {
-    return mi->iter->get_weight();
+    return mi->get_rank();
+}
+
+unsigned int
+msetiterator_get_weight (Xapian::MSetIterator *mi)
+{
+    return mi->get_weight();
 }
 
 const char *
-msetiterator_get_collapse_key (msetiterator *mi)
+msetiterator_get_collapse_key (Xapian::MSetIterator *mi)
 {
-    return mi->iter->get_collapse_key().c_str();
+    return mi->get_collapse_key().c_str();
 }
 
 unsigned int
-msetiterator_get_collapse_count (msetiterator *mi)
+msetiterator_get_collapse_count (Xapian::MSetIterator *mi)
 {
-    return mi->iter->get_collapse_count();
+    return mi->get_collapse_count();
 }
 
 int
-msetiterator_get_percent (msetiterator *mi)
+msetiterator_get_percent (Xapian::MSetIterator *mi)
 {
-    return mi->iter->get_percent();
+    return mi->get_percent();
 }
 
 const char *
-msetiterator_get_description (msetiterator *mi)
+msetiterator_get_description (Xapian::MSetIterator *mi)
 {
-    return mi->iter->get_description().c_str();
+    return mi->get_description().c_str();
 }

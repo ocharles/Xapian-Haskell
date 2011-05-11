@@ -1,74 +1,65 @@
 #include <xapian.h>
 #include "cxapian_postingiterator.h"
 
-postingiterator *
+Xapian::PostingIterator *
 postingiterator_new ()
 {
-    postingiterator *self = new postingiterator();
-    self->iter = new Xapian::PostingIterator();
-    return self;
+    return new Xapian::PostingIterator();
 }
 
-postingiterator *
-postingiterator_copy (postingiterator *other)
+Xapian::PostingIterator *
+postingiterator_copy (Xapian::PostingIterator *other)
 {
-    postingiterator *self = new postingiterator();
-    self->iter = new Xapian::PostingIterator(*other->iter);
-    return self;
+    return new Xapian::PostingIterator(*other);
 }
 
 void
-postingiterator_delete (postingiterator *self)
+postingiterator_delete (Xapian::PostingIterator *self)
 {
-    delete self->iter;
     delete self;
 }
 
 unsigned int // Xapian::docid
-postingiterator_get (postingiterator *self)
+postingiterator_get (Xapian::PostingIterator *self)
 {
-    return **self->iter;
+    return **self;
 }
 
 void
-postingiterator_skip_to (postingiterator *self, unsigned int docid)
+postingiterator_skip_to (Xapian::PostingIterator *self, unsigned int docid)
 {
-    self->iter->skip_to(docid);
+    self->skip_to(docid);
 }
 
 unsigned int
-postingiterator_get_doclength (postingiterator *self)
+postingiterator_get_doclength (Xapian::PostingIterator *self)
 {
-    return self->iter->get_doclength();
+    return self->get_doclength();
 }
 
 unsigned int
-postingiterator_get_wdf (postingiterator *self)
+postingiterator_get_wdf (Xapian::PostingIterator *self)
 {
-    return self->iter->get_wdf();
+    return self->get_wdf();
 }
 
-positioniterator *
-postingiterator_positionlist_begin (postingiterator *self)
+Xapian::PositionIterator *
+postingiterator_positionlist_begin (Xapian::PostingIterator *self)
 {
-    positioniterator *pi = new positioniterator();
-    pi->iter = new Xapian::PositionIterator(
-            self->iter->positionlist_begin() );
-    return pi;
+    return new Xapian::PositionIterator(
+            self->positionlist_begin() );
 }
 
-positioniterator *
-postingiterator_positionlist_end (postingiterator *self)
+Xapian::PositionIterator *
+postingiterator_positionlist_end (Xapian::PostingIterator *self)
 {
-    positioniterator *pi = new positioniterator();
-    pi->iter = new Xapian::PositionIterator(
-            self->iter->positionlist_end() );
-    return pi;
+    return new Xapian::PositionIterator(
+            self->positionlist_end() );
 }
 
 const char *
-postingiterator_get_description (postingiterator *self)
+postingiterator_get_description (Xapian::PostingIterator *self)
 {
-    return self->iter->get_description().c_str();
+    return self->get_description().c_str();
 }
 

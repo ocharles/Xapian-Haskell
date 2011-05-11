@@ -6,44 +6,44 @@
 
 extern "C" {
 
-termiterator *
+Xapian::TermIterator *
 termiterator_new ();
 
-termiterator *
-termiterator_copy (termiterator *other);
+Xapian::TermIterator *
+termiterator_copy (Xapian::TermIterator *other);
 
 void
-termiterator_delete (termiterator *);
+termiterator_delete (Xapian::TermIterator *);
 
 void
-termiterator_next (termiterator *);
+termiterator_next (Xapian::TermIterator *);
 
 cbool
-termiterator_is_end (termiterator *, termiterator *end);
+termiterator_is_end (Xapian::TermIterator *, Xapian::TermIterator *end);
 
 const char *
-termiterator_get (termiterator *);
+termiterator_get (Xapian::TermIterator *);
 
 void
-termiterator_skip_to (termiterator *, const char *tname);
+termiterator_skip_to (Xapian::TermIterator *, const char *tname);
 
 unsigned int
-termiterator_get_wdf (termiterator *);
+termiterator_get_wdf (Xapian::TermIterator *);
 
 unsigned int
-termiterator_get_termfreq (termiterator *);
+termiterator_get_termfreq (Xapian::TermIterator *);
 
 unsigned int
-termiterator_positionlist_count (termiterator *);
+termiterator_positionlist_count (Xapian::TermIterator *);
 
-positioniterator *
-termiterator_positionlist_begin (termiterator *);
+Xapian::PositionIterator *
+termiterator_positionlist_begin (Xapian::TermIterator *);
 
-positioniterator *
-termiterator_positionlist_end (termiterator *);
+Xapian::PositionIterator *
+termiterator_positionlist_end (Xapian::TermIterator *);
 
 const char *
-termiterator_get_description (termiterator *);
+termiterator_get_description (Xapian::TermIterator *);
 
 }
 

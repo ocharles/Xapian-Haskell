@@ -6,89 +6,89 @@
 
 extern "C" {
 
-mset *
+Xapian::MSet *
 mset_new ();
 
-mset *
-mset_copy (mset *original);
+Xapian::MSet *
+mset_copy (Xapian::MSet *original);
 
 void
-mset_delete (mset *);
+mset_delete (Xapian::MSet *);
 
 void
-mset_fetch_all (mset *);
+mset_fetch_all (Xapian::MSet *);
 
 void
-mset_fetch_one (mset *, msetiterator *item);
+mset_fetch_one (Xapian::MSet *, Xapian::MSetIterator *item);
 
 void
-mset_fetch_many (mset *, msetiterator *begin, msetiterator *end);
+mset_fetch_many (Xapian::MSet *, Xapian::MSetIterator *begin, Xapian::MSetIterator *end);
 
 int
-mset_convert_weight_to_percent (mset *, double weight);
+mset_convert_weight_to_percent (Xapian::MSet *, double weight);
 
 int
-mset_convert_document_to_percent (mset *, msetiterator *it);
+mset_convert_document_to_percent (Xapian::MSet *, Xapian::MSetIterator *other);
 
 unsigned int
-mset_get_termfreq (mset *, const char *tname);
+mset_get_termfreq (Xapian::MSet *, const char *tname);
 
 double
-mset_get_termweight (mset *, const char *tname);
+mset_get_termweight (Xapian::MSet *, const char *tname);
 
 unsigned int
-mset_get_firstitem (mset *);
+mset_get_firstitem (Xapian::MSet *);
 
 unsigned int
-mset_get_matches_lower_bound (mset *);
+mset_get_matches_lower_bound (Xapian::MSet *);
 
 unsigned int
-mset_get_matches_estimated (mset *);
+mset_get_matches_estimated (Xapian::MSet *);
 
 unsigned int
-mset_get_matches_upper_bound (mset *);
+mset_get_matches_upper_bound (Xapian::MSet *);
 
 unsigned int
-mset_get_uncollapsed_matches_lower_bound (mset *);
+mset_get_uncollapsed_matches_lower_bound (Xapian::MSet *);
 
 unsigned int
-mset_get_uncollapsed_matches_estimated (mset *);
+mset_get_uncollapsed_matches_estimated (Xapian::MSet *);
 
 unsigned int
-mset_get_uncollapsed_matches_upper_bound (mset *);
+mset_get_uncollapsed_matches_upper_bound (Xapian::MSet *);
 
 double // Xapian::weight
-mset_get_max_possible (mset *);
+mset_get_max_possible (Xapian::MSet *);
 
 double // weight
-mset_get_max_attained (mset *);
+mset_get_max_attained (Xapian::MSet *);
 
 unsigned int
-mset_size (mset *);
+mset_size (Xapian::MSet *);
 
 unsigned int
-mset_max_size (mset *);
+mset_max_size (Xapian::MSet *);
 
 cbool
-mset_empty (mset *);
+mset_empty (Xapian::MSet *);
 
 void
-mset_swap (mset *, mset *other);
+mset_swap (Xapian::MSet *, Xapian::MSet *other);
 
-msetiterator *
-mset_begin (mset *);
+Xapian::MSetIterator *
+mset_begin (Xapian::MSet *);
 
-msetiterator *
-mset_end (mset *);
+Xapian::MSetIterator *
+mset_end (Xapian::MSet *);
 
-msetiterator *
-mset_back (mset *);
+Xapian::MSetIterator *
+mset_back (Xapian::MSet *);
 
-msetiterator *
-mset_index (mset *, unsigned int i); // operator[]
+Xapian::MSetIterator *
+mset_index (Xapian::MSet *, unsigned int i); // operator[]
 
 const char *
-mset_get_description (mset *);
+mset_get_description (Xapian::MSet *);
 
 }
 

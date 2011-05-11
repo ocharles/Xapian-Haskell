@@ -7,35 +7,35 @@
 extern "C" {
 
 
-postingiterator *
+Xapian::PostingIterator *
 postingiterator_new ();
 
-postingiterator *
-postingiterator_copy (postingiterator *other);
+Xapian::PostingIterator *
+postingiterator_copy (Xapian::PostingIterator *other);
 
 void
-postingiterator_delete (postingiterator *);
+postingiterator_delete (Xapian::PostingIterator *);
 
 unsigned int // Xapian::docid
-postingiterator_get (postingiterator *);
+postingiterator_get (Xapian::PostingIterator *);
 
 void
-postingiterator_skip_to (postingiterator *, unsigned int docid);
+postingiterator_skip_to (Xapian::PostingIterator *, unsigned int docid);
 
 unsigned int
-postingiterator_get_doclength (postingiterator *);
+postingiterator_get_doclength (Xapian::PostingIterator *);
 
 unsigned int
-postingiterator_get_wdf (postingiterator *);
+postingiterator_get_wdf (Xapian::PostingIterator *);
 
-positioniterator *
-postingiterator_positionlist_begin (postingiterator *);
+Xapian::PositionIterator *
+postingiterator_positionlist_begin (Xapian::PostingIterator *);
 
-positioniterator *
-postingiterator_positionlist_end (postingiterator *);
+Xapian::PositionIterator *
+postingiterator_positionlist_end (Xapian::PostingIterator *);
 
 const char *
-postingiterator_get_description (postingiterator *);
+postingiterator_get_description (Xapian::PostingIterator *);
 
 
 }

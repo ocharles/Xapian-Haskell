@@ -1,20 +1,18 @@
 #include <xapian.h>
 #include "cxapian_database.h"
 
-database *
+Xapian::Database *
 database_new ()
 {
-    database *db = new database();
-    db->get = new Xapian::Database();
-    return db;
+    return new Xapian::Database();
 }
 
-database *
+Xapian::Database *
 database_new_from_path (const char *path, const char **error)
 {
-    database *db = new database();
+    Xapian::Database *db;
     try {
-        db->get = new Xapian::Database(std::string(path));
+        db = new Xapian::Database(std::string(path));
         return db;
     }
     catch (const Xapian::Error &e) {
@@ -24,245 +22,218 @@ database_new_from_path (const char *path, const char **error)
     }
 }
 
-database *
-database_copy (database *other)
+Xapian::Database *
+database_copy (Xapian::Database *other)
 {
-    database *db = new database();
-    db->get = new Xapian::Database(*other->get);
-    return db;
+    return new Xapian::Database(*other);
 }
 
 void
-database_delete (database *db)
+database_delete (Xapian::Database *db)
 {
-    delete db->get;
     delete db;
 }
 
 void
-database_add_database (database *db, database *other)
+database_add_database (Xapian::Database *db, Xapian::Database *other)
 {
-    db->get->add_database(*other->get);
+    db->add_database(*other);
 }
 
 void
-database_reopen (database *db)
+database_reopen (Xapian::Database *db)
 {
-    db->get->reopen();
+    db->reopen();
 }
 
 void
-database_close (database *db)
+database_close (Xapian::Database *db)
 {
-    db->get->close();
+    db->close();
 }
 
 const char *
-database_get_description (database *db)
+database_get_description (Xapian::Database *db)
 {
-    return db->get->get_description().c_str();;
+    return db->get_description().c_str();;
 }
 
-postingiterator *
-database_postlist_begin (database *db, const char *tname)
+Xapian::PostingIterator *
+database_postlist_begin (Xapian::Database *db, const char *tname)
 {
-    postingiterator *pi = new postingiterator();
-    pi->iter = new Xapian::PostingIterator(
-            db->get->postlist_begin(std::string(tname)) );
-    return pi;
+    return new Xapian::PostingIterator(
+            db->postlist_begin(std::string(tname)) );
 }
 
-postingiterator *
-database_postlist_end (database *db, const char *tname)
+Xapian::PostingIterator *
+database_postlist_end (Xapian::Database *db, const char *tname)
 {
-    postingiterator *pi = new postingiterator();
-    pi->iter = new Xapian::PostingIterator(
-            db->get->postlist_end(std::string(tname)) );
-    return pi;
+    return new Xapian::PostingIterator(
+            db->postlist_end(std::string(tname)) );
 }
 
-termiterator *
-database_termlist_begin (database *db, unsigned int docid)
+Xapian::TermIterator *
+database_termlist_begin (Xapian::Database *db, unsigned int docid)
 {
-    termiterator *ti = new termiterator();
-    ti->iter = new Xapian::TermIterator(
-            db->get->termlist_begin(docid) );
-    return ti;
+    return new Xapian::TermIterator(
+            db->termlist_begin(docid) );
 }
 
-termiterator *
-database_termlist_end (database *db, unsigned int docid)
+Xapian::TermIterator *
+database_termlist_end (Xapian::Database *db, unsigned int docid)
 {
-    termiterator *ti = new termiterator();
-    ti->iter = new Xapian::TermIterator(
-            db->get->termlist_end(docid) );
-    return ti;
+    return new Xapian::TermIterator(
+            db->termlist_end(docid) );
 }
 
 cbool
-database_has_positions (database *db)
+database_has_positions (Xapian::Database *db)
 {
-    return db->get->has_positions();
+    return (cbool)db->has_positions();
 }
 
-positioniterator *
-database_positionlist_begin (database *db, unsigned int docid, const char *tname)
+Xapian::PositionIterator *
+database_positionlist_begin (Xapian::Database *db, unsigned int docid, const char *tname)
 {
-    positioniterator *pi = new positioniterator();
-    pi->iter = new Xapian::PositionIterator(
-            db->get->positionlist_begin(docid, std::string(tname)) );
-    return pi;
+    return new Xapian::PositionIterator(
+            db->positionlist_begin(docid, std::string(tname)) );
 }
 
-positioniterator *
-database_positionlist_end (database *db, unsigned int docid, const char *tname)
+Xapian::PositionIterator *
+database_positionlist_end (Xapian::Database *db, unsigned int docid, const char *tname)
 {
-    positioniterator *pi = new positioniterator();
-    pi->iter = new Xapian::PositionIterator(
-            db->get->positionlist_end(docid, std::string(tname)) );
-    return pi;
+    return new Xapian::PositionIterator(
+            db->positionlist_end(docid, std::string(tname)) );
 }
 
-termiterator *
-database_allterms_begin (database *db)
+Xapian::TermIterator *
+database_allterms_begin (Xapian::Database *db)
 {
-    termiterator *ti = new termiterator();
-    ti->iter = new Xapian::TermIterator( db->get->allterms_begin() );
-    return ti;
+    return new Xapian::TermIterator( db->allterms_begin() );
 }
 
-termiterator *
-database_allterms_end (database *db)
+Xapian::TermIterator *
+database_allterms_end (Xapian::Database *db)
 {
-    termiterator *ti = new termiterator();
-    ti->iter = new Xapian::TermIterator( db->get->allterms_end() );
-    return ti;
+    return new Xapian::TermIterator( db->allterms_end() );
 }
 
-termiterator *
-database_allterms_with_prefix_begin (database *db, const char *prefix)
+Xapian::TermIterator *
+database_allterms_with_prefix_begin (Xapian::Database *db, const char *prefix)
 {
-    termiterator *ti = new termiterator();
-    ti->iter = new Xapian::TermIterator(
-            db->get->allterms_begin(std::string(prefix)) );
-    return ti;
+    return new Xapian::TermIterator(
+            db->allterms_begin(std::string(prefix)) );
 }
 
-termiterator *
-database_allterms_with_prefix_end (database *db, const char *prefix)
+Xapian::TermIterator *
+database_allterms_with_prefix_end (Xapian::Database *db, const char *prefix)
 {
-    termiterator *ti = new termiterator();
-    ti->iter = new Xapian::TermIterator(
-            db->get->allterms_end(std::string(prefix)) );
-    return ti;
+    return new Xapian::TermIterator(
+            db->allterms_end(std::string(prefix)) );
 }
 
 unsigned int
-database_get_doccount (database *db)
+database_get_doccount (Xapian::Database *db)
 {
-    return db->get->get_doccount();
+    return db->get_doccount();
 }
 
 unsigned int
-database_get_lastdocid (database *db)
+database_get_lastdocid (Xapian::Database *db)
 {
-    return db->get->get_lastdocid();
+    return db->get_lastdocid();
 }
 
 double
-database_get_avlength (database *db)
+database_get_avlength (Xapian::Database *db)
 {
-    return db->get->get_avlength();
+    return db->get_avlength();
 }
 
 unsigned int
-database_get_termfreq (database *db, const char *tname)
+database_get_termfreq (Xapian::Database *db, const char *tname)
 {
-    return db->get->get_termfreq( std::string(tname) );
+    return db->get_termfreq( std::string(tname) );
 }
 
 cbool
-database_term_exists (database *db, const char *tname)
+database_term_exists (Xapian::Database *db, const char *tname)
 {
-    return db->get->term_exists( std::string(tname) );
+    return db->term_exists( std::string(tname) );
 }
 
 unsigned int
-database_get_collection_freq (database *db, const char *tname)
+database_get_collection_freq (Xapian::Database *db, const char *tname)
 {
-    return db->get->get_collection_freq( std::string(tname) );
+    return db->get_collection_freq( std::string(tname) );
 }
 
 unsigned int
-database_get_value_freq (database *db, unsigned int valno)
+database_get_value_freq (Xapian::Database *db, unsigned int valno)
 {
-    return db->get->get_value_freq( valno );
+    return db->get_value_freq( valno );
 }
 
 const char *
-database_get_value_lower_bound (database *db, unsigned int valno)
+database_get_value_lower_bound (Xapian::Database *db, unsigned int valno)
 {
-    return db->get->get_value_lower_bound( valno ).c_str();
+    return db->get_value_lower_bound( valno ).c_str();
 }
 
 const char *
-database_get_value_upper_bound (database *db, unsigned int valno)
+database_get_value_upper_bound (Xapian::Database *db, unsigned int valno)
 {
-    return db->get->get_value_upper_bound( valno ).c_str();
+    return db->get_value_upper_bound( valno ).c_str();
 }
 
 unsigned int
-database_get_doclength_lower_bound (database *db)
+database_get_doclength_lower_bound (Xapian::Database *db)
 {
-    return db->get->get_doclength_lower_bound();
+    return db->get_doclength_lower_bound();
 }
 
 unsigned int
-database_get_doclength_upper_bound (database *db)
+database_get_doclength_upper_bound (Xapian::Database *db)
 {
-    return db->get->get_doclength_upper_bound();
+    return db->get_doclength_upper_bound();
 }
 
 unsigned int
-database_get_wdf_upper_bound (database *db, const char *term)
+database_get_wdf_upper_bound (Xapian::Database *db, const char *term)
 {
-    return db->get->get_wdf_upper_bound( std::string(term) );
+    return db->get_wdf_upper_bound( std::string(term) );
 }
 
-valueiterator *
-database_valuestream_begin (database *db, unsigned int valueno)
+Xapian::ValueIterator *
+database_valuestream_begin (Xapian::Database *db, unsigned int valueno)
 {
-    valueiterator *vi = new valueiterator();
-    vi->iter = new Xapian::ValueIterator( db->get->valuestream_begin(valueno) );
-    return vi;
+    return new Xapian::ValueIterator( db->valuestream_begin(valueno) );
 }
 
-valueiterator *
-database_valuestream_end (database *db, unsigned int valueno)
+Xapian::ValueIterator *
+database_valuestream_end (Xapian::Database *db, unsigned int valueno)
 {
-    valueiterator *vi = new valueiterator();
-    vi->iter = new Xapian::ValueIterator( db->get->valuestream_end(valueno) );
-    return vi;
+    return new Xapian::ValueIterator( db->valuestream_end(valueno) );
 }
 
 unsigned int
-database_get_doclength (database *db, unsigned int docid)
+database_get_doclength (Xapian::Database *db, unsigned int docid)
 {
-    return db->get->get_doclength(docid);
+    return db->get_doclength(docid);
 }
 
 void
-database_keep_alive (database *db)
+database_keep_alive (Xapian::Database *db)
 {
-    return db->get->keep_alive();
+    return db->keep_alive();
 }
 
-document *
-database_get_document (database *db, unsigned int docid, const char **error)
+Xapian::Document *
+database_get_document (Xapian::Database *db, unsigned int docid, const char **error)
 {
-    document *doc = new document();
+    Xapian::Document *doc; 
     try {
-        doc->get = new Xapian::Document( db->get->get_document(docid) );
+        doc = new Xapian::Document( db->get_document(docid) );
         return doc;
     }
     catch (const Xapian::Error &e) {
@@ -273,95 +244,79 @@ database_get_document (database *db, unsigned int docid, const char **error)
 }
 
 const char * // max_edit_distance defaults to 2
-database_get_spelling_suggestion (database *db, const char *word,
+database_get_spelling_suggestion (Xapian::Database *db, const char *word,
                                   unsigned int max_edit_distance)
 {
-    return db->get->get_spelling_suggestion(
+    return db->get_spelling_suggestion(
             std::string(word), max_edit_distance ).c_str();
 }
-termiterator *
-database_spellings_begin (database *db)
+
+Xapian::TermIterator *
+database_spellings_begin (Xapian::Database *db)
 {
-    termiterator *ti = new termiterator();
-    ti->iter = new Xapian::TermIterator( db->get->spellings_begin() );
-    return ti;
+    return new Xapian::TermIterator( db->spellings_begin() );
 }
 
-termiterator *
-database_spellings_end (database *db)
+Xapian::TermIterator *
+database_spellings_end (Xapian::Database *db)
 {
-    termiterator *ti = new termiterator();
-    ti->iter = new Xapian::TermIterator( db->get->spellings_end() );
-    return ti;
+    return new Xapian::TermIterator( db->spellings_end() );
 }
 
-termiterator *
-database_synonyms_begin (database *db, const char *term)
+Xapian::TermIterator *
+database_synonyms_begin (Xapian::Database *db, const char *term)
 {
-    termiterator *ti = new termiterator();
-    ti->iter = new Xapian::TermIterator(
-            db->get->synonyms_begin(std::string(term)) );
-    return ti;
+    return new Xapian::TermIterator(
+            db->synonyms_begin(std::string(term)) );
 }
 
-termiterator *
-database_synonyms_end (database *db, const char *term)
+Xapian::TermIterator *
+database_synonyms_end (Xapian::Database *db, const char *term)
 {
-    termiterator *ti = new termiterator();
-    ti->iter = new Xapian::TermIterator(
-            db->get->synonyms_end(std::string(term)) );
-    return ti;
+    return new Xapian::TermIterator(
+            db->synonyms_end(std::string(term)) );
 }
 
-termiterator *
-database_synonym_keys_begin (database *db, const char *prefix)
+Xapian::TermIterator *
+database_synonym_keys_begin (Xapian::Database *db, const char *prefix)
 {
-    termiterator *ti = new termiterator();
-    ti->iter = new Xapian::TermIterator(
-            db->get->synonym_keys_begin(std::string(prefix)) );
-    return ti;
+    return new Xapian::TermIterator(
+            db->synonym_keys_begin(std::string(prefix)) );
 }
 
 
-termiterator *
-database_synonym_keys_end (database *db, const char *prefix)
+Xapian::TermIterator *
+database_synonym_keys_end (Xapian::Database *db, const char *prefix)
 {
-    termiterator *ti = new termiterator();
-    ti->iter = new Xapian::TermIterator(
-            db->get->synonym_keys_end(std::string(prefix)) );
-    return ti;
+    return new Xapian::TermIterator(
+            db->synonym_keys_end(std::string(prefix)) );
 }
 
 const char *
-database_get_metadata (database *db, const char *key)
+database_get_metadata (Xapian::Database *db, const char *key)
 {
-    return db->get->get_metadata(std::string(key)).c_str();
+    return db->get_metadata(std::string(key)).c_str();
 }
 
-termiterator *
-database_metadata_keys_begin (database *db, const char *prefix)
+Xapian::TermIterator *
+database_metadata_keys_begin (Xapian::Database *db, const char *prefix)
 {
-    termiterator *ti = new termiterator();
-    ti->iter = new Xapian::TermIterator(
-            db->get->metadata_keys_begin(std::string(prefix)) );
-    return ti;
+    return new Xapian::TermIterator(
+            db->metadata_keys_begin(std::string(prefix)) );
 }
 
-termiterator *
-database_metadata_keys_end (database *db, const char *prefix)
+Xapian::TermIterator *
+database_metadata_keys_end (Xapian::Database *db, const char *prefix)
 {
-    termiterator *ti = new termiterator();
-    ti->iter = new Xapian::TermIterator(
-            db->get->metadata_keys_end(std::string(prefix)) );
-    return ti;
+    return new Xapian::TermIterator(
+            db->metadata_keys_end(std::string(prefix)) );
 }
 
 const char *
-database_get_uuid (database *db)
+database_get_uuid (Xapian::Database *db)
 {
-    return db->get->get_uuid().c_str();
+    return db->get_uuid().c_str();
 }
-
 
 /* Writable database interface */
 
@@ -374,27 +329,19 @@ database_get_uuid (database *db)
  *
  */
 
-static Xapian::WritableDatabase *
-__writable_db (Xapian::Database *db)
-{
-    return (Xapian::WritableDatabase *) db;
-}
 
-database *
+Xapian::WritableDatabase *
 database_writable_new ()
 {
-    database *db = new database();
-    db->get = (Xapian::Database *) new Xapian::WritableDatabase();
-    return db;
+    return new Xapian::WritableDatabase();
 }
 
-database *
+Xapian::WritableDatabase *
 database_writable_new_from_path (const char *path, int action, const char **error)
 {
-    database *db = new database();
+    Xapian::WritableDatabase *db;
     try {
-        db->get = (Xapian::Database *) new Xapian::WritableDatabase(
-                std::string(path), action );
+        db = new Xapian::WritableDatabase( std::string(path), action );
         return db;
     }
     catch (const Xapian::Error & e) {
@@ -404,109 +351,104 @@ database_writable_new_from_path (const char *path, int action, const char **erro
     }
 }
 
-database *
-database_writable_copy (database *other)
+Xapian::WritableDatabase *
+database_writable_copy (Xapian::WritableDatabase *other)
 {
-    database *db = new database();
-    db->get = (Xapian::Database *) new Xapian::WritableDatabase(
-            *(__writable_db(other->get)));
-    return db;
+    return new Xapian::WritableDatabase(*other);
 }
 
 void
-database_writable_delete (database *db)
+database_writable_delete (Xapian::WritableDatabase *db)
 {
-    database_commit(db);
-    delete (__writable_db(db->get));
     delete db;
 }
 
 void
-database_commit (database *db)
+database_commit (Xapian::WritableDatabase *db)
 {
-    (__writable_db(db->get))->commit();
+    db->commit();
 }
 
 void
-database_begin_transaction (database *db, cbool flushed)
+database_begin_transaction (Xapian::WritableDatabase *db, cbool flushed)
 {
-    (__writable_db(db->get))->begin_transaction();
+    db->begin_transaction();
 }
 
 void
-database_commit_transaction (database *db)
+database_commit_transaction (Xapian::WritableDatabase *db)
 {
-    (__writable_db(db->get))->commit_transaction();
+    db->commit_transaction();
 }
 
 void
-database_cancel_transaction (database *db)
+database_cancel_transaction (Xapian::WritableDatabase *db)
 {
-    (__writable_db(db->get))->cancel_transaction();
+    db->cancel_transaction();
 }
 
 unsigned int
-database_add_document (database *db, document *doc)
+database_add_document (Xapian::WritableDatabase *db, Xapian::Document *doc)
 {
-    return (__writable_db(db->get))->add_document(*doc->get);
+    return db->add_document(*doc);
 }
 
 void
-database_delete_document_by_id (database *db, unsigned int docid)
+database_delete_document_by_id (Xapian::WritableDatabase *db, unsigned int docid)
 {
-    (__writable_db(db->get))->delete_document(docid);
+    db->delete_document(docid);
 }
 
 void
-database_delete_document_by_term (database *db, const char *unique_term)
+database_delete_document_by_term (Xapian::WritableDatabase *db, const char *unique_term)
 {
-    (__writable_db(db->get))->delete_document(std::string(unique_term));
+    db->delete_document(std::string(unique_term));
 }
 
 void
-database_replace_document (database *db, unsigned int docid, document *doc)
+database_replace_document (Xapian::WritableDatabase *db, unsigned int docid, Xapian::Document *doc)
 {
-    (__writable_db(db->get))->replace_document(docid, *doc->get);
+    db->replace_document(docid, *doc);
 }
 
 void
-database_add_spelling (database *db, const char *word, unsigned int freqinc)
+database_add_spelling (Xapian::WritableDatabase *db, const char *word, unsigned int freqinc)
 {
-    (__writable_db(db->get))->add_spelling(std::string(word), freqinc);
+    db->add_spelling(std::string(word), freqinc);
 }
 
 void
-database_remove_spelling (database *db, const char *word, unsigned int freqdec)
+database_remove_spelling (Xapian::WritableDatabase *db, const char *word, unsigned int freqdec)
 {
-    (__writable_db(db->get))->remove_spelling(std::string(word), freqdec);
+    db->remove_spelling(std::string(word), freqdec);
 }
 
 void
-database_add_synonym (database *db, const char *term, const char *synonym)
+database_add_synonym (Xapian::WritableDatabase *db, const char *term, const char *synonym)
 {
-    (__writable_db(db->get))->add_synonym(std::string(term), std::string(synonym));
+    db->add_synonym(std::string(term), std::string(synonym));
 }
 
 void
-database_remove_synonym (database *db, const char *term, const char *synonym)
+database_remove_synonym (Xapian::WritableDatabase *db, const char *term, const char *synonym)
 {
-    (__writable_db(db->get))->remove_synonym(std::string(term), std::string(synonym));
+    db->remove_synonym(std::string(term), std::string(synonym));
 }
 
 void
-database_clear_synonyms (database *db, const char *term)
+database_clear_synonyms (Xapian::WritableDatabase *db, const char *term)
 {
-    (__writable_db(db->get))->clear_synonyms(std::string(term));
+    db->clear_synonyms(std::string(term));
 }
 
 void
-database_set_metadata (database *db, const char *key, const char *value)
+database_set_metadata (Xapian::WritableDatabase *db, const char *key, const char *value)
 {
-    (__writable_db(db->get))->set_metadata(std::string(key), std::string(value));
+    db->set_metadata(std::string(key), std::string(value));
 }
 
 const char *
-database_writable_get_description (database *db)
+database_writable_get_description (Xapian::WritableDatabase *db)
 {
-    return (__writable_db(db->get))->get_description().c_str();
+    db->get_description().c_str();
 }

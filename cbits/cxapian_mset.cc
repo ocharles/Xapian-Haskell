@@ -1,183 +1,170 @@
 #include <xapian.h>
 #include "cxapian_mset.h"
 
-mset *
+Xapian::MSet *
 mset_new ()
 {
-    mset *m = new mset();
-    m->get  = new Xapian::MSet();
-    return m;
+    return new Xapian::MSet();
 }
 
-mset *
-mset_copy (mset *original)
+Xapian::MSet *
+mset_copy (Xapian::MSet *original)
 {
-    mset *m = new mset();
-    m->get  = new Xapian::MSet(*original->get);
-    return m;
+    return new Xapian::MSet(*original);
 }
 
 void
-mset_delete (mset *m)
+mset_delete (Xapian::MSet *self)
 {
-    delete m->get;
-    delete m;
+    delete self;
 }
 
 void
-mset_fetch_all (mset *m)
+mset_fetch_all (Xapian::MSet *self)
 {
-    m->get->fetch();
+    self->fetch();
 }
 
 void
-mset_fetch_one (mset *m, msetiterator *item)
+mset_fetch_one (Xapian::MSet *self, Xapian::MSetIterator *item)
 {
-    m->get->fetch(*item->iter);
+    self->fetch(*item);
 }
 
 void
-mset_fetch_many (mset *m, msetiterator *begin, msetiterator *end)
+mset_fetch_many (Xapian::MSet *self, Xapian::MSetIterator *begin, Xapian::MSetIterator *end)
 {
-    m->get->fetch(*begin->iter, *end->iter);
+    self->fetch(*begin, *end);
 }
 
 int
-mset_convert_weight_to_percent (mset *m, double weight)
+mset_convert_weight_to_percent (Xapian::MSet *self, double weight)
 {
-    return m->get->convert_to_percent((Xapian::weight)weight);
+    return self->convert_to_percent((Xapian::weight)weight);
 }
 
 int
-mset_convert_document_to_percent (mset *m, msetiterator *it)
+mset_convert_document_to_percent (Xapian::MSet *self, Xapian::MSetIterator *other)
 {
-    return m->get->convert_to_percent(*it->iter);
+    return self->convert_to_percent(*other);
 }
 
 unsigned int
-mset_get_termfreq (mset *m, const char *tname)
+mset_get_termfreq (Xapian::MSet *self, const char *tname)
 {
-    return m->get->get_termfreq(std::string(tname));
+    return self->get_termfreq(std::string(tname));
 }
 
 double
-mset_get_termweight (mset *m, const char *tname)
+mset_get_termweight (Xapian::MSet *self, const char *tname)
 {
-    return m->get->get_termweight(std::string(tname));
+    return self->get_termweight(std::string(tname));
 }
 
 unsigned int
-mset_get_firstitem (mset *m)
+mset_get_firstitem (Xapian::MSet *self)
 {
-    return m->get->get_firstitem();
+    return self->get_firstitem();
 }
 
 unsigned int
-mset_get_matches_lower_bound (mset *m)
+mset_get_matches_lower_bound (Xapian::MSet *self)
 {
-    return m->get->get_matches_lower_bound();
+    return self->get_matches_lower_bound();
 }
 
 unsigned int
-mset_get_matches_estimated (mset *m)
+mset_get_matches_estimated (Xapian::MSet *self)
 {
-    return m->get->get_matches_estimated();
+    return self->get_matches_estimated();
 }
 
 unsigned int
-mset_get_matches_upper_bound (mset *m)
+mset_get_matches_upper_bound (Xapian::MSet *self)
 {
-    return m->get->get_matches_upper_bound();
+    return self->get_matches_upper_bound();
 }
 
 unsigned int
-mset_get_uncollapsed_matches_lower_bound (mset *m)
+mset_get_uncollapsed_matches_lower_bound (Xapian::MSet *self)
 {
-    return m->get->get_uncollapsed_matches_lower_bound();
+    return self->get_uncollapsed_matches_lower_bound();
 }
 
 unsigned int
-mset_get_uncollapsed_matches_estimated (mset *m)
+mset_get_uncollapsed_matches_estimated (Xapian::MSet *self)
 {
-    return m->get->get_uncollapsed_matches_estimated();
+    return self->get_uncollapsed_matches_estimated();
 }
 
 unsigned int
-mset_get_uncollapsed_matches_upper_bound (mset *m)
+mset_get_uncollapsed_matches_upper_bound (Xapian::MSet *self)
 {
-    return m->get->get_uncollapsed_matches_upper_bound();
+    return self->get_uncollapsed_matches_upper_bound();
 }
 
 double // Xapian::weight
-mset_get_max_possible (mset *m)
+mset_get_max_possible (Xapian::MSet *self)
 {
-    return m->get->get_max_possible();
+    return self->get_max_possible();
 }
 
 double // weight
-mset_get_max_attained (mset *m)
+mset_get_max_attained (Xapian::MSet *self)
 {
-    return m->get->get_max_attained();
+    return self->get_max_attained();
 }
 
 unsigned int
-mset_size (mset *m)
+mset_size (Xapian::MSet *self)
 {
-    return m->get->size();
+    return self->size();
 }
 
 unsigned int
-mset_max_size (mset *m)
+mset_max_size (Xapian::MSet *self)
 {
-    return m->get->max_size();
+    return self->max_size();
 }
 
 cbool
-mset_empty (mset *m)
+mset_empty (Xapian::MSet *self)
 {
-    return m->get->empty();
+    return self->empty();
 }
 
 void
-mset_swap (mset *m, mset *other)
+mset_swap (Xapian::MSet *self, Xapian::MSet *other)
 {
-    return m->get->swap(*other->get);
+    return self->swap(*other);
 }
 
-msetiterator *
-mset_begin (mset *m)
+Xapian::MSetIterator *
+mset_begin (Xapian::MSet *self)
 {
-    msetiterator *mi = new msetiterator();
-    mi->iter = new Xapian::MSetIterator(m->get->begin());
-    return mi;
+    return new Xapian::MSetIterator(self->begin());
 }
 
-msetiterator *
-mset_end (mset *m)
+Xapian::MSetIterator *
+mset_end (Xapian::MSet *self)
 {
-    msetiterator *mi = new msetiterator();
-    mi->iter = new Xapian::MSetIterator(m->get->end());
-    return mi;
+    return new Xapian::MSetIterator(self->end());
 }
 
-msetiterator *
-mset_back (mset *m)
+Xapian::MSetIterator *
+mset_back (Xapian::MSet *self)
 {
-    msetiterator *mi = new msetiterator();
-    mi->iter = new Xapian::MSetIterator(m->get->back());
-    return mi;
+    return new Xapian::MSetIterator(self->back());
 }
 
-msetiterator *
-mset_index (mset *m, unsigned int i)
+Xapian::MSetIterator *
+mset_index (Xapian::MSet *self, unsigned int i)
 {
-    msetiterator *mi = new msetiterator();
-    mi->iter = new Xapian::MSetIterator((*m->get)[i]);
-    return mi;
+    return new Xapian::MSetIterator((*self)[i]);
 }
 
 const char *
-mset_get_description (mset *m)
+mset_get_description (Xapian::MSet *self)
 {
-    return m->get->get_description().c_str();
+    return self->get_description().c_str();
 }

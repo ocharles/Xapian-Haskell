@@ -42,8 +42,8 @@ library
                       Search.Xapian.Stem,
                       Search.Xapian.Query,
                       Search.Xapian.Query.Combinators,
-                      Search.Xapian
-  other-modules:      Search.Xapian.Internal.Types,
+                      Search.Xapian,
+                      Search.Xapian.Internal.Types,
                       Search.Xapian.Internal.Utils
   build-depends:      base,
                       blaze-builder,

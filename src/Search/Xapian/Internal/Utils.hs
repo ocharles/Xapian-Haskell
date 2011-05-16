@@ -3,6 +3,7 @@ module Search.Xapian.Internal.Utils
        collect
      , collectTerms
      , collectDocIds
+     , collectValues
 
        -- * Document related
      , newDocumentPtr

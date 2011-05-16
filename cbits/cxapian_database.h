@@ -182,7 +182,7 @@ void
 database_cancel_transaction (Xapian::WritableDatabase *);
 
 unsigned int
-database_add_document (Xapian::WritableDatabase *, document *doc);
+database_add_document (Xapian::WritableDatabase *, Xapian::Document *doc);
 
 void
 database_delete_document_by_id (Xapian::WritableDatabase *, unsigned int docid);
@@ -191,7 +191,7 @@ void
 database_delete_document_by_term (Xapian::WritableDatabase *, const char *unique_term);
 
 void
-database_replace_document (Xapian::WritableDatabase *, unsigned int docid, document *doc);
+database_replace_document (Xapian::WritableDatabase *, unsigned int docid, Xapian::Document *doc);
 
 void
 database_add_spelling (Xapian::WritableDatabase *, const char *word, unsigned int freqinc);

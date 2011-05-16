@@ -6,23 +6,23 @@
 
 extern "C" {
 
-stopper *
+Xapian::Stopper *
 stopper_simple_stopper_new ();
 
-//stopper *
+//Xapian::Stopper *
 //stopper_new_simple_stopper_from_iterator
 
 void
-stopper_simple_stopper_add (stopper *, const char *word);
+stopper_simple_stopper_add (Xapian::Stopper *, const char *word);
 
 void
-stopper_delete (stopper *);
+stopper_delete (Xapian::Stopper *);
 
 cbool
-stopper_check (stopper *, const char *term); // operator()
+stopper_check (Xapian::Stopper *, const char *term); // operator()
 
 const char *
-stopper_get_description (stopper *);
+stopper_get_description (Xapian::Stopper *);
 
 }
 

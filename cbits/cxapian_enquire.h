@@ -16,7 +16,7 @@ void
 enquire_delete (Xapian::Enquire *);
 
 void // qlen defaults to 0
-enquire_set_query (Xapian::Enquire *self, query *query, unsigned int qlen);
+enquire_set_query (Xapian::Enquire *self, Xapian::Query *query, unsigned int qlen);
 
 //query *
 //enquire_get_query (Xapian::Enquire *self)

@@ -238,7 +238,7 @@ database_get_document (Xapian::Database *db, unsigned int docid, const char **er
     }
     catch (const Xapian::Error &e) {
         *error = e.get_msg().c_str();
-        delete doc;
+        if (doc) delete doc;
         return NULL;
     }
 }

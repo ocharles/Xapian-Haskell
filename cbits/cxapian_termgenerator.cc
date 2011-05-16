@@ -16,21 +16,21 @@ termgenerator_delete (Xapian::TermGenerator *self)
 }
 
 void
-termgenerator_set_stemmer (Xapian::TermGenerator *self, stem *stemmer)
+termgenerator_set_stemmer (Xapian::TermGenerator *self, Xapian::Stem *stemmer)
 {
-    self->set_stemmer(*stemmer->get);
+    self->set_stemmer(*stemmer);
 }
 
 void
-termgenerator_set_stopper (Xapian::TermGenerator *self, stopper *stop)
+termgenerator_set_stopper (Xapian::TermGenerator *self, Xapian::Stopper *stop)
 {
-    self->set_stopper(stop->get);
+    self->set_stopper(stop);
 }
 
 void
-termgenerator_set_document (Xapian::TermGenerator *self, document *doc)
+termgenerator_set_document (Xapian::TermGenerator *self, Xapian::Document *doc)
 {
-    self->set_document(*doc->get);
+    self->set_document(*doc);
 }
 
 const Xapian::Document *

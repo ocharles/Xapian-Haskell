@@ -2,38 +2,35 @@
 #include "cxapian_stopper.h"
 
 
-stopper *
+Xapian::Stopper *
 stopper_simple_stopper_new ()
 {
-    stopper *s = new stopper();
-    s->get = new Xapian::SimpleStopper();
-    return s;
+    return new Xapian::SimpleStopper();
 }
 
-//stopper *
+//Xapian::Stopper *
 //stopper_new_simple_stopper_from_iterator
 
 void // make sure you call this on a Xapian::SimpleStopper
-stopper_simple_stopper_add (stopper *s, const char *word)
+stopper_simple_stopper_add (Xapian::Stopper *s, const char *word)
 {
-    ((Xapian::SimpleStopper*)s->get)->add(std::string(word));
+    ((Xapian::SimpleStopper*)s)->add(std::string(word));
 }
 
 void
-stopper_delete (stopper *s)
+stopper_delete (Xapian::Stopper *s)
 {
-    delete s->get;
     delete s;
 }
 
 cbool
-stopper_check (stopper *s, const char *term)
+stopper_check (Xapian::Stopper *s, const char *term)
 {
-    return (*s->get)(std::string(term));
+    return (*s)(std::string(term));
 }
 
 const char *
-stopper_get_description (stopper *s)
+stopper_get_description (Xapian::Stopper *s)
 {
-    return s->get->get_description().c_str();
+    return s->get_description().c_str();
 }

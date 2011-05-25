@@ -3,8 +3,7 @@ import Control.Monad (forM_)
 import Search.Xapian
 
 main = do
---  (dbPath:terms) <- getArgs
-  (dbPath:terms) <- return (words "foo.db 5")
+  (dbPath:terms) <- getArgs
   (Right db) <- openReadOnly dbPath
   (_, results) <- runXapian $ search db (queryAny terms) (paging 0 10)
   forM_ results $ \result ->

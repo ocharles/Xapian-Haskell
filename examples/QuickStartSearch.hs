@@ -3,10 +3,10 @@ import Control.Monad (forM_)
 import Search.Xapian
 
 main = do
-  (dbPath:terms) <- getArgs
-  (Right db) <- openDatabase dbPath
-  MSet results <- search db (queryAny terms) (QueryRange 0 10)
-  forM_ (results :: [SimpleDocument String]) $ \result ->
-   do putStr "You may be interested in document#"
-      print (documentLazyData result)
---      print result
+--  (dbPath:terms) <- getArgs
+  (dbPath:terms) <- return (words "foo.db 5")
+  (Right db) <- openReadOnly dbPath
+  (_, results) <- runXapian $ search db (queryAny terms) (paging 0 10)
+  forM_ results $ \result ->
+   do putStr "You may be interested in document #"
+      print (docId result)

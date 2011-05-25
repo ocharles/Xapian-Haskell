@@ -1,12 +1,14 @@
-import Control.Monad (zipWithM)
+import Control.Monad (forM_)
 import System.Environment (getArgs)
 import Data.ByteString.Char8 (pack)
 import Search.Xapian
 
 main = do
   (dbPath:store:terms) <- getArgs
-  (Right db) <- openWritableDatabase CreateOrOpen dbPath
-  let doc :: SimpleDocument String
-      doc = addPostings ((map pack terms) `zip` [1..]) $ addData store $ emptyDocument
-  addDocument db doc
-  return ()
+  (Right db) <- openReadWrite CreateOrOpen dbPath
+  runXapian $
+   do doc <- emptyDocument
+      forM_ (zip [1..] terms) $ \(i,term) ->
+          addPosting i (pack term) doc
+      setData (pack store) doc
+      addDocument db doc

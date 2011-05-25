@@ -1,10 +1,12 @@
 -- | this module is not intended to be made visible
 module Search.Xapian.Internal.Types
-       ( Error (..)
+       ( XapianM (runXapian)
+
+       , Error (..)
        , NativeError (..)
 
-       , WritableDatabase (..)
-       , Database (..)
+       , ReadWriteDB (..)
+       , ReadOnlyDB (..)
        , castPtr
        , castForeignPtr
 
@@ -16,14 +18,10 @@ module Search.Xapian.Internal.Types
        , QueryPtr
 
        , DocumentPtr
+       , DocumentId (..)
        , ValueNumber
        , Value
        , Document (..)
-       , SimpleDocument
-       , DocumentDiff (..)
-       , Prefixable (..)
-       , Fieldless
-       , DocumentId (..)
        , Term (..)
        , Pos
 
@@ -38,8 +36,29 @@ import qualified Data.ByteString as BS
 import Data.Map (Map)
 import Data.IntMap (IntMap)
 import Data.Sequence (Seq)
+import Control.Monad
+import Control.Monad.Trans
 
 import Search.Xapian.Internal.FFI
+
+
+-- * Xapian's own monad :)
+-- --------------------------------------------------------------------
+
+newtype XapianM a = XapianM {runXapian :: IO a}
+
+instance Monad XapianM where
+    return  = XapianM . return
+    x >>= f = XapianM $
+               do x' <- runXapian x
+                  runXapian $ f x'
+
+instance MonadIO XapianM where
+    liftIO = XapianM
+
+instance Functor XapianM where
+    fmap f = XapianM . fmap f . runXapian
+
 
 -- * Error types
 -- --------------------------------------------------------------------
@@ -69,11 +88,14 @@ data NativeError
 -- * Database related types
 -- --------------------------------------------------------------------
 
-data Database fields dat = Database !(ForeignPtr CDatabase)
-    deriving (Eq, Show)
+newtype ReadWriteDB = ReadWriteDB { rwDbPtr :: WritableDatabasePtr }
+newtype ReadOnlyDB = ReadOnlyDB { roDbPtr :: DatabasePtr }
 
-data WritableDatabase fields dat = WritableDatabase !(ForeignPtr CWritableDatabase)
-    deriving (Eq, Show)
+instance Show ReadWriteDB where
+    show = ("ReadWriteDB " ++) . show . rwDbPtr
+
+instance Show ReadOnlyDB where
+    show = ("ReadOnlyDB " ++) . show . roDbPtr
 
 -- * Query related types
 -- --------------------------------------------------------------------
@@ -125,57 +147,19 @@ data OpMulti
 type ValueNumber = Word32
 type Value       = ByteString
 
-class Ord fields => Prefixable fields where
-    getPrefix   :: fields -> ByteString
-    stripPrefix :: fields -> ByteString -> Maybe ByteString
-    allFields   :: [fields]
-
-data Fieldless = Fieldless deriving (Show, Ord, Eq)
-
-instance Prefixable Fieldless where
-    getPrefix   Fieldless = BS.empty
-    stripPrefix Fieldless = const Nothing
-    allFields   = []
-
-type SimpleDocument = Document Fieldless
-
 -- | doc_id == 0 is invalid; what is the range of
 newtype DocumentId = DocId { getDocId :: Word32 }
     deriving (Show, Eq)
 
 -- | A @Document@
-data Document fields dat = Document
-    { documentPtr   :: Maybe DocumentPtr
-    , documentId    :: Maybe DocumentId
-    , documentLazyStem  :: Maybe Stemmer
-    , documentLazyValues :: Maybe (IntMap Value)
-    , documentLazyTerms :: Maybe [Term]
-    , documentLazyFields :: Maybe (Map fields [ByteString])
-    , documentLazyData  :: Maybe dat
-    , documentDiffs :: Seq (DocumentDiff fields dat)
-    } deriving (Show)
-
--- FIXME: unpack stuff to save space
-data DocumentDiff fields dat
-    = AddTerm ByteString {-# UNPACK #-} !Word32
-    | DelTerm ByteString
-    | AddTerms [(ByteString, Word32)]
-    | DelTerms [ByteString]
-    | AddPosting ByteString {-# UNPACK #-} !Word32 {-# UNPACK #-} !Word32
-    | DelPosting ByteString {-# UNPACK #-} !Word32 {-# UNPACK #-} !Word32
-    | AddPostings [(ByteString, Word32, Word32)]
-    | DelPostings [(ByteString, Word32, Word32)]
-    | AddValue {-# UNPACK #-} !Word32 ByteString
-    | DelValue {-# UNPACK #-} !Word32
-    | AddRawText ByteString
-    | SetData dat
-    | ClearTerms
-    | ClearValues
-    deriving (Show)
+data Document
+    = Document 
+      { docPtr :: DocumentPtr
+      , docId  :: DocumentId
+      } deriving (Show)
 
 data Term = Term    ByteString [Pos] -- ^ a single term w/ or wo/
                                      --   positional information
-          | RawText ByteString       -- ^ a text to be parsed as terms
   deriving (Eq, Show)
 
 -- * Stemming related types

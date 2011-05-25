@@ -22,16 +22,16 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 -}
 
 module Search.Xapian.Types
-       (
+       ( XapianM (runXapian)
+       
          -- * Error types
-         Error (..)
+       , Error (..)
          
          -- * Database related types
        , ReadableDatabase (..)
-       , SimpleDatabase
-       , SimpleWritableDatabase
-       , Database (..)
-       , WritableDatabase
+       , WritableDatabase (..)
+       , ReadWriteDB (..)
+       , ReadOnlyDB (..)
        , InitDBOption (..)
        , packInitDBOption
 
@@ -42,9 +42,6 @@ module Search.Xapian.Types
        , QueryRange (..)
 
          -- * Document related types
-       , Prefixable (..)
-       , SimpleDocument
-       , Fieldless
        , Document (..)
        , DocumentId (..)
        , Term (..)
@@ -59,23 +56,26 @@ module Search.Xapian.Types
 import Data.Serialize
 import Search.Xapian.Internal.Types
 import Search.Xapian.Internal.FFI
+import Data.ByteString (ByteString)
+
+-- * Indexing
+-- --------------------------------------------------------------------
+
+class Index d where
+    index :: d -> XapianM Document
 
 -- * Database related types
 -- --------------------------------------------------------------------
 
 
 class ReadableDatabase db where
-  search :: (Serialize dat, Prefixable fields)
-         => db fields dat
-         -> Query
-         -> QueryRange
-         -> IO (MSet fields dat)
+    search :: db -> Query -> QueryRange -> XapianM (MSet, [Document])
+    getDocument :: db -> DocumentId -> XapianM (Either Error Document)
 
-
-  getDocument :: (Serialize dat, Prefixable fields)
-              => db fields dat
-              -> DocumentId
-              -> IO (Either Error (Document fields dat))
+class WritableDatabase db where
+    addDocument :: db -> Document -> XapianM DocumentId
+    delDocumentById :: db -> DocumentId -> XapianM ()
+    delDocumentByTerm :: db -> ByteString -> XapianM ()
 
 
 data InitDBOption
@@ -90,9 +90,6 @@ data InitDBOption
                         --   exist
     deriving (Show, Eq, Ord, Enum)
 
-type SimpleDatabase = Database Fieldless
-type SimpleWritableDatabase = WritableDatabase Fieldless
-
 packInitDBOption :: InitDBOption -> Int
 packInitDBOption option =
   case option of
@@ -104,8 +101,7 @@ packInitDBOption option =
 -- * Query related types
 -- --------------------------------------------------------------------
 
--- | it's a list, not a set
-newtype MSet fields dat = MSet {getMSet :: [Document fields dat]}
+newtype MSet = MSet { msetPtr :: MSetPtr }
 
 -- | would YOU expect this when you think of a range?
 data QueryRange = QueryRange

@@ -156,7 +156,7 @@ compileQuery query' =
 -- of @query@. Note, this is not really meant for human consumption, but
 -- may help for debugging.
 --
-describeQuery :: ForeignPtr CQuery -> IO String
+describeQuery :: QueryPtr -> IO String
 describeQuery q =
   withForeignPtr q $ \query' ->
   peekCString =<< cx_query_get_description query'

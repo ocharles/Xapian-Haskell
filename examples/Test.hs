@@ -7,7 +7,7 @@ import Search.Xapian
 --
 testStuff =
   do let textData = "Oh my, how very confusing Haskell can be!"
-     (Right db) <- openWritableDatabase "test.db" createOrOverwriteDB
+     (Right db) <- openReadWrite "test.db" createOrOverwriteDB
      doc <- newDocument
      stemToDocument englishStem doc textData
      setDocumentData doc textData

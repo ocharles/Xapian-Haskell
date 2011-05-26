@@ -10,16 +10,15 @@ TODO
   * is there a good practice regarding how to call 'exceptionable' functions?
 
 * Encoding:
-  * can we index Sanskrit?
+  * can we index Sanskrit? (switch from ByteString to Text)
 
-* Type Safety:
-  * (e.g. you cannot call functions for writable databases on read-only databases)
+* Type Safety
+  * --
 
 * Testing:
   * Uuuhh..
 
 * Writing 'withForeignPtr' all the time is *visually unpleasant*
-* reduce boilerplate in nullify/unnullify
 * some objects are not being deleted such as iterators. can we reconcile this
   with lazy IO (unsafeInterleaveIO)?
 * unpack Op-datatypes in module Query

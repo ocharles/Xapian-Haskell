@@ -191,8 +191,8 @@ foreign import ccall unsafe "database_synonym_keys_end"
 foreign import ccall unsafe "database_get_metadata"
     cx_database_get_metadata
         :: Ptr CDatabase
-        -> CString       -- ^ key
-        -> CString       -- ^ value
+        -> Ptr CCString      -- ^ key
+        -> IO (Ptr CCString) -- ^ value
 
 foreign import ccall unsafe "database_metadata_keys_begin"
     cx_database_metadata_keys_begin :: Ptr CDatabase -> IO (Ptr CTermIterator)
@@ -305,8 +305,8 @@ foreign import ccall unsafe "database_clear_synonyms"
 foreign import ccall unsafe "database_set_metadata"
     cx_database_set_metadata
         :: Ptr CWritableDatabase
-        -> CString       -- ^ key
-        -> CString       -- ^ value
+        -> Ptr CCString  -- ^ key
+        -> Ptr CCString  -- ^ value
         -> IO ()
 
 foreign import ccall unsafe "database_writable_get_description"

@@ -73,11 +73,13 @@ class Index d where
 class ReadableDatabase db where
     search :: db -> Query -> QueryRange -> XapianM (MSet, [Document])
     getDocument :: db -> DocumentId -> XapianM (Either Error Document)
+    getMetadata :: db -> ByteString -> XapianM ByteString
 
 class WritableDatabase db where
     addDocument :: db -> Document -> XapianM DocumentId
     delDocumentById :: db -> DocumentId -> XapianM ()
     delDocumentByTerm :: db -> ByteString -> XapianM ()
+    setMetadata :: db -> ByteString -> ByteString -> XapianM ()
 
 
 data InitDBOption

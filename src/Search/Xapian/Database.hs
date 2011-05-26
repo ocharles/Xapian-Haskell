@@ -50,10 +50,18 @@ instance ReadableDatabase ReadOnlyDB where
                        return . Left $ Error (Just DocNotFoundError) err
                else manage handle >>= action
 
+  getMetadata (ReadOnlyDB dbmptr) key =
+      liftIO $
+      withForeignPtr dbmptr $ \dbptr ->
+       do cckey <- toCCString key
+          ccval <- cx_database_get_metadata dbptr cckey
+          fromCCString ccval
+
 
 instance ReadableDatabase ReadWriteDB where
   search (ReadWriteDB db) = search (ReadOnlyDB $ castForeignPtr db)
   getDocument (ReadWriteDB db) id' = getDocument (ReadOnlyDB $ castForeignPtr db) id'
+  getMetadata (ReadWriteDB db) key = getMetadata (ReadOnlyDB $ castForeignPtr db) key
 
 
 -- * opening databases
@@ -107,6 +115,13 @@ instance WritableDatabase ReadWriteDB where
         withForeignPtr dbmptr $ \dbptr ->
         useAsCString term $ \cterm ->
         cx_database_delete_document_by_term dbptr cterm
+
+    setMetadata (ReadWriteDB dbmptr) key val =
+        liftIO $
+        withForeignPtr dbmptr $ \dbptr ->
+         do cckey <- toCCString key
+            ccval <- toCCString val
+            cx_database_set_metadata dbptr cckey ccval
 
 
 replaceDocument :: ReadWriteDB -> DocumentId -> Document -> XapianM ()

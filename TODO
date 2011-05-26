@@ -1,6 +1,9 @@
 TODO
 ----
 
+* Idea for XapianM
+  * delay actions (for example Database::commit())
+
 * Exceptions:
   * make sure, that any exception in the c bindings is caught
   * document occurences of exceptions

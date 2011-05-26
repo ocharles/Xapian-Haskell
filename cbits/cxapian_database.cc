@@ -292,10 +292,11 @@ database_synonym_keys_end (Xapian::Database *db, const char *prefix)
             db->synonym_keys_end(std::string(prefix)) );
 }
 
-const char *
-database_get_metadata (Xapian::Database *db, const char *key)
+std::string *
+database_get_metadata (Xapian::Database *db, std::string *key)
 {
-    return db->get_metadata(std::string(key)).c_str();
+    std::string *str = new std::string(db->get_metadata(*key));
+    return str;
 }
 
 Xapian::TermIterator *
@@ -442,9 +443,9 @@ database_clear_synonyms (Xapian::WritableDatabase *db, const char *term)
 }
 
 void
-database_set_metadata (Xapian::WritableDatabase *db, const char *key, const char *value)
+database_set_metadata (Xapian::WritableDatabase *db, std::string *key, std::string *value)
 {
-    db->set_metadata(std::string(key), std::string(value));
+    db->set_metadata(*key, *value);
 }
 
 const char *

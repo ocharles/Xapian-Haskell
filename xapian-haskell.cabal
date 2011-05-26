@@ -10,9 +10,9 @@ description:    Haskell bindings for the Xapian search engine
 synopsis:       Haskell bindings for the Xapian search engine
 category:       Search, Database
 
-extra-source-files: examples/QuickStartIndex.hs
-                    examples/QuickStartSearch.hs
-                    examples/Test.hs
+extra-source-files: examples/SimpleIndex.hs
+                    examples/SimpleSearch.hs
+                    examples/Metadata.hs
                     cbits/cxapian_database.h
                     cbits/cxapian_document.h
                     cbits/cxapian_enquire.h
@@ -27,6 +27,7 @@ extra-source-files: examples/QuickStartIndex.hs
                     cbits/cxapian_termiterator.h
                     cbits/cxapian_types.h
                     cbits/cxapian_valueiterator.h
+                    cbits/ccstring.h
                     cbits/Makefile
 
 source-repository HEAD

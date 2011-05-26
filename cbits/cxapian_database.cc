@@ -450,5 +450,5 @@ database_set_metadata (Xapian::WritableDatabase *db, const char *key, const char
 const char *
 database_writable_get_description (Xapian::WritableDatabase *db)
 {
-    db->get_description().c_str();
+    return db->get_description().c_str();
 }

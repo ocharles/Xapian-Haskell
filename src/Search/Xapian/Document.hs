@@ -9,10 +9,13 @@ module Search.Xapian.Document
      ) where
 
 import Foreign
-
+ 
+import Control.Monad (forM_)
 import Control.Monad.Trans (liftIO)
 import Data.ByteString.Char8 (ByteString, useAsCString)
 import qualified Data.ByteString.Char8 as BS
+import Data.IntMap (IntMap)
+import qualified Data.IntMap as IntMap
 
 import Search.Xapian.Types
 import Search.Xapian.Internal.Utils
@@ -78,11 +81,23 @@ getValue valno =
     withDocumentPtr $ \ptr ->
     cx_document_get_value ptr (fromIntegral valno) >>= BS.packCString
 
+getValues :: Document -> XapianM (IntMap Value)
+getValues =
+    withDocumentPtr $ \ptr ->
+     do b <- manage =<< cx_document_values_begin ptr
+        e <- manage =<< cx_document_values_end   ptr
+        fmap IntMap.fromList $ collectValues b e
+
 setValue :: ValueNumber -> Value -> Document -> XapianM ()
 setValue valno val =
     withDocumentPtr $ \ptr ->
     useAsCString val $ \cval ->
     cx_document_add_value ptr (fromIntegral valno) cval
+
+setValues :: IntMap Value -> Document -> XapianM ()
+setValues vals doc =
+    forM_ (IntMap.toList vals) $ \(valno, val) ->
+    setValue (fromIntegral valno) val doc
 
 delValue :: ValueNumber -> Document -> XapianM ()
 delValue valno =

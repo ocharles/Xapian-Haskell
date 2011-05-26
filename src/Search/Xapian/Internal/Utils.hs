@@ -9,10 +9,6 @@ module Search.Xapian.Internal.Utils
      , createStemmer
      , stemWord
      , indexToDocument
-
-       -- * Debug
-     , nullify
-     , unnullify
      ) where
 
 import Foreign
@@ -23,7 +19,6 @@ import qualified Data.ByteString as BS
 import Data.ByteString.Char8 (pack, ByteString, packCString, useAsCString)
 import Data.IntMap (IntMap)
 import qualified Data.IntMap as IntMap
-import Data.Serialize
 
 import System.IO.Unsafe (unsafeInterleaveIO)
 
@@ -106,107 +101,6 @@ collectValues = collect cx_valueiterator_next
     getter ptr = do value <- BS.packCString =<< cx_valueiterator_get ptr
                     valno <- cx_valueiterator_get_valueno ptr
                     return (fromIntegral valno, value)
-
--- * Document related
-
-newDocumentPtr :: IO DocumentPtr
-newDocumentPtr =
- do cx_document_new >>= manage
-
--- | @addPosting document posting pos@ will index the term @posting@ in
--- the document @document@ at position @pos@.
-addPosting' :: DocumentPtr   -- ^ The document to add a posting to
-            -> ByteString -- ^ The term to index within the document
-            -> Pos           -- ^ The position of the term within the document
-            -> IO ()
-addPosting' docFPtr term pos =
-    withForeignPtr docFPtr $ \docPtr ->
-    BS.useAsCString term   $ \cterm ->
-    cx_document_add_posting
-        docPtr
-        cterm
-        (fromIntegral pos) -- FIXME
-        1 -- FIXME
-
-addTerm' :: DocumentPtr
-         -> ByteString
-         -> IO ()
-addTerm' docFPtr term =
-    withForeignPtr docFPtr $ \docPtr ->
-    useAsCString term $ \cterm ->
-    cx_document_add_term
-        docPtr
-        cterm
-        1 -- FIXME
-
-addValue :: DocumentPtr -> ValueNumber -> Value -> IO ()
-addValue docFPtr valno val =
-    useAsCString val $ \cval ->
-    withForeignPtr docFPtr $ \docPtr ->
-    cx_document_add_value docPtr (fromIntegral valno) cval
-
-getDocumentValues :: DocumentPtr -> IO (IntMap Value)
-getDocumentValues docFPtr =
-    unsafeInterleaveIO $
-    withForeignPtr docFPtr $ \docPtr ->
-     do b <- manage =<< cx_document_values_begin docPtr
-        e <- manage =<< cx_document_values_end docPtr
-        fmap IntMap.fromList $ collectValues b e
-
--- | FIXME wrong implementation
-getDocumentTerms :: DocumentPtr -> IO [Term]
-getDocumentTerms docFPtr =
-    unsafeInterleaveIO $
-    withForeignPtr docFPtr $ \docPtr ->
-     do b <- manage =<< cx_document_termlist_begin docPtr
-        e <- manage =<< cx_document_termlist_end docPtr
-        collectTerms b e
-
-  
--- * handling NULL values
--- because cstrings can't contain any NULL value, we have to store 7 bytes of
--- date as 8 bytes of data
-
-_zero = 48 :: Word8
-z  = 122 :: Word8
-z' = BS.pack [z]
-z0 = BS.pack [z,_zero]
-zz = BS.pack [z,z]
-
--- | unnullify maps NULL to z0 and z to zz
-unnullify :: ByteString -> ByteString
-unnullify = Blaze.toByteString . go
-  where
-    go bs =
-      let (xs,xss) = BS.span (\x -> x /= 0 && x /= z) bs
-          replacement = if BS.head xss == 0 then z0
-                                            else zz -- this part is still not failsafe
-      in if BS.null xss
-            then Blaze.fromByteString xs
-            else Blaze.fromByteString xs `mappend`
-                 Blaze.fromByteString replacement `mappend`
-                 go (BS.tail xss)
-
--- | nullify is the inverse of unnullify
-nullify :: ByteString -> Either String ByteString
-nullify bs = case go bs of
-                  Right builder -> Right $ Blaze.toByteString builder
-                  Left errorMsg -> Left errorMsg
-  where
-    go :: ByteString -> Either String Blaze.Builder
-    go bs =
-        let (xs,xss) = BS.span (/= z) bs
-            replacement = if xss `BS.index` 1 == _zero then 0 :: Word8
-                                                       else z -- this part is still not failsafe
-        in  if BS.null xss
-               then Right $ Blaze.fromByteString xs
-               else if BS.length xss == 1
-                       then Left "nullify: failed to decode document data"
-                       else case go (BS.drop 2 xss) of
-                                 Right rest -> Right $ Blaze.fromByteString xs `mappend`
-                                                       Blaze.fromStorable replacement `mappend`
-                                                       rest
-                                 error'     -> error'
 
 -- | @indexToDocument stemmer document text@ adds stemmed posting terms derived from
 -- @text@ using the stemming algorith @stemmer@ to @doc@

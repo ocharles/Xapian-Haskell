@@ -10,21 +10,11 @@ module Search.Xapian.Document
 
 import Foreign
 
-import Control.Arrow ((&&&))
-import Control.Monad (forM_)
 import Control.Monad.Trans (liftIO)
 import Data.ByteString.Char8 (ByteString, useAsCString)
 import qualified Data.ByteString.Char8 as BS
-import Data.Maybe (fromJust)
-import Data.Map (Map)
-import qualified Data.IntMap as IntMap
-import qualified Data.Map as Map
-import Data.Sequence ((|>), ViewL (..))
-import qualified Data.Sequence as Seq
-import Data.Serialize
 
 import Search.Xapian.Types
-import Search.Xapian.Internal.Types
 import Search.Xapian.Internal.Utils
 import Search.Xapian.Internal.FFI
 

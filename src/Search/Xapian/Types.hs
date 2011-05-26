@@ -26,6 +26,9 @@ module Search.Xapian.Types
        
          -- * Error types
        , Error (..)
+
+         -- * Indexing
+       , Index (..)
          
          -- * Database related types
        , ReadableDatabase (..)
@@ -53,7 +56,6 @@ module Search.Xapian.Types
        , Stemmer (..)
        ) where
 
-import Data.Serialize
 import Search.Xapian.Internal.Types
 import Search.Xapian.Internal.FFI
 import Data.ByteString (ByteString)

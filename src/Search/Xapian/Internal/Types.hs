@@ -30,14 +30,9 @@ module Search.Xapian.Internal.Types
        ) where
 
 import Foreign
-import Foreign.C.Types
 import Data.ByteString (ByteString)
-import qualified Data.ByteString as BS
-import Data.Map (Map)
-import Data.IntMap (IntMap)
-import Data.Sequence (Seq)
 import Control.Monad
-import Control.Monad.Trans
+import Control.Monad.Trans (liftIO, MonadIO)
 
 import Search.Xapian.Internal.FFI
 

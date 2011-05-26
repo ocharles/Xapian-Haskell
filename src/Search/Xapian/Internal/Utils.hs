@@ -27,9 +27,7 @@ module Search.Xapian.Internal.Utils
 import Foreign
 import Foreign.C.String
 import Blaze.ByteString.Builder as Blaze
-import Control.Monad
 import Data.Monoid
-import Data.Maybe (maybe)
 import qualified Data.ByteString as BS
 import Data.ByteString.Char8 (pack, ByteString, packCString, useAsCString)
 import Data.IntMap (IntMap)
@@ -39,7 +37,6 @@ import Data.Serialize
 import System.IO.Unsafe (unsafeInterleaveIO)
 
 import Search.Xapian.Internal.Types
-import Search.Xapian.Types
 import Search.Xapian.Internal.FFI
 
 -- * General
@@ -73,10 +70,10 @@ collect next' get' finished' pos' end' =
      do exit <- finished pos end
         if exit /= 0
            then do return []
-           else do elem <- get pos
-                   next pos
+           else do element <- get pos
+                   _ <- next pos
                    rest <- collect' next get finished pos end
-                   return (elem : rest)
+                   return (element : rest)
 
 collectPositions :: ForeignPtr CPositionIterator
                  -> ForeignPtr CPositionIterator
@@ -216,7 +213,7 @@ unnullify = Blaze.toByteString . go
 nullify :: ByteString -> Either String ByteString
 nullify bs = case go bs of
                   Right builder -> Right $ Blaze.toByteString builder
-                  Left error    -> Left error
+                  Left errorMsg -> Left errorMsg
   where
     go :: ByteString -> Either String Blaze.Builder
     go bs =
@@ -231,7 +228,7 @@ nullify bs = case go bs of
                                  Right rest -> Right $ Blaze.fromByteString xs `mappend`
                                                        Blaze.fromStorable replacement `mappend`
                                                        rest
-                                 error      -> error
+                                 error'     -> error'
 
 -- | @indexToDocument stemmer document text@ adds stemmed posting terms derived from
 -- @text@ using the stemming algorith @stemmer@ to @doc@

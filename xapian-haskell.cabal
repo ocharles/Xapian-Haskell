@@ -70,5 +70,6 @@ library
                       cbits/cxapian_termgenerator.cc
                       cbits/cxapian_termiterator.cc
                       cbits/cxapian_valueiterator.cc
+                      cbits/ccstring.cc
   cc-options:         -Wall -c
   extra-libraries:    xapian

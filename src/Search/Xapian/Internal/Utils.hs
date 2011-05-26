@@ -5,15 +5,6 @@ module Search.Xapian.Internal.Utils
      , collectDocIds
      , collectValues
 
-       -- * Document related
-     , newDocumentPtr
-     , addPosting'
-     , addTerm'
-     , addValue
-     , getDocumentTerms
-     , getDocumentValues
-     , getDocumentData
-
        -- * Stemmer related
      , createStemmer
      , stemWord
@@ -171,19 +162,6 @@ getDocumentTerms docFPtr =
         e <- manage =<< cx_document_termlist_end docPtr
         collectTerms b e
 
-getDocumentData :: Serialize dat
-                => DocumentPtr
-                -> IO (Either Error dat)
-getDocumentData docFPtr =
-    unsafeInterleaveIO $
-    withForeignPtr docFPtr $ \docPtr ->
-     do dat <- BS.packCString =<< cx_document_get_data docPtr
-        return $ case nullify dat of
-                      Left msg -> Left $ Error Nothing msg
-                      Right nullified ->
-                          case decode nullified of
-                               Left msg   -> Left $ Error Nothing msg
-                               Right dat' -> Right dat'
   
 -- * handling NULL values
 -- because cstrings can't contain any NULL value, we have to store 7 bytes of

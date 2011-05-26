@@ -43,16 +43,17 @@ document_clear_values (Xapian::Document *doc)
     doc->clear_values();
 }
 
-const char *
+std::string *
 document_get_data (Xapian::Document *doc)
 {
-    return doc->get_data().c_str();
+    std::string *str = new std::string(doc->get_data());
+    return str;
 }
 
 void
-document_set_data (Xapian::Document *doc, const char *data)
+document_set_data (Xapian::Document *doc, std::string *data)
 {
-    doc->set_data(std::string(data));
+    doc->set_data(*data);
 }
 
 void

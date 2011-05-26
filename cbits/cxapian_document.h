@@ -27,11 +27,11 @@ document_remove_value(Xapian::Document *, unsigned int valueno);
 void
 document_clear_values (Xapian::Document *);
 
-const char *
+std::string *
 document_get_data (Xapian::Document *);
 
 void
-document_set_data (Xapian::Document *, const char *data);
+document_set_data (Xapian::Document *, std::string *data);
 
 void
 document_add_posting (Xapian::Document *, const char *tname, unsigned int tpos, unsigned int wdfinc);

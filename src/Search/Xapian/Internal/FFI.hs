@@ -11,6 +11,20 @@ class Manageable a where
 
 type CBool = CInt
 
+-- Helper
+-- ---------------------------------------------------------
+
+data CCString
+
+foreign import ccall unsafe "asCCString"
+    asCCString :: CString -> CUInt -> IO (Ptr CCString)
+
+foreign import ccall unsafe "fromCCString"
+    fromCCString :: Ptr CCString -> IO CString
+
+foreign import ccall unsafe "lengthCCString"
+    lengthCCString :: Ptr CCString -> IO CUInt
+
 -- Generic Database
 -- ---------------------------------------------------------
 
@@ -316,10 +330,10 @@ foreign import ccall unsafe "document_clear_values"
     cx_document_clear_values :: Ptr CDocument -> IO ()
 
 foreign import ccall unsafe "document_get_data"
-    cx_document_get_data :: Ptr CDocument -> IO CString
+    cx_document_get_data :: Ptr CDocument -> IO (Ptr CCString)
 
 foreign import ccall unsafe "document_set_data"
-    cx_document_set_data :: Ptr CDocument -> CString -> IO ()
+    cx_document_set_data :: Ptr CDocument -> Ptr CCString -> IO ()
 
 foreign import ccall unsafe "document_add_posting"
     cx_document_add_posting :: Ptr CDocument

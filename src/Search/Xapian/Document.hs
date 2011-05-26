@@ -32,16 +32,13 @@ emptyDocument =
 getData :: Document -> XapianM ByteString
 getData =
     withDocumentPtr $ \ptr ->
-     do ccstring <- cx_document_get_data ptr
-        cstring  <- fromCCString ccstring
-        len      <- lengthCCString ccstring
-        BS.packCStringLen (cstring, fromIntegral len)
+    cx_document_get_data ptr >>= fromCCString
+        
 
 setData :: ByteString -> Document -> XapianM ()
 setData dat =
     withDocumentPtr $ \ptr ->
-    useAsCString dat $ \cdat ->
-     do ccstring <- asCCString cdat (fromIntegral $ BS.length dat)
+     do ccstring <- toCCString dat
         cx_document_set_data ptr ccstring
 
 getTerms :: Document -> XapianM [Term]

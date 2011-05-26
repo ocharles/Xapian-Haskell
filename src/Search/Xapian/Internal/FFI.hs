@@ -4,6 +4,8 @@ module Search.Xapian.Internal.FFI where
 import Foreign
 import Foreign.C.String
 import Foreign.C.Types
+import Data.ByteString
+import Data.ByteString.Unsafe
 
 
 class Manageable a where
@@ -16,14 +18,25 @@ type CBool = CInt
 
 data CCString
 
-foreign import ccall unsafe "asCCString"
-    asCCString :: CString -> CUInt -> IO (Ptr CCString)
+foreign import ccall unsafe "toCCString_"
+    toCCString_ :: CString -> CUInt -> IO (Ptr CCString)
 
-foreign import ccall unsafe "fromCCString"
-    fromCCString :: Ptr CCString -> IO CString
+toCCString :: ByteString -> IO (Ptr CCString)
+toCCString bs =
+    unsafeUseAsCStringLen bs $ \(cstring,len) ->
+    toCCString_ cstring (fromIntegral len)
+
+foreign import ccall unsafe "fromCCString_"
+    fromCCString_ :: Ptr CCString -> IO CString
 
 foreign import ccall unsafe "lengthCCString"
     lengthCCString :: Ptr CCString -> IO CUInt
+
+fromCCString :: Ptr CCString -> IO ByteString
+fromCCString ccstring =
+ do cstring <- fromCCString_ ccstring
+    len     <- lengthCCString ccstring
+    unsafePackCStringLen (cstring, fromIntegral len)
 
 -- Generic Database
 -- ---------------------------------------------------------

@@ -96,26 +96,32 @@ instance GetOpCode OpMulti where
     opcode OpSynonym    = cx_query_OP_SYNONYM
     opcode (OpPhrase _) = cx_query_OP_PHRASE
 
-compileQuery :: Query -> IO (ForeignPtr CQuery)
-compileQuery query' =
+compileQuery :: ReadOnlyDB -> Query -> IO (ForeignPtr CQuery)
+compileQuery db@(ReadOnlyDB dbmptr) query' =
     case query' of
          MatchAll   -> cx_query_match_all >>= manage
          MatchNothing -> cx_query_match_nothing >>= manage
          Atom bs    -> useAsCString bs $ \cs ->
                        cx_query_new_0 cs 1 0 >>= manage
          Parsed stemmer bs
-                    -> useAsCString bs $ \cs ->
-                       (createStemmer stemmer >>=) $
+                    -> (createStemmer stemmer >>=) $
                        (flip withForeignPtr) $ \stemPtr ->
-                       -- FIXME: write FFI for Xapian::QueryParser
-                       error "cx_parse_query cs stemPtr >>= manage"
+                       withForeignPtr dbmptr $ \dbptr ->
+                        do qp <- cx_queryparser_new
+                           ccs <- toCCString bs
+                           cx_queryparser_set_database qp dbptr
+                           cx_queryparser_set_stemmer  qp stemPtr
+                           cx_queryparser_set_stemming_strategy qp
+                               cx_queryparser_STEM_SOME
+                           cx_queryparser_parse_query_simple qp ccs
+                               >>= manage
          Nullary op -> compileNullary op
-         Unary op q -> do cq <- compileQuery q
+         Unary op q -> do cq <- compileQuery db q
                           compileUnary op cq
-         Binary op q q' -> do cq <- compileQuery q
-                              cq' <- compileQuery q'
+         Binary op q q' -> do cq <- compileQuery db q
+                              cq' <- compileQuery db q'
                               compileBinary op cq cq'
-         Multi op qs    -> do cqs <- mapM compileQuery qs
+         Multi op qs    -> do cqs <- mapM (compileQuery db) qs
                               compileMulti op cqs
   where
     compileNullary op@(OpValueGE valno val) =

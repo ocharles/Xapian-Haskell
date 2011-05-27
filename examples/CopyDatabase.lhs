@@ -36,15 +36,18 @@
 >  do args <- getArgs
 >     case getOpt Permute cmdlineArgs args of
 >          (_ , _, (x:xs))    -> mapM_ putStrLn (x:xs)
->          (xs, src:dst:_, _) -> handleArgs xs $
+>          (xs, dbs@(_:_:_), _) -> handleArgs xs $
 >           do let renumber = not $ NoRenumber `elem` xs
->              srcDB <- failing =<< openReadOnly src
+>                  dst = last dbs
+>                  srcs = init dbs
 >              dstDB <- failing =<< openReadWrite Create dst
->              runXapian $ copyDocuments renumber srcDB dstDB
->              putStrLn ""
->              wrap "spelling data" $ copySpellingData srcDB dstDB
->              wrap "synonym data"  $ copySynonymData srcDB dstDB
->              wrap "user metadata" $ copyMetadata srcDB dstDB
+>              forM_ srcs $ \src ->
+>               do srcDB <- failing =<< openReadOnly src
+>                  runXapian $ copyDocuments renumber src srcDB dstDB
+>                  putStrLn ""
+>                  wrap "spelling data" $ copySpellingData srcDB dstDB
+>                  wrap "synonym data"  $ copySynonymData srcDB dstDB
+>                  wrap "user metadata" $ copyMetadata srcDB dstDB
 >          _ -> handleArgs [Help] (return ())
 
 >     where
@@ -52,12 +55,13 @@
 >     failing (Left err) = error (show err)
 >     failing (Right a)  = return a
 
->     copyDocuments renumber srcDB dstDB =
+>     copyDocuments renumber src srcDB dstDB =
 >      do postings <- getPostings srcDB (pack "")
 >         doccount <- getDocCount srcDB
 >
 >         let showStatus i = liftIO $
->              do putStr $ "\r" ++ show i ++ " of " ++ show doccount
+>              do putStr $ "\r" ++ src ++ " " ++ show i
+>                               ++ " of " ++ show doccount
 >                 hFlush stdout
 >                 --threadDelay 10000
 >

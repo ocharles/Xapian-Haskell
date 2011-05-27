@@ -17,8 +17,7 @@ main =
                             ++ " PATH_TO_DATABASE QUERY"
 
 doQuery db queryStrings =
- do --let q = rawQuery English (unwords queryStrings)
-    let q = queryAny queryStrings
+ do let q = rawQuery English (unwords queryStrings)
     print q
     results <- runXapian $
      do (mset,doclist) <- search db q (paging 0 10)

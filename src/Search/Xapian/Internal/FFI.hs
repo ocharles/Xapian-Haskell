@@ -610,6 +610,69 @@ foreign import ccall unsafe "query_get_terms_end"
 foreign import ccall unsafe "query_get_description"
     cx_query_get_description :: Ptr CQuery -> IO CString
 
+-- QueryParser
+-- ---------------------------------------------------------
+
+data CQueryParser
+type QueryParserPtr = ForeignPtr CQueryParser
+
+instance Manageable CQueryParser where
+    manage = newForeignPtr cx_queryparser_delete
+
+foreign import ccall safe "queryparser_STEM_NONE"
+    cx_queryparser_STEM_NONE :: CInt
+
+foreign import ccall safe "queryparser_STEM_SOME"
+    cx_queryparser_STEM_SOME :: CInt
+
+foreign import ccall safe "queryparser_STEM_ALL"
+    cx_queryparser_STEM_ALL  :: CInt
+
+foreign import ccall unsafe "queryparser_new"
+    cx_queryparser_new :: IO (Ptr CQueryParser)
+
+foreign import ccall unsafe "queryparser_copy"
+    cx_queryparser_copy :: Ptr CQueryParser -> IO (Ptr CQueryParser)
+
+foreign import ccall unsafe "&queryparser_delete"
+    cx_queryparser_delete :: FunPtr (Ptr CQueryParser -> IO ())
+
+foreign import ccall unsafe "queryparser_set_stemmer"
+    cx_queryparser_set_stemmer :: Ptr CQueryParser -> Ptr CStem -> IO ()
+
+foreign import ccall unsafe "queryparser_set_stemming_strategy"
+    cx_queryparser_set_stemming_strategy :: Ptr CQueryParser -> CInt -> IO ()
+
+foreign import ccall unsafe "queryparser_set_stopper"
+    cx_queryparser_set_stopper :: Ptr CQueryParser -> Ptr CStopper -> IO ()
+
+foreign import ccall unsafe "queryparser_set_database"
+    cx_queryparser_set_database :: Ptr CQueryParser -> Ptr CDatabase -> IO ()
+
+foreign import ccall unsafe "queryparser_parse_query_simple"
+    cx_queryparser_parse_query_simple
+        :: Ptr CQueryParser -> Ptr CCString -> IO (Ptr CQuery)
+
+foreign import ccall unsafe "queryparser_add_prefix"
+    cx_queryparser_add_prefix
+        :: Ptr CQueryParser
+        -> Ptr CCString -- ^ field
+        -> Ptr CCString -- ^ prefix
+        -> IO ()
+
+foreign import ccall unsafe "queryparser_add_boolean_prefix"
+    cx_queryparser_add_boolean_prefix
+        :: Ptr CQueryParser
+        -> Ptr CCString -- ^ field
+        -> Ptr CCString -- ^ field
+        -> CBool -- ^ exclusive
+        -> IO ()
+
+foreign import ccall unsafe "queryparser_get_corrected_query_string"
+    cx_queryparser_get_corrected_query_string :: Ptr CQueryParser -> IO (Ptr CCString)
+
+foreign import ccall unsafe "queryparser_get_description"
+    cx_queryparser_get_description :: Ptr CQueryParser -> IO (Ptr CCString)
 
 -- Stem
 -- ---------------------------------------------------------
@@ -936,17 +999,17 @@ foreign import ccall unsafe "termgenerator_set_flags"
 foreign import ccall unsafe "termgenerator_index_text"
     cx_termgenerator_index_text
         :: Ptr CTermGenerator
-        -> CString -- ^text
+        -> Ptr CCString -- ^text
         -> Word32  -- ^weight
-        -> CString -- ^prefix
+        -> Ptr CCString -- ^prefix
         -> IO ()
 
 foreign import ccall unsafe "termgenerator_index_text_wo_positions"
     cx_termgenerator_index_text_wo_positions
         :: Ptr CTermGenerator
-        -> CString -- ^text
+        -> Ptr CCString -- ^text
         -> Word32  -- ^weight
-        -> CString -- ^prefix
+        -> Ptr CCString -- ^prefix
         -> IO ()
 
 foreign import ccall unsafe "termgenerator_increase_termpos"

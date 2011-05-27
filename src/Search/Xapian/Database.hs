@@ -1,4 +1,8 @@
-module Search.Xapian.Database where
+module Search.Xapian.Database
+      ( openReadOnly
+      , openReadWrite
+      , replaceDocument
+      ) where
 
 import Prelude hiding (words)
 import Foreign
@@ -21,7 +25,7 @@ instance ReadableDatabase ReadOnlyDB where
     search db@(ReadOnlyDB dbmptr) query (QueryRange off lim) =
         liftIO $
         withForeignPtr dbmptr $ \dbptr ->
-         do querymptr <- Q.compileQuery query
+         do querymptr <- Q.compileQuery db query
             enquiremptr <- manage =<< cx_enquire_new dbptr
             withForeignPtr querymptr $ \queryptr ->
                 withForeignPtr enquiremptr $ \enquire ->

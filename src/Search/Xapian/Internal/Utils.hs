@@ -45,17 +45,18 @@ import Search.Xapian.Internal.FFI
 -- 
 -- @get@ converts the pointer to some meaningful 'object' performing an
 -- effectful computation
-collect :: (Ptr a -> IO ()) -- next
-        -> (Ptr a -> IO b)  -- get
-        -> (Ptr a -> Ptr a -> IO CBool) -- finished?
-        -> ForeignPtr a -- current position
-        -> ForeignPtr a -- end
-        -> IO [b]
+collect
+    :: (Ptr a -> IO ()) -- next
+    -> (Ptr a -> IO b)  -- get                          
+    -> (Ptr a -> Ptr a -> IO CBool) -- finished?        
+    -> ForeignPtr a -- current position                 
+    -> ForeignPtr a -- end                              
+    -> IO [b]                                           
 collect next' get' finished' pos' end' =
     withForeignPtr pos' $ \posPtr ->
     withForeignPtr end' $ \endPtr ->
     collect' next' get' finished' posPtr endPtr
-  where
+    where
     collect' next get finished pos end =
      do exit <- finished pos end
         if exit /= 0
@@ -63,19 +64,25 @@ collect next' get' finished' pos' end' =
            else do element <- get pos
                    _ <- next pos
                    rest <- collect' next get finished pos end
-                   return (element : rest)
+                   unsafeInterleaveIO $ return (element : rest)
 
-collectPositions :: ForeignPtr CPositionIterator
-                 -> ForeignPtr CPositionIterator
-                 -> IO [Pos]
-collectPositions = collect cx_positioniterator_next
-                           cx_positioniterator_get
-                           cx_positioniterator_is_end
+collectPositions
+    :: ForeignPtr CPositionIterator
+    -> ForeignPtr CPositionIterator
+    -> IO [Pos]
+collectPositions =
+    collect cx_positioniterator_next
+            cx_positioniterator_get                      
+            cx_positioniterator_is_end                   
 
-collectTerms :: ForeignPtr CTermIterator -- current position
-             -> ForeignPtr CTermIterator -- end
-             -> IO [Term]
-collectTerms b e = collect cx_termiterator_next getter cx_termiterator_is_end b e
+collectTerms
+    :: ForeignPtr CTermIterator -- current position
+    -> ForeignPtr CTermIterator -- end
+    -> IO [Term]
+collectTerms b e =
+    collect cx_termiterator_next
+            getter cx_termiterator_is_end
+            b e
     where
     getter ptr =
      do term <- BS.packCString =<< cx_termiterator_get ptr
@@ -88,17 +95,19 @@ collectTerms b e = collect cx_termiterator_next getter cx_termiterator_is_end b 
                        collectPositions b_pos e_pos
                    return $ Term term positions
 
-collectTerms' :: ForeignPtr CTermIterator -- current position
-              -> ForeignPtr CTermIterator -- end
-              -> IO [ByteString]
+collectTerms'
+    :: ForeignPtr CTermIterator -- current position
+    -> ForeignPtr CTermIterator -- end
+    -> IO [ByteString]
 collectTerms' =
     collect cx_termiterator_next
             (BS.packCString <=< cx_termiterator_get)
             cx_termiterator_is_end
 
-collectTermsWdf :: ForeignPtr CTermIterator -- current position
-                -> ForeignPtr CTermIterator -- end
-                -> IO [(ByteString,Int)]
+collectTermsWdf
+    :: ForeignPtr CTermIterator -- current position
+    -> ForeignPtr CTermIterator -- end
+    -> IO [(ByteString,Int)]
 collectTermsWdf =
     collect cx_termiterator_next
             getter
@@ -108,18 +117,20 @@ collectTermsWdf =
      do term <- BS.packCString =<< cx_termiterator_get ptr
         wdf  <- fmap fromIntegral $ cx_termiterator_get_wdf ptr
         return (term, wdf)
-                  
 
-collectDocIds :: ForeignPtr CMSetIterator
-              -> ForeignPtr CMSetIterator
-              -> IO [DocumentId]
-collectDocIds = collect cx_msetiterator_next
-                        (fmap DocId . cx_msetiterator_get)
-                        cx_msetiterator_is_end
+collectDocIds
+    :: ForeignPtr CMSetIterator
+    -> ForeignPtr CMSetIterator
+    -> IO [DocumentId]
+collectDocIds =
+    collect cx_msetiterator_next
+            (fmap DocId . cx_msetiterator_get)
+            cx_msetiterator_is_end
 
-collectPostings :: ForeignPtr CPostingIterator
-                -> ForeignPtr CPostingIterator
-                -> IO [(DocumentId, Wdf)]
+collectPostings
+    :: ForeignPtr CPostingIterator
+    -> ForeignPtr CPostingIterator
+    -> IO [(DocumentId, Wdf)]
 collectPostings =
     collect cx_postingiterator_next
             getter
@@ -130,13 +141,15 @@ collectPostings =
         docid <- fmap (DocId . fromIntegral) $ cx_postingiterator_get ptr
         return (docid, wdf)
 
-collectValues :: ForeignPtr CValueIterator
-              -> ForeignPtr CValueIterator
-              -> IO [(Int, Value)]
-collectValues = collect cx_valueiterator_next
-                        getter
-                        cx_valueiterator_is_end
-  where
+collectValues
+    :: ForeignPtr CValueIterator
+    -> ForeignPtr CValueIterator
+    -> IO [(Int, Value)]
+collectValues =
+    collect cx_valueiterator_next
+            getter
+            cx_valueiterator_is_end
+    where
     getter ptr = do value <- BS.packCString =<< cx_valueiterator_get ptr
                     valno <- cx_valueiterator_get_valueno ptr
                     return (fromIntegral valno, value)
@@ -151,17 +164,19 @@ indexToDocument
 indexToDocument docPtr mStemmer text =
  do termgenFPtr <- manage =<< cx_termgenerator_new
     withForeignPtr termgenFPtr $ \termgen ->
-     do maybe (return ())
-              (\stemmer ->
-               do stemFPtr <- createStemmer stemmer
-                  withForeignPtr stemFPtr $ \stemPtr ->
-                      cx_termgenerator_set_stemmer termgen stemPtr)
-              mStemmer
-        useAsCString text $ \ctext ->
-         do prefix <- newCString ""
-            let weight = 1
-            cx_termgenerator_set_document termgen docPtr
-            cx_termgenerator_index_text termgen ctext weight prefix
+     do maybeIO mStemmer $ \stemmer ->
+         do stemFPtr <- createStemmer stemmer
+            withForeignPtr stemFPtr $ \stemPtr ->
+                cx_termgenerator_set_stemmer termgen stemPtr
+        cctext   <- toCCString text
+        ccprefix <- toCCString BS.empty
+        let weight = 1
+        cx_termgenerator_set_document termgen docPtr
+        cx_termgenerator_index_text termgen cctext weight ccprefix
+
+maybeIO :: Maybe a -> (a -> IO b) -> IO ()
+maybeIO Nothing  _ = return ()
+maybeIO (Just x) f = f x >> return ()
 
 stemWord :: StemPtr -> ByteString -> IO ByteString
 stemWord stemFPtr word =
@@ -172,25 +187,27 @@ stemWord stemFPtr word =
 
 createStemmer :: Stemmer -> IO StemPtr
 createStemmer stemmer =
-    let lang = case stemmer of
-                    Danish  -> "danish"
-                    Dutch   -> "dutch"
-                    DutchKraaijPohlmann -> "kraaij_pohlmann"
-                    English -> "english"
-                    EnglishLovins -> "lovins"
-                    EnglishPorter -> "porter"
-                    Finnish -> "finnish"
-                    French  -> "french"
-                    German  -> "german"
-                    German2 -> "german2"
-                    Hungarian  -> "hungarian"
-                    Italian -> "italian"
-                    Norwegian  -> "norwegian"
-                    Portuguese -> "portuguese"
-                    Romanian -> "romanian"
-                    Russian -> "russian"
-                    Spanish -> "spanish"
-                    Swedish -> "swedish"
-                    Turkish -> "turkish"
-    in useAsCString (pack lang) $ \clang ->
-        do cx_stem_new_with_language clang >>= manage
+    useAsCString (pack lang) $ \clang ->
+    cx_stem_new_with_language clang >>= manage
+    where
+    lang = case stemmer of
+        { Danish  -> "danish"
+        ; Dutch   -> "dutch"
+        ; DutchKraaijPohlmann -> "kraaij_pohlmann"
+        ; English -> "english"
+        ; EnglishLovins -> "lovins"
+        ; EnglishPorter -> "porter"
+        ; Finnish -> "finnish"
+        ; French  -> "french"
+        ; German  -> "german"
+        ; German2 -> "german2"
+        ; Hungarian  -> "hungarian"
+        ; Italian -> "italian"
+        ; Norwegian  -> "norwegian"
+        ; Portuguese -> "portuguese"
+        ; Romanian -> "romanian"
+        ; Russian -> "russian"
+        ; Spanish -> "spanish"
+        ; Swedish -> "swedish"
+        ; Turkish -> "turkish"
+        }

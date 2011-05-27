@@ -48,6 +48,7 @@ module Search.Xapian.Types
        , Document (..)
        , DocumentId (..)
        , Term (..)
+       , Wdf
        , ValueNumber
        , Value
        , Pos
@@ -74,12 +75,24 @@ class ReadableDatabase db where
     search :: db -> Query -> QueryRange -> XapianM (MSet, [Document])
     getDocument :: db -> DocumentId -> XapianM (Either Error Document)
     getMetadata :: db -> ByteString -> XapianM ByteString
+    getMetadataKeys :: db -> ByteString {- prefix -} -> XapianM [ByteString]
+    getSynonyms :: db -> ByteString -> XapianM [ByteString]
+    getSynonymKeys :: db -> ByteString {- prefix -} -> XapianM [ByteString]
+    getSpellings :: db -> XapianM [(ByteString, Int)] -- spellings and frequencies
+    suggestSpelling :: db -> ByteString -> Int -> XapianM ByteString
+    getPostings :: db -> ByteString -> XapianM [(DocumentId,Wdf)] -- when an empty term ist passed all document ids are returned
+    getDocCount :: db -> XapianM Integer
 
 class WritableDatabase db where
     addDocument :: db -> Document -> XapianM DocumentId
     delDocumentById :: db -> DocumentId -> XapianM ()
     delDocumentByTerm :: db -> ByteString -> XapianM ()
     setMetadata :: db -> ByteString -> ByteString -> XapianM ()
+    addSynonym :: db -> ByteString -> ByteString -> XapianM ()
+    delSynonym :: db -> ByteString -> ByteString -> XapianM ()
+    clearSynonyms :: db -> ByteString -> XapianM ()
+    addSpelling :: db -> ByteString -> Int -> XapianM ()
+    delSpelling :: db -> ByteString -> Int -> XapianM () -- FIXME: does not really delete spellings in some cases
 
 
 data InitDBOption

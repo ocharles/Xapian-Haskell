@@ -18,51 +18,113 @@ import qualified Search.Xapian.Query as Q
 -- * interfacing the database
 
 instance ReadableDatabase ReadOnlyDB where
-  search db@(ReadOnlyDB dbmptr) query (QueryRange off lim) =
-      liftIO $
-      withForeignPtr dbmptr $ \dbptr ->
-       do querymptr <- Q.compileQuery query
-          enquiremptr <- manage =<< cx_enquire_new dbptr
-          withForeignPtr querymptr $ \queryptr ->
-              withForeignPtr enquiremptr $ \enquire ->
-               do cx_enquire_set_query enquire queryptr 0
-                  msetmptr <- manage =<< cx_enquire_get_mset enquire
-                      (fromIntegral off) (fromIntegral lim)
-                  withForeignPtr msetmptr $ \mset ->
-                   do begin <- manage =<< cx_mset_begin mset
-                      end   <- manage =<< cx_mset_end   mset
-                      docidlist <- collectDocIds begin end
-                      doclist <- runXapian $ fmap rights $ 
-                       do forM docidlist $ getDocument db
-                      return (MSet msetmptr, doclist)
+    search db@(ReadOnlyDB dbmptr) query (QueryRange off lim) =
+        liftIO $
+        withForeignPtr dbmptr $ \dbptr ->
+         do querymptr <- Q.compileQuery query
+            enquiremptr <- manage =<< cx_enquire_new dbptr
+            withForeignPtr querymptr $ \queryptr ->
+                withForeignPtr enquiremptr $ \enquire ->
+                 do cx_enquire_set_query enquire queryptr 0
+                    msetmptr <- manage =<< cx_enquire_get_mset enquire
+                        (fromIntegral off) (fromIntegral lim)
+                    withForeignPtr msetmptr $ \mset ->
+                     do begin <- manage =<< cx_mset_begin mset
+                        end   <- manage =<< cx_mset_end   mset
+                        docidlist <- collectDocIds begin end
+                        doclist <- runXapian $ fmap rights $ 
+                         do forM docidlist $ getDocument db
+                        return (MSet msetmptr, doclist)
 
-  getDocument (ReadOnlyDB dbmptr) docId@(DocId id') =
-      liftIO $
-       withForeignPtr dbmptr $ \dbptr ->
-       handleError dbptr $ \docmptr ->
-           return . Right $ Document docmptr docId
-    where
-      handleError dbptr action =
-        alloca $ \errorPtr ->
-         do handle <- cx_database_get_document dbptr (fromIntegral id') errorPtr
-            if handle == nullPtr
-               then do err <- peekCString =<< peek errorPtr
-                       return . Left $ Error (Just DocNotFoundError) err
-               else manage handle >>= action
+    getDocument (ReadOnlyDB dbmptr) docId@(DocId id') =
+        liftIO $
+         withForeignPtr dbmptr $ \dbptr ->
+         handleError dbptr $ \docmptr ->
+             return . Right $ Document docmptr docId
+      where
+        handleError dbptr action =
+          alloca $ \errorPtr ->
+           do handle <- cx_database_get_document dbptr (fromIntegral id') errorPtr
+              if handle == nullPtr
+                 then do err <- peekCString =<< peek errorPtr
+                         return . Left $ Error (Just DocNotFoundError) err
+                 else manage handle >>= action
 
-  getMetadata (ReadOnlyDB dbmptr) key =
-      liftIO $
-      withForeignPtr dbmptr $ \dbptr ->
-       do cckey <- toCCString key
-          ccval <- cx_database_get_metadata dbptr cckey
-          fromCCString ccval
+    getMetadata (ReadOnlyDB dbmptr) key =
+        liftIO $
+        withForeignPtr dbmptr $ \dbptr ->
+         do cckey <- toCCString key
+            ccval <- cx_database_get_metadata dbptr cckey
+            fromCCString ccval
+
+    getMetadataKeys (ReadOnlyDB dbmptr) prefix =
+        liftIO $
+        withForeignPtr dbmptr $ \dbptr ->
+         do ccprefix <- toCCString prefix
+            b <- manage =<< cx_database_metadata_keys_begin dbptr ccprefix
+            e <- manage =<< cx_database_metadata_keys_end   dbptr ccprefix
+            collectTerms' b e
+
+    getSynonyms (ReadOnlyDB dbmptr) term =
+        liftIO $
+        withForeignPtr dbmptr $ \dbptr ->
+         do ccterm <- toCCString term
+            b <- manage =<< cx_database_synonyms_begin dbptr ccterm
+            e <- manage =<< cx_database_synonyms_end   dbptr ccterm
+            collectTerms' b e
+
+    getSynonymKeys (ReadOnlyDB dbmptr) prefix =
+        liftIO $
+        withForeignPtr dbmptr $ \dbptr ->
+         do ccprefix <- toCCString prefix
+            b <- manage =<< cx_database_synonym_keys_begin dbptr ccprefix
+            e <- manage =<< cx_database_synonym_keys_end   dbptr ccprefix
+            collectTerms' b e
+
+    getSpellings (ReadOnlyDB dbmptr) =
+        liftIO $
+        withForeignPtr dbmptr $ \dbptr ->
+         do b <- manage =<< cx_database_spellings_begin dbptr
+            e <- manage =<< cx_database_spellings_end   dbptr
+            collectTermsWdf b e
+    
+    suggestSpelling (ReadOnlyDB dbmptr) term max_edit_distance =
+        liftIO $
+        withForeignPtr dbmptr $ \dbptr ->
+         do ccterm <- toCCString term
+            cx_database_get_spelling_suggestion
+                dbptr
+                ccterm
+                (fromIntegral max_edit_distance)
+                >>= fromCCString
+
+    getPostings (ReadOnlyDB dbmptr) term =
+        liftIO $
+        withForeignPtr dbmptr $ \dbptr ->
+         do ccterm <- toCCString term
+            b <- manage =<< cx_database_postlist_begin dbptr ccterm
+            e <- manage =<< cx_database_postlist_end   dbptr ccterm
+            collectPostings b e
+
+    getDocCount (ReadOnlyDB dbmptr) =
+        liftIO $
+        withForeignPtr dbmptr $ \dbptr ->
+        fmap fromIntegral $ cx_database_get_doccount dbptr
 
 
 instance ReadableDatabase ReadWriteDB where
-  search (ReadWriteDB db) = search (ReadOnlyDB $ castForeignPtr db)
-  getDocument (ReadWriteDB db) id' = getDocument (ReadOnlyDB $ castForeignPtr db) id'
-  getMetadata (ReadWriteDB db) key = getMetadata (ReadOnlyDB $ castForeignPtr db) key
+  search          = __withCastedDB search
+  getDocument     = __withCastedDB getDocument
+  getMetadata     = __withCastedDB getMetadata
+  getMetadataKeys = __withCastedDB getMetadataKeys
+  getSynonyms     = __withCastedDB getSynonyms
+  getSynonymKeys  = __withCastedDB getSynonymKeys
+  getSpellings    = __withCastedDB getSpellings
+  suggestSpelling = __withCastedDB suggestSpelling
+  getPostings     = __withCastedDB getPostings
+  getDocCount     = __withCastedDB getDocCount
 
+__withCastedDB f (ReadWriteDB db) = f (ReadOnlyDB $ castForeignPtr db)
 
 -- * opening databases
 
@@ -122,6 +184,38 @@ instance WritableDatabase ReadWriteDB where
          do cckey <- toCCString key
             ccval <- toCCString val
             cx_database_set_metadata dbptr cckey ccval
+
+    addSynonym (ReadWriteDB dbmptr) term synonym =
+        liftIO $
+        withForeignPtr dbmptr $ \dbptr ->
+         do ccterm <- toCCString term
+            ccsyno <- toCCString synonym
+            cx_database_add_synonym dbptr ccterm ccsyno
+
+    delSynonym (ReadWriteDB dbmptr) term synonym =
+        liftIO $
+        withForeignPtr dbmptr $ \dbptr ->
+         do ccterm <- toCCString term
+            ccsyno <- toCCString synonym
+            cx_database_remove_synonym dbptr ccterm ccsyno
+
+    clearSynonyms (ReadWriteDB dbmptr) prefix =
+        liftIO $
+        withForeignPtr dbmptr $ \dbptr ->
+         do ccprefix <- toCCString prefix
+            cx_database_clear_synonyms dbptr ccprefix
+
+    addSpelling (ReadWriteDB dbmptr) term freqinc =
+        liftIO $
+        withForeignPtr dbmptr $ \dbptr ->
+         do ccterm <- toCCString term
+            cx_database_add_spelling dbptr ccterm (fromIntegral freqinc)
+
+    delSpelling (ReadWriteDB dbmptr) term freqdec =
+        liftIO $
+        withForeignPtr dbmptr $ \dbptr ->
+         do ccterm <- toCCString term
+            cx_database_remove_spelling dbptr ccterm (fromIntegral freqdec)
 
 
 replaceDocument :: ReadWriteDB -> DocumentId -> Document -> XapianM ()

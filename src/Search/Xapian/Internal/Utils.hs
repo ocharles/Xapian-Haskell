@@ -2,8 +2,11 @@ module Search.Xapian.Internal.Utils
      ( -- * General
        collect
      , collectTerms
+     , collectTerms'
+     , collectTermsWdf
      , collectDocIds
      , collectValues
+     , collectPostings
 
        -- * Stemmer related
      , createStemmer
@@ -19,6 +22,7 @@ import qualified Data.ByteString as BS
 import Data.ByteString.Char8 (pack, ByteString, packCString, useAsCString)
 import Data.IntMap (IntMap)
 import qualified Data.IntMap as IntMap
+import Control.Monad ((<=<))
 
 import System.IO.Unsafe (unsafeInterleaveIO)
 
@@ -72,7 +76,7 @@ collectTerms :: ForeignPtr CTermIterator -- current position
              -> ForeignPtr CTermIterator -- end
              -> IO [Term]
 collectTerms b e = collect cx_termiterator_next getter cx_termiterator_is_end b e
-  where
+    where
     getter ptr =
      do term <- BS.packCString =<< cx_termiterator_get ptr
         positions_len <- cx_termiterator_positionlist_count ptr
@@ -84,12 +88,47 @@ collectTerms b e = collect cx_termiterator_next getter cx_termiterator_is_end b 
                        collectPositions b_pos e_pos
                    return $ Term term positions
 
+collectTerms' :: ForeignPtr CTermIterator -- current position
+              -> ForeignPtr CTermIterator -- end
+              -> IO [ByteString]
+collectTerms' =
+    collect cx_termiterator_next
+            (BS.packCString <=< cx_termiterator_get)
+            cx_termiterator_is_end
+
+collectTermsWdf :: ForeignPtr CTermIterator -- current position
+                -> ForeignPtr CTermIterator -- end
+                -> IO [(ByteString,Int)]
+collectTermsWdf =
+    collect cx_termiterator_next
+            getter
+            cx_termiterator_is_end
+    where
+    getter ptr =
+     do term <- BS.packCString =<< cx_termiterator_get ptr
+        wdf  <- fmap fromIntegral $ cx_termiterator_get_wdf ptr
+        return (term, wdf)
+                  
+
 collectDocIds :: ForeignPtr CMSetIterator
               -> ForeignPtr CMSetIterator
               -> IO [DocumentId]
 collectDocIds = collect cx_msetiterator_next
                         (fmap DocId . cx_msetiterator_get)
                         cx_msetiterator_is_end
+
+collectPostings :: ForeignPtr CPostingIterator
+                -> ForeignPtr CPostingIterator
+                -> IO [(DocumentId, Wdf)]
+collectPostings =
+    collect cx_postingiterator_next
+            getter
+            cx_postingiterator_is_end
+    where
+    getter ptr =
+     do wdf <- fmap fromIntegral $ cx_postingiterator_get_wdf ptr
+        docid <- fmap (DocId . fromIntegral) $ cx_postingiterator_get ptr
+        return (docid, wdf)
 
 collectValues :: ForeignPtr CValueIterator
               -> ForeignPtr CValueIterator

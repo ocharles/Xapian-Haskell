@@ -33,10 +33,10 @@ const char *
 database_get_description (Xapian::Database *);
 
 Xapian::PostingIterator *
-database_postlist_begin (Xapian::Database *, const char *tname);
+database_postlist_begin (Xapian::Database *, std::string *term);
 
 Xapian::PostingIterator *
-database_postlist_end (Xapian::Database *, const char *tname);
+database_postlist_end (Xapian::Database *, std::string *term);
 
 Xapian::TermIterator *
 database_termlist_begin (Xapian::Database *, unsigned int docid);
@@ -116,8 +116,8 @@ database_keep_alive (Xapian::Database *);
 Xapian::Document *
 database_get_document (Xapian::Database *, unsigned int docid, const char **error);
 
-const char * // max_edit_distance defaults to 2
-database_get_spelling_suggestion (Xapian::Database *, const char *word,
+std::string * // max_edit_distance defaults to 2
+database_get_spelling_suggestion (Xapian::Database *, std::string *word,
                                   unsigned int max_edit_distance);
 Xapian::TermIterator *
 database_spellings_begin (Xapian::Database *);
@@ -126,25 +126,25 @@ Xapian::TermIterator *
 database_spellings_end (Xapian::Database *);
 
 Xapian::TermIterator *
-database_synonyms_begin (Xapian::Database *, const char *term);
+database_synonyms_begin (Xapian::Database *, std::string *term);
 
 Xapian::TermIterator *
-database_synonyms_end (Xapian::Database *, const char *term);
+database_synonyms_end (Xapian::Database *, std::string *term);
 
 Xapian::TermIterator *
-database_synonym_keys_begin (Xapian::Database *, const char *prefix);
+database_synonym_keys_begin (Xapian::Database *, std::string *prefix);
 
 Xapian::TermIterator *
-database_synonym_keys_end (Xapian::Database *, const char *prefix);
+database_synonym_keys_end (Xapian::Database *, std::string *prefix);
 
 std::string *
 database_get_metadata (Xapian::Database *, std::string *key);
 
 Xapian::TermIterator *
-database_metadata_keys_begin (Xapian::Database *, const char *prefix);
+database_metadata_keys_begin (Xapian::Database *, std::string *prefix);
 
 Xapian::TermIterator *
-database_metadata_keys_end (Xapian::Database *, const char *prefix);
+database_metadata_keys_end (Xapian::Database *, std::string *prefix);
 
 const char *
 database_get_uuid (Xapian::Database *);
@@ -194,19 +194,19 @@ void
 database_replace_document (Xapian::WritableDatabase *, unsigned int docid, Xapian::Document *doc);
 
 void
-database_add_spelling (Xapian::WritableDatabase *, const char *word, unsigned int freqinc);
+database_add_spelling (Xapian::WritableDatabase *, std::string *word, unsigned int freqinc);
 
 void
-database_remove_spelling (Xapian::WritableDatabase *, const char *word, unsigned int freqdec);
+database_remove_spelling (Xapian::WritableDatabase *, std::string *word, unsigned int freqdec);
 
 void
-database_add_synonym (Xapian::WritableDatabase *, const char *term, const char *synonym);
+database_add_synonym (Xapian::WritableDatabase *, std::string *term, std::string *synonym);
 
 void
-database_remove_synonym (Xapian::WritableDatabase *, const char *term, const char *synonym);
+database_remove_synonym (Xapian::WritableDatabase *, std::string *term, std::string *synonym);
 
 void
-database_clear_synonyms (Xapian::WritableDatabase *, const char *term);
+database_clear_synonyms (Xapian::WritableDatabase *, std::string *term);
 
 void
 database_set_metadata (Xapian::WritableDatabase *, std::string *key, std::string *value);

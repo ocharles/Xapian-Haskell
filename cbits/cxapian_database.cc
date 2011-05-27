@@ -59,17 +59,15 @@ database_get_description (Xapian::Database *db)
 }
 
 Xapian::PostingIterator *
-database_postlist_begin (Xapian::Database *db, const char *tname)
+database_postlist_begin (Xapian::Database *db, std::string *term)
 {
-    return new Xapian::PostingIterator(
-            db->postlist_begin(std::string(tname)) );
+    return new Xapian::PostingIterator( db->postlist_begin(*term) );
 }
 
 Xapian::PostingIterator *
-database_postlist_end (Xapian::Database *db, const char *tname)
+database_postlist_end (Xapian::Database *db, std::string *term)
 {
-    return new Xapian::PostingIterator(
-            db->postlist_end(std::string(tname)) );
+    return new Xapian::PostingIterator( db->postlist_end(*term) );
 }
 
 Xapian::TermIterator *
@@ -231,7 +229,7 @@ database_keep_alive (Xapian::Database *db)
 Xapian::Document *
 database_get_document (Xapian::Database *db, unsigned int docid, const char **error)
 {
-    Xapian::Document *doc; 
+    Xapian::Document *doc = NULL; 
     try {
         doc = new Xapian::Document( db->get_document(docid) );
         return doc;
@@ -243,12 +241,13 @@ database_get_document (Xapian::Database *db, unsigned int docid, const char **er
     }
 }
 
-const char * // max_edit_distance defaults to 2
-database_get_spelling_suggestion (Xapian::Database *db, const char *word,
+std::string * // max_edit_distance defaults to 2
+database_get_spelling_suggestion (Xapian::Database *db, std::string *word,
                                   unsigned int max_edit_distance)
 {
-    return db->get_spelling_suggestion(
-            std::string(word), max_edit_distance ).c_str();
+    std::string *str = new std::string(
+            db->get_spelling_suggestion( *word, max_edit_distance ) );
+    return str;
 }
 
 Xapian::TermIterator *
@@ -264,32 +263,28 @@ database_spellings_end (Xapian::Database *db)
 }
 
 Xapian::TermIterator *
-database_synonyms_begin (Xapian::Database *db, const char *term)
+database_synonyms_begin (Xapian::Database *db, std::string *term)
 {
-    return new Xapian::TermIterator(
-            db->synonyms_begin(std::string(term)) );
+    return new Xapian::TermIterator( db->synonyms_begin(*term) );
 }
 
 Xapian::TermIterator *
-database_synonyms_end (Xapian::Database *db, const char *term)
+database_synonyms_end (Xapian::Database *db, std::string *term)
 {
-    return new Xapian::TermIterator(
-            db->synonyms_end(std::string(term)) );
+    return new Xapian::TermIterator( db->synonyms_end(*term) );
 }
 
 Xapian::TermIterator *
-database_synonym_keys_begin (Xapian::Database *db, const char *prefix)
+database_synonym_keys_begin (Xapian::Database *db, std::string *prefix)
 {
-    return new Xapian::TermIterator(
-            db->synonym_keys_begin(std::string(prefix)) );
+    return new Xapian::TermIterator( db->synonym_keys_begin(*prefix) );
 }
 
 
 Xapian::TermIterator *
-database_synonym_keys_end (Xapian::Database *db, const char *prefix)
+database_synonym_keys_end (Xapian::Database *db, std::string *prefix)
 {
-    return new Xapian::TermIterator(
-            db->synonym_keys_end(std::string(prefix)) );
+    return new Xapian::TermIterator( db->synonym_keys_end(*prefix) );
 }
 
 std::string *
@@ -300,17 +295,15 @@ database_get_metadata (Xapian::Database *db, std::string *key)
 }
 
 Xapian::TermIterator *
-database_metadata_keys_begin (Xapian::Database *db, const char *prefix)
+database_metadata_keys_begin (Xapian::Database *db, std::string *prefix)
 {
-    return new Xapian::TermIterator(
-            db->metadata_keys_begin(std::string(prefix)) );
+    return new Xapian::TermIterator( db->metadata_keys_begin(*prefix) );
 }
 
 Xapian::TermIterator *
-database_metadata_keys_end (Xapian::Database *db, const char *prefix)
+database_metadata_keys_end (Xapian::Database *db, std::string *prefix)
 {
-    return new Xapian::TermIterator(
-            db->metadata_keys_end(std::string(prefix)) );
+    return new Xapian::TermIterator( db->metadata_keys_end(*prefix) );
 }
 
 const char *
@@ -413,33 +406,33 @@ database_replace_document (Xapian::WritableDatabase *db, unsigned int docid, Xap
 }
 
 void
-database_add_spelling (Xapian::WritableDatabase *db, const char *word, unsigned int freqinc)
+database_add_spelling (Xapian::WritableDatabase *db, std::string *word, unsigned int freqinc)
 {
-    db->add_spelling(std::string(word), freqinc);
+    db->add_spelling(*word, freqinc);
 }
 
 void
-database_remove_spelling (Xapian::WritableDatabase *db, const char *word, unsigned int freqdec)
+database_remove_spelling (Xapian::WritableDatabase *db, std::string *word, unsigned int freqdec)
 {
-    db->remove_spelling(std::string(word), freqdec);
+    db->remove_spelling(*word, freqdec);
 }
 
 void
-database_add_synonym (Xapian::WritableDatabase *db, const char *term, const char *synonym)
+database_add_synonym (Xapian::WritableDatabase *db, std::string *term, std::string *synonym)
 {
-    db->add_synonym(std::string(term), std::string(synonym));
+    db->add_synonym(*term, *synonym);
 }
 
 void
-database_remove_synonym (Xapian::WritableDatabase *db, const char *term, const char *synonym)
+database_remove_synonym (Xapian::WritableDatabase *db, std::string *term, std::string *synonym)
 {
-    db->remove_synonym(std::string(term), std::string(synonym));
+    db->remove_synonym(*term, *synonym);
 }
 
 void
-database_clear_synonyms (Xapian::WritableDatabase *db, const char *term)
+database_clear_synonyms (Xapian::WritableDatabase *db, std::string *term)
 {
-    db->clear_synonyms(std::string(term));
+    db->clear_synonyms(*term);
 }
 
 void

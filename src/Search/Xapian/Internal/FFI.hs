@@ -77,10 +77,10 @@ foreign import ccall unsafe "database_get_description"
     cx_database_get_description :: Ptr CDatabase -> IO CString
 
 foreign import ccall unsafe "database_postlist_begin"
-    cx_database_postlist_begin :: Ptr CDatabase -> IO (Ptr CPostingIterator)
+    cx_database_postlist_begin :: Ptr CDatabase -> Ptr CCString -> IO (Ptr CPostingIterator)
 
 foreign import ccall unsafe "database_postlist_end"
-    cx_database_postlist_end :: Ptr CDatabase -> IO (Ptr CPostingIterator)
+    cx_database_postlist_end :: Ptr CDatabase -> Ptr CCString -> IO (Ptr CPostingIterator)
 
 foreign import ccall unsafe "database_termlist_begin"
     cx_database_termlist_begin :: Ptr CDatabase -> IO (Ptr CTermIterator)
@@ -159,9 +159,9 @@ foreign import ccall unsafe "database_get_document"
 foreign import ccall unsafe "database_get_spelling_suggestion"
     cx_database_get_spelling_suggestion
         :: Ptr CDatabase
-        -> CString       -- ^ word
-        -> Word32         -- ^ maximum edit distance
-        -> IO CString    -- ^ suggested word
+        -> Ptr CCString      -- ^ word
+        -> Word32            -- ^ maximum edit distance
+        -> IO (Ptr CCString) -- ^ suggested word
 
 foreign import ccall unsafe "database_spellings_begin"
     cx_database_spellings_begin :: Ptr CDatabase -> IO (Ptr CTermIterator)
@@ -170,22 +170,22 @@ foreign import ccall unsafe "database_spellings_end"
     cx_database_spellings_end :: Ptr CDatabase -> IO (Ptr CTermIterator)
 
 foreign import ccall unsafe "database_synonyms_begin"
-    cx_database_synonyms_begin :: Ptr CDatabase -> IO (Ptr CTermIterator)
+    cx_database_synonyms_begin :: Ptr CDatabase -> Ptr CCString -> IO (Ptr CTermIterator)
 
 foreign import ccall unsafe "database_synonyms_end"
-    cx_database_synonyms_end :: Ptr CDatabase -> IO (Ptr CTermIterator)
+    cx_database_synonyms_end :: Ptr CDatabase -> Ptr CCString -> IO (Ptr CTermIterator)
 
 foreign import ccall unsafe "database_synonym_keys_begin"
     cx_database_synonym_keys_begin
         :: Ptr CDatabase
-        -> CString                -- ^ prefix
+        -> Ptr CCString           -- ^ prefix
         -> IO (Ptr CTermIterator)
 
 -- | see @cx_database_synonym_keys_begin@
 foreign import ccall unsafe "database_synonym_keys_end"
     cx_database_synonym_keys_end
         :: Ptr CDatabase
-        -> CString
+        -> Ptr CCString
         -> IO (Ptr CTermIterator)
 
 foreign import ccall unsafe "database_get_metadata"
@@ -195,10 +195,10 @@ foreign import ccall unsafe "database_get_metadata"
         -> IO (Ptr CCString) -- ^ value
 
 foreign import ccall unsafe "database_metadata_keys_begin"
-    cx_database_metadata_keys_begin :: Ptr CDatabase -> IO (Ptr CTermIterator)
+    cx_database_metadata_keys_begin :: Ptr CDatabase -> Ptr CCString -> IO (Ptr CTermIterator)
 
 foreign import ccall unsafe "database_metadata_keys_end"
-    cx_database_metadata_keys_end :: Ptr CDatabase -> IO (Ptr CTermIterator)
+    cx_database_metadata_keys_end :: Ptr CDatabase -> Ptr CCString -> IO (Ptr CTermIterator)
 
 foreign import ccall unsafe "database_get_uuid"
     cx_database_get_uuid :: Ptr CDatabase -> IO (CString)
@@ -274,33 +274,33 @@ foreign import ccall unsafe "database_replace_document"
 foreign import ccall unsafe "database_add_spelling"
     cx_database_add_spelling
         :: Ptr CWritableDatabase
-        -> CString       -- ^ word
+        -> Ptr CCString  -- ^ word
         -> Word32         -- ^ frequency increase
         -> IO ()
 
 foreign import ccall unsafe "database_remove_spelling"
     cx_database_remove_spelling
         :: Ptr CWritableDatabase
-        -> CString       -- ^ word
+        -> Ptr CCString  -- ^ word
         -> Word32         -- ^ frequency decrease
         -> IO ()
 
 foreign import ccall unsafe "database_add_synonym"
     cx_database_add_synonym
         :: Ptr CWritableDatabase
-        -> CString       -- ^ term
-        -> CString       -- ^ synonym
+        -> Ptr CCString  -- ^ term
+        -> Ptr CCString  -- ^ synonym
         -> IO ()
 
 foreign import ccall unsafe "database_remove_synonym"
     cx_database_remove_synonym
         :: Ptr CWritableDatabase
-        -> CString       -- ^ term
-        -> CString       -- ^ synonym
+        -> Ptr CCString  -- ^ term
+        -> Ptr CCString  -- ^ synonym
         -> IO ()
 
 foreign import ccall unsafe "database_clear_synonyms"
-    cx_database_clear_synonyms :: Ptr CWritableDatabase -> CString -> IO ()
+    cx_database_clear_synonyms :: Ptr CWritableDatabase -> Ptr CCString -> IO ()
 
 foreign import ccall unsafe "database_set_metadata"
     cx_database_set_metadata
@@ -767,8 +767,15 @@ foreign import ccall unsafe "postingiterator_copy"
 foreign import ccall unsafe "&postingiterator_delete"
     cx_postingiterator_delete :: FunPtr (Ptr CPostingIterator -> IO ())
 
+foreign import ccall unsafe "postingiterator_next"
+    cx_postingiterator_next :: Ptr CPostingIterator -> IO ()
+
 foreign import ccall unsafe "postingiterator_get"
     cx_postingiterator_get :: Ptr CPostingIterator -> IO Word32
+
+foreign import ccall unsafe "postingiterator_is_end"
+    cx_postingiterator_is_end
+        :: Ptr CPostingIterator -> Ptr CPostingIterator -> IO CBool
 
 foreign import ccall unsafe "postingiterator_skip_to"
     cx_postingiterator_skip_to

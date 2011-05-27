@@ -19,10 +19,23 @@ postingiterator_delete (Xapian::PostingIterator *self)
     delete self;
 }
 
+void
+postingiterator_next (Xapian::PostingIterator *self)
+{
+    (*self)++;
+}
+
 unsigned int // Xapian::docid
 postingiterator_get (Xapian::PostingIterator *self)
 {
     return **self;
+}
+
+cbool
+postingiterator_is_end (Xapian::PostingIterator *self
+                       ,Xapian::PostingIterator *other)
+{
+    return *self == *other;
 }
 
 void

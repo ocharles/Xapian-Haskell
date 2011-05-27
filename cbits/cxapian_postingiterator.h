@@ -16,8 +16,15 @@ postingiterator_copy (Xapian::PostingIterator *other);
 void
 postingiterator_delete (Xapian::PostingIterator *);
 
+void
+postingiterator_next (Xapian::PostingIterator *);
+
 unsigned int // Xapian::docid
 postingiterator_get (Xapian::PostingIterator *);
+
+cbool
+postingiterator_is_end (Xapian::PostingIterator *pos
+                       ,Xapian::PostingIterator *end);
 
 void
 postingiterator_skip_to (Xapian::PostingIterator *, unsigned int docid);

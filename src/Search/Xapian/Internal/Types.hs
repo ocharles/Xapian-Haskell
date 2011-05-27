@@ -19,6 +19,7 @@ module Search.Xapian.Internal.Types
 
        , DocumentPtr
        , DocumentId (..)
+       , Wdf
        , ValueNumber
        , Value
        , Document (..)
@@ -137,6 +138,9 @@ data OpMulti
 
 -- * Document related types
 -- --------------------------------------------------------------------
+
+-- * within document frequency
+type Wdf         = Int
 
 -- * document fields
 type ValueNumber = Word32

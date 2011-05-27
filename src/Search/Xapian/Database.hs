@@ -11,6 +11,7 @@ import Control.Monad (forM)
 import Control.Monad.Trans (liftIO)
 import Data.ByteString.Char8 (ByteString, pack, useAsCString)
 import Data.Either (rights)
+import Data.Enumerator (Iteratee (..))
 
 import Search.Xapian.Types
 import Search.Xapian.Internal.Types
@@ -102,13 +103,13 @@ instance ReadableDatabase ReadOnlyDB where
                 (fromIntegral max_edit_distance)
                 >>= fromCCString
 
-    getPostings (ReadOnlyDB dbmptr) term =
-        liftIO $
+    getPostings (ReadOnlyDB dbmptr) term step =
+        Iteratee $ liftIO $
         withForeignPtr dbmptr $ \dbptr ->
          do ccterm <- toCCString term
             b <- manage =<< cx_database_postlist_begin dbptr ccterm
             e <- manage =<< cx_database_postlist_end   dbptr ccterm
-            collectPostings b e
+            runXapian $ runIteratee $ enumeratePostings 1024 b e step
 
     getDocCount (ReadOnlyDB dbmptr) =
         liftIO $

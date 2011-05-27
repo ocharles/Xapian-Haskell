@@ -60,6 +60,7 @@ module Search.Xapian.Types
 import Search.Xapian.Internal.Types
 import Search.Xapian.Internal.FFI
 import Data.ByteString (ByteString)
+import Data.Enumerator (Enumerator)
 
 -- * Indexing
 -- --------------------------------------------------------------------
@@ -80,7 +81,7 @@ class ReadableDatabase db where
     getSynonymKeys :: db -> ByteString {- prefix -} -> XapianM [ByteString]
     getSpellings :: db -> XapianM [(ByteString, Int)] -- spellings and frequencies
     suggestSpelling :: db -> ByteString -> Int -> XapianM ByteString
-    getPostings :: db -> ByteString -> XapianM [(DocumentId,Wdf)] -- when an empty term ist passed all document ids are returned
+    getPostings :: db -> ByteString -> Enumerator (DocumentId,Wdf) XapianM a -- when an empty term ist passed all document ids are returned
     getDocCount :: db -> XapianM Integer
 
 class WritableDatabase db where

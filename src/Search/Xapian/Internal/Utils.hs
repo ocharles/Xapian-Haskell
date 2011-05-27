@@ -1,12 +1,16 @@
 module Search.Xapian.Internal.Utils
      ( -- * General
        collect
+     , collectSome
      , collectTerms
      , collectTerms'
      , collectTermsWdf
      , collectDocIds
      , collectValues
      , collectPostings
+     
+     , enumerate
+     , enumeratePostings
 
        -- * Stemmer related
      , createStemmer
@@ -23,6 +27,9 @@ import Data.ByteString.Char8 (pack, ByteString, packCString, useAsCString)
 import Data.IntMap (IntMap)
 import qualified Data.IntMap as IntMap
 import Control.Monad ((<=<))
+import Control.Monad.Trans (liftIO)
+import qualified Data.Enumerator as Enumerator
+import Data.Enumerator (Enumerator, Step (..), Iteratee (..), Stream (..))
 
 import System.IO.Unsafe (unsafeInterleaveIO)
 
@@ -33,25 +40,25 @@ import Search.Xapian.Internal.FFI
 
 -- | @collect@ returns objects using a triple of functions over iterators
 -- @(finished, next, get)@ and two pointers @pos@ and @end@ where
--- 
+--
 -- @pos@ points to the current iterator position
--- 
+--
 -- @end@ denotes the end of the iterator
 --
 -- @finished@ checks whether there are elements
 -- left in the iterator
 --
 -- @next@ moves the @pos@ to the next element
--- 
+--
 -- @get@ converts the pointer to some meaningful 'object' performing an
 -- effectful computation
 collect
     :: (Ptr a -> IO ()) -- next
-    -> (Ptr a -> IO b)  -- get                          
-    -> (Ptr a -> Ptr a -> IO CBool) -- finished?        
-    -> ForeignPtr a -- current position                 
-    -> ForeignPtr a -- end                              
-    -> IO [b]                                           
+    -> (Ptr a -> IO b)  -- get
+    -> (Ptr a -> Ptr a -> IO CBool) -- finished?
+    -> ForeignPtr a -- current position
+    -> ForeignPtr a -- end
+    -> IO [b]
 collect next' get' finished' pos' end' =
     withForeignPtr pos' $ \posPtr ->
     withForeignPtr end' $ \endPtr ->
@@ -64,7 +71,29 @@ collect next' get' finished' pos' end' =
            else do element <- get pos
                    _ <- next pos
                    rest <- collect' next get finished pos end
-                   unsafeInterleaveIO $ return (element : rest)
+                   return (element : rest)
+
+collectSome
+    :: Int -- max number of elements to collect
+    -> (Ptr a -> IO ()) -- next
+    -> (Ptr a -> IO b)  -- get
+    -> (Ptr a -> Ptr a -> IO CBool) -- finished?
+    -> ForeignPtr a -- current position
+    -> ForeignPtr a -- end
+    -> IO [b]
+collectSome n' next' get' finished' pos' end' =
+    withForeignPtr pos' $ \posPtr ->
+    withForeignPtr end' $ \endPtr ->
+    collectSome' n' next' get' finished' posPtr endPtr
+    where
+    collectSome' n next get finished pos end =
+     do exit <- finished pos end
+        if exit /= 0 || n <= 0
+           then do return []
+           else do element <- get pos
+                   _ <- next pos
+                   rest <- collectSome' (n-1) next get finished pos end
+                   return (element : rest)
 
 collectPositions
     :: ForeignPtr CPositionIterator
@@ -72,8 +101,8 @@ collectPositions
     -> IO [Pos]
 collectPositions =
     collect cx_positioniterator_next
-            cx_positioniterator_get                      
-            cx_positioniterator_is_end                   
+            cx_positioniterator_get
+            cx_positioniterator_is_end
 
 collectTerms
     :: ForeignPtr CTermIterator -- current position
@@ -153,6 +182,39 @@ collectValues =
     getter ptr = do value <- BS.packCString =<< cx_valueiterator_get ptr
                     valno <- cx_valueiterator_get_valueno ptr
                     return (fromIntegral valno, value)
+
+
+enumerate
+    :: Int -- chunk size
+    -> (Ptr a -> IO ()) -- next
+    -> (Ptr a -> IO b)  -- get
+    -> (Ptr a -> Ptr a -> IO CBool) -- finished?
+    -> ForeignPtr a -- current position
+    -> ForeignPtr a -- end
+    -> Enumerator b XapianM r
+enumerate chunksize next get finished pos end step =
+ do case step of
+    { Continue k -> Iteratee $
+      do xs <- liftIO $ collectSome chunksize next get finished pos end
+         if null xs
+            then runIteratee $ k EOF
+            else do step' <- runIteratee $ k (Chunks xs)
+                    runIteratee $ enumerate chunksize next get finished pos end step'
+    ; done       -> Iteratee $ return done
+    }
+
+enumeratePostings
+    :: Int
+    -> ForeignPtr CPostingIterator
+    -> ForeignPtr CPostingIterator
+    -> Enumerator (DocumentId, Wdf) XapianM r
+enumeratePostings chunksize =
+    enumerate chunksize cx_postingiterator_next getter cx_postingiterator_is_end
+    where
+    getter ptr =
+     do wdf <- fmap fromIntegral $ cx_postingiterator_get_wdf ptr
+        docid <- fmap (DocId . fromIntegral) $ cx_postingiterator_get ptr
+        return (docid, wdf)
 
 -- | @indexToDocument stemmer document text@ adds stemmed posting terms derived from
 -- @text@ using the stemming algorith @stemmer@ to @doc@

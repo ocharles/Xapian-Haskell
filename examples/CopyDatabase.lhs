@@ -5,6 +5,8 @@
 > import Control.Monad.Trans (liftIO)
 > import Data.ByteString.Char8 (pack)
 > --import Control.Concurrent (threadDelay)
+> import qualified Data.Enumerator.List as Enumerator
+> import Data.Enumerator (($$), runIteratee, consume)
 
 > import Search.Xapian
 
@@ -56,7 +58,7 @@
 >     failing (Right a)  = return a
 
 >     copyDocuments renumber src srcDB dstDB =
->      do postings <- getPostings srcDB (pack "")
+>      do let postingEnum = getPostings srcDB (pack "")
 >         doccount <- getDocCount srcDB
 >
 >         let showStatus i = liftIO $
@@ -65,16 +67,22 @@
 >                 hFlush stdout
 >                 --threadDelay 10000
 >
->         forM_ (zip [1..] postings) $ \(i, (docid,_)) ->
->          do edoc <- getDocument srcDB docid
->             case edoc of
->                  Right doc ->
->                     if renumber
->                        then do addDocument dstDB doc
->                                showStatus i
->                        else do replaceDocument dstDB docid doc
->                                showStatus i
->                  Left  err -> liftIO $ putStrLn (show err)
+>         let iterate i (docid, _) =
+>              do edoc <- getDocument srcDB docid
+>                 case edoc of
+>                 { Right doc ->
+>                   if renumber
+>                      then do addDocument dstDB doc
+>                              showStatus i >> return (i+1)
+>                      else do replaceDocument dstDB docid doc
+>                              showStatus i >> return (i+1)
+>                 ; Left  err ->
+>                    do liftIO $ putStrLn (show err)
+>                       return (i+1)
+>                 }
+>         
+>         runIteratee $ postingEnum $$ Enumerator.foldM iterate 1
+>         return ()
 
 >     wrap target xapianAction =
 >      do putStr $ "Copying " ++ target ++ "..."

@@ -52,6 +52,7 @@ library
                       blaze-builder,
                       bytestring,
                       containers,
+                      enumerator,
                       mtl >= 2.0
   ghc-options:          -Wall -funbox-strict-fields -O
   ghc-prof-options:     -Wall -funbox-strict-fields -O -prof -auto-all

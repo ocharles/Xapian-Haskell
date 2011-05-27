@@ -39,7 +39,7 @@
 >          (xs, src:dst:_, _) -> handleArgs xs $
 >           do let renumber = not $ NoRenumber `elem` xs
 >              srcDB <- failing =<< openReadOnly src
->              dstDB <- failing =<< openReadWrite CreateOrOverwrite dst
+>              dstDB <- failing =<< openReadWrite Create dst
 >              runXapian $ copyDocuments renumber srcDB dstDB
 >              putStrLn ""
 >              wrap "spelling data" $ copySpellingData srcDB dstDB

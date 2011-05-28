@@ -11,7 +11,7 @@ import Control.Monad (forM)
 import Control.Monad.Trans (liftIO)
 import Data.ByteString.Char8 (ByteString, pack, useAsCString)
 import Data.Either (rights)
-import Data.Enumerator (Iteratee (..))
+import Data.Enumerator (Iteratee (..), Enumerator)
 
 import Search.Xapian.Types
 import Search.Xapian.Internal.Types
@@ -104,17 +104,26 @@ instance ReadableDatabase ReadOnlyDB where
                 >>= fromCCString
 
     getPostings (ReadOnlyDB dbmptr) term step =
-        Iteratee $ liftIO $
-        withForeignPtr dbmptr $ \dbptr ->
-         do ccterm <- toCCString term
-            b <- manage =<< cx_database_postlist_begin dbptr ccterm
-            e <- manage =<< cx_database_postlist_end   dbptr ccterm
-            runXapian $ runIteratee $ enumeratePostings 1024 b e step
+        Iteratee $
+         do (b,e) <- liftIO $ withForeignPtr dbmptr $ \dbptr ->
+             do ccterm <- toCCString term
+                b <- manage =<< cx_database_postlist_begin dbptr ccterm
+                e <- manage =<< cx_database_postlist_end   dbptr ccterm
+                return (b,e)
+            runIteratee $ enumeratePostings 1024 b e step
 
     getDocCount (ReadOnlyDB dbmptr) =
         liftIO $
         withForeignPtr dbmptr $ \dbptr ->
         fmap fromIntegral $ cx_database_get_doccount dbptr
+
+    getAllTerms (ReadOnlyDB dbmptr) step =
+        Iteratee $
+         do (b,e) <- liftIO $ withForeignPtr dbmptr $ \dbptr ->
+             do b <- manage =<< cx_database_allterms_begin dbptr
+                e <- manage =<< cx_database_allterms_end   dbptr
+                return (b,e)
+            runIteratee $ enumerateTerms' 4096 b e step
 
 
 instance ReadableDatabase ReadWriteDB where
@@ -128,6 +137,7 @@ instance ReadableDatabase ReadWriteDB where
   suggestSpelling = __withCastedDB suggestSpelling
   getPostings     = __withCastedDB getPostings
   getDocCount     = __withCastedDB getDocCount
+  getAllTerms     = __withCastedDB getAllTerms
 
 __withCastedDB f (ReadWriteDB db) = f (ReadOnlyDB $ castForeignPtr db)
 

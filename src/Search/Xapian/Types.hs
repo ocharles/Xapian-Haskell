@@ -83,6 +83,7 @@ class ReadableDatabase db where
     suggestSpelling :: db -> ByteString -> Int -> XapianM ByteString
     getPostings :: db -> ByteString -> Enumerator (DocumentId,Wdf) XapianM a -- when an empty term ist passed all document ids are returned
     getDocCount :: db -> XapianM Integer
+    getAllTerms :: db -> Enumerator ByteString XapianM a
 
 class WritableDatabase db where
     addDocument :: db -> Document -> XapianM DocumentId

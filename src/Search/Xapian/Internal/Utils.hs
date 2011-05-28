@@ -10,6 +10,7 @@ module Search.Xapian.Internal.Utils
      , collectPostings
      
      , enumerate
+     , enumerateTerms'
      , enumeratePostings
 
        -- * Stemmer related
@@ -215,6 +216,14 @@ enumeratePostings chunksize =
      do wdf <- fmap fromIntegral $ cx_postingiterator_get_wdf ptr
         docid <- fmap (DocId . fromIntegral) $ cx_postingiterator_get ptr
         return (docid, wdf)
+
+enumerateTerms' :: Int -> ForeignPtr CTermIterator -> ForeignPtr CTermIterator -> Enumerator ByteString XapianM a
+enumerateTerms' chunksize =
+    enumerate
+        chunksize
+        cx_termiterator_next
+        (BS.packCString <=< cx_termiterator_get)
+        cx_termiterator_is_end
 
 -- | @indexToDocument stemmer document text@ adds stemmed posting terms derived from
 -- @text@ using the stemming algorith @stemmer@ to @doc@

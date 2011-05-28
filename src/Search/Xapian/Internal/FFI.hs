@@ -894,10 +894,10 @@ foreign import ccall unsafe "termiterator_is_end"
                            -> IO CBool
 
 foreign import ccall unsafe "termiterator_get"
-    cx_termiterator_get :: Ptr CTermIterator -> IO CString
+    cx_termiterator_get :: Ptr CTermIterator -> IO (Ptr CCString)
 
 foreign import ccall unsafe "termiterator_skip_to"
-    cx_termiterator_skip_to :: Ptr CTermIterator -> CString -> IO ()
+    cx_termiterator_skip_to :: Ptr CTermIterator -> Ptr CCString -> IO ()
 
 foreign import ccall unsafe "termiterator_get_wdf"
     cx_termiterator_get_wdf :: Ptr CTermIterator -> IO Word32

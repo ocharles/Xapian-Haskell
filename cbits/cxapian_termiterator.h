@@ -21,11 +21,11 @@ termiterator_next (Xapian::TermIterator *);
 cbool
 termiterator_is_end (Xapian::TermIterator *, Xapian::TermIterator *end);
 
-const char *
+std::string *
 termiterator_get (Xapian::TermIterator *);
 
 void
-termiterator_skip_to (Xapian::TermIterator *, const char *tname);
+termiterator_skip_to (Xapian::TermIterator *, std::string *term);
 
 unsigned int
 termiterator_get_wdf (Xapian::TermIterator *);

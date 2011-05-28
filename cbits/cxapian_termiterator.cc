@@ -32,16 +32,17 @@ termiterator_is_end (Xapian::TermIterator *self, Xapian::TermIterator *end)
     return (*self == *end);
 }
 
-const char *
+std::string *
 termiterator_get (Xapian::TermIterator *self)
 {
-    return (**self).c_str();
+    std::string *str = new std::string(**self);
+    return str;
 }
 
 void
-termiterator_skip_to (Xapian::TermIterator *self, const char *tname)
+termiterator_skip_to (Xapian::TermIterator *self, std::string *term)
 {
-    self->skip_to(std::string(tname));
+    self->skip_to(*term);
 }
 
 unsigned int

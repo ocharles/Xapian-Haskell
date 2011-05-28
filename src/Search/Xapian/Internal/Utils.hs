@@ -119,7 +119,7 @@ collectTerms b e =
             b e
     where
     getter ptr =
-     do term <- BS.packCString =<< cx_termiterator_get ptr
+     do term <- fromCCString =<< cx_termiterator_get ptr
         positions_len <- cx_termiterator_positionlist_count ptr
         b_pos <- manage =<< cx_termiterator_positionlist_begin ptr
         e_pos <- manage =<< cx_termiterator_positionlist_end ptr
@@ -135,7 +135,7 @@ collectTerms'
     -> IO [ByteString]
 collectTerms' =
     collect cx_termiterator_next
-            (BS.packCString <=< cx_termiterator_get)
+            (fromCCString <=< cx_termiterator_get)
             cx_termiterator_is_end
 
 collectTermsWdf
@@ -148,7 +148,7 @@ collectTermsWdf =
             cx_termiterator_is_end
     where
     getter ptr =
-     do term <- BS.packCString =<< cx_termiterator_get ptr
+     do term <- fromCCString =<< cx_termiterator_get ptr
         wdf  <- fmap fromIntegral $ cx_termiterator_get_wdf ptr
         return (term, wdf)
 
@@ -235,7 +235,7 @@ enumerateTerms b e chunksize =
               b e
     where
     getter ptr =
-     do term <- BS.packCString =<< cx_termiterator_get ptr
+     do term <- fromCCString =<< cx_termiterator_get ptr
         positions_len <- cx_termiterator_positionlist_count ptr
         b_pos <- manage =<< cx_termiterator_positionlist_begin ptr
         e_pos <- manage =<< cx_termiterator_positionlist_end ptr
@@ -253,7 +253,7 @@ enumerateTerms' pos end chunksize =
     enumerate
         chunksize
         cx_termiterator_next
-        (BS.packCString <=< cx_termiterator_get)
+        (fromCCString <=< cx_termiterator_get)
         cx_termiterator_is_end
         pos end
 
@@ -269,7 +269,7 @@ enumerateTermsWdf pos end chunksize =
               pos end
     where
     getter ptr =
-     do term <- BS.packCString =<< cx_termiterator_get ptr
+     do term <- fromCCString =<< cx_termiterator_get ptr
         wdf  <- fmap fromIntegral $ cx_termiterator_get_wdf ptr
         return (term, wdf)
 

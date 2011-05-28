@@ -58,8 +58,7 @@
 >     failing (Right a)  = return a
 
 >     copyDocuments renumber src srcDB dstDB =
->      do let postingEnum = getPostings srcDB (pack "")
->         doccount <- getDocCount srcDB
+>      do doccount <- getDocCount srcDB
 >
 >         let showStatus i = liftIO $
 >              do putStr $ "\r" ++ src ++ " " ++ show i
@@ -80,7 +79,8 @@
 >                    do liftIO $ putStrLn (show err)
 >                       return (i+1)
 >                 }
->         
+>
+>         let postingEnum = getPostings srcDB (pack "") 1024
 >         runIteratee $ postingEnum $$ Enumerator.foldM iterate 1
 >         return ()
 
@@ -90,18 +90,18 @@
 >         putStrLn " done."     
 
 >     copySpellingData srcDB dstDB =
->      do spellings <- getSpellings srcDB
+>      do spellings <- collectE $ getSpellings srcDB
 >         forM_ spellings $ uncurry (addSpelling dstDB)
 
 >     copySynonymData srcDB dstDB =
->      do terms <- getSynonymKeys srcDB (pack "")
+>      do terms <- collectE $ getSynonymKeys srcDB (pack "")
 >         forM_ terms $ \term ->
->          do synonyms <- getSynonyms srcDB term
+>          do synonyms <- collectE $ getSynonyms srcDB term
 >             forM_ synonyms $ \synonym ->
 >                 addSynonym dstDB term synonym
 
 >     copyMetadata srcDB dstDB =
->      do keys <- getMetadataKeys srcDB (pack "")
+>      do keys <- collectE $ getMetadataKeys srcDB (pack "")
 >         forM_ keys $ \key ->
 >          do value <- getMetadata srcDB key
 >             setMetadata dstDB key value

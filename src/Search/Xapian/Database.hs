@@ -62,36 +62,40 @@ instance ReadableDatabase ReadOnlyDB where
             ccval <- cx_database_get_metadata dbptr cckey
             fromCCString ccval
 
-    getMetadataKeys (ReadOnlyDB dbmptr) prefix =
-        liftIO $
-        withForeignPtr dbmptr $ \dbptr ->
-         do ccprefix <- toCCString prefix
-            b <- manage =<< cx_database_metadata_keys_begin dbptr ccprefix
-            e <- manage =<< cx_database_metadata_keys_end   dbptr ccprefix
-            collectTerms' b e
+    getMetadataKeys (ReadOnlyDB dbmptr) prefix chunksize step =
+        Iteratee $
+         do (b,e) <- liftIO $ withForeignPtr dbmptr $ \dbptr ->
+             do ccprefix <- toCCString prefix
+                b <- manage =<< cx_database_metadata_keys_begin dbptr ccprefix
+                e <- manage =<< cx_database_metadata_keys_end   dbptr ccprefix
+                return (b,e)
+            runIteratee $ enumerateTerms' b e chunksize step
 
-    getSynonyms (ReadOnlyDB dbmptr) term =
-        liftIO $
-        withForeignPtr dbmptr $ \dbptr ->
-         do ccterm <- toCCString term
-            b <- manage =<< cx_database_synonyms_begin dbptr ccterm
-            e <- manage =<< cx_database_synonyms_end   dbptr ccterm
-            collectTerms' b e
+    getSynonyms (ReadOnlyDB dbmptr) term chunksize step =
+        Iteratee $
+         do (b,e) <- liftIO $ withForeignPtr dbmptr $ \dbptr ->
+             do ccterm <- toCCString term
+                b <- manage =<< cx_database_synonyms_begin dbptr ccterm
+                e <- manage =<< cx_database_synonyms_end   dbptr ccterm
+                return (b,e)
+            runIteratee $ enumerateTerms' b e chunksize step
 
-    getSynonymKeys (ReadOnlyDB dbmptr) prefix =
-        liftIO $
-        withForeignPtr dbmptr $ \dbptr ->
-         do ccprefix <- toCCString prefix
-            b <- manage =<< cx_database_synonym_keys_begin dbptr ccprefix
-            e <- manage =<< cx_database_synonym_keys_end   dbptr ccprefix
-            collectTerms' b e
+    getSynonymKeys (ReadOnlyDB dbmptr) prefix chunksize step =
+        Iteratee $
+         do (b,e) <- liftIO $ withForeignPtr dbmptr $ \dbptr ->
+             do ccprefix <- toCCString prefix
+                b <- manage =<< cx_database_synonym_keys_begin dbptr ccprefix
+                e <- manage =<< cx_database_synonym_keys_end   dbptr ccprefix
+                return (b,e)
+            runIteratee $ enumerateTerms' b e chunksize step
 
-    getSpellings (ReadOnlyDB dbmptr) =
-        liftIO $
-        withForeignPtr dbmptr $ \dbptr ->
-         do b <- manage =<< cx_database_spellings_begin dbptr
-            e <- manage =<< cx_database_spellings_end   dbptr
-            collectTermsWdf b e
+    getSpellings (ReadOnlyDB dbmptr) chunksize step =
+        Iteratee $
+         do (b,e) <- liftIO $ withForeignPtr dbmptr $ \dbptr ->
+             do b <- manage =<< cx_database_spellings_begin dbptr
+                e <- manage =<< cx_database_spellings_end   dbptr
+                return (b,e)
+            runIteratee $ enumerateTermsWdf b e chunksize step
     
     suggestSpelling (ReadOnlyDB dbmptr) term max_edit_distance =
         liftIO $
@@ -103,28 +107,49 @@ instance ReadableDatabase ReadOnlyDB where
                 (fromIntegral max_edit_distance)
                 >>= fromCCString
 
-    getPostings (ReadOnlyDB dbmptr) term step =
+    getPostings (ReadOnlyDB dbmptr) term chunksize step =
         Iteratee $
          do (b,e) <- liftIO $ withForeignPtr dbmptr $ \dbptr ->
              do ccterm <- toCCString term
                 b <- manage =<< cx_database_postlist_begin dbptr ccterm
                 e <- manage =<< cx_database_postlist_end   dbptr ccterm
                 return (b,e)
-            runIteratee $ enumeratePostings 1024 b e step
+            runIteratee $ enumeratePostings b e chunksize step
 
     getDocCount (ReadOnlyDB dbmptr) =
         liftIO $
         withForeignPtr dbmptr $ \dbptr ->
         fmap fromIntegral $ cx_database_get_doccount dbptr
 
-    getAllTerms (ReadOnlyDB dbmptr) step =
+    getAllTerms (ReadOnlyDB dbmptr) chunksize step =
         Iteratee $
          do (b,e) <- liftIO $ withForeignPtr dbmptr $ \dbptr ->
              do b <- manage =<< cx_database_allterms_begin dbptr
                 e <- manage =<< cx_database_allterms_end   dbptr
                 return (b,e)
-            runIteratee $ enumerateTerms' 4096 b e step
+            runIteratee $ enumerateTerms' b e chunksize step
 
+    termExists = __withDbAndTerm $ \dbptr ccterm ->
+        fmap (==1) $ cx_database_term_exists dbptr ccterm
+
+    termFreq = __withDbAndTerm $ \dbptr ccterm ->
+        fmap fromIntegral $ cx_database_get_termfreq dbptr ccterm
+
+    collFreq = __withDbAndTerm $ \dbptr ccterm ->
+        fmap fromIntegral $ cx_database_get_collection_freq dbptr ccterm
+
+    wdfMax   = __withDbAndTerm $ \dbptr ccterm ->
+        fmap fromIntegral $ cx_database_get_wdf_upper_bound dbptr ccterm
+
+    getUUID (ReadOnlyDB dbmptr) =
+        liftIO $ withForeignPtr dbmptr $ \dbptr ->
+        cx_database_get_uuid dbptr >>= fromCCString
+
+__withDbAndTerm f (ReadOnlyDB dbmptr) term =
+    liftIO $
+    withForeignPtr dbmptr $ \dbptr ->
+     do ccterm <- toCCString term
+        f dbptr ccterm
 
 instance ReadableDatabase ReadWriteDB where
   search          = __withCastedDB search
@@ -138,6 +163,13 @@ instance ReadableDatabase ReadWriteDB where
   getPostings     = __withCastedDB getPostings
   getDocCount     = __withCastedDB getDocCount
   getAllTerms     = __withCastedDB getAllTerms
+
+  termExists      = __withCastedDB termExists
+  termFreq        = __withCastedDB termFreq
+  collFreq        = __withCastedDB collFreq
+  wdfMax          = __withCastedDB wdfMax
+  getUUID         = __withCastedDB getUUID
+
 
 __withCastedDB f (ReadWriteDB db) = f (ReadOnlyDB $ castForeignPtr db)
 
@@ -190,8 +222,7 @@ instance WritableDatabase ReadWriteDB where
     delDocumentByTerm (ReadWriteDB dbmptr) term =
         liftIO $
         withForeignPtr dbmptr $ \dbptr ->
-        useAsCString term $ \cterm ->
-        cx_database_delete_document_by_term dbptr cterm
+        toCCString term >>= cx_database_delete_document_by_term dbptr
 
     setMetadata (ReadWriteDB dbmptr) key val =
         liftIO $

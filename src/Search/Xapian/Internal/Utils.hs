@@ -10,7 +10,10 @@ module Search.Xapian.Internal.Utils
      , collectPostings
      
      , enumerate
+     , enumerateTerms
      , enumerateTerms'
+     , enumerateTermsWdf
+     , enumerateDocIds
      , enumeratePostings
 
        -- * Stemmer related
@@ -35,6 +38,7 @@ import Data.Enumerator (Enumerator, Step (..), Iteratee (..), Stream (..))
 import System.IO.Unsafe (unsafeInterleaveIO)
 
 import Search.Xapian.Internal.Types
+import Search.Xapian.Types
 import Search.Xapian.Internal.FFI
 
 -- * General
@@ -205,25 +209,83 @@ enumerate chunksize next get finished pos end step =
     }
 
 enumeratePostings
-    :: Int
+    :: ForeignPtr CPostingIterator
     -> ForeignPtr CPostingIterator
-    -> ForeignPtr CPostingIterator
-    -> Enumerator (DocumentId, Wdf) XapianM r
-enumeratePostings chunksize =
-    enumerate chunksize cx_postingiterator_next getter cx_postingiterator_is_end
+    -> XapianE(DocumentId, Wdf) a
+enumeratePostings pos end chunksize =
+    enumerate chunksize
+              cx_postingiterator_next
+              getter
+              cx_postingiterator_is_end
+              pos end
     where
     getter ptr =
      do wdf <- fmap fromIntegral $ cx_postingiterator_get_wdf ptr
         docid <- fmap (DocId . fromIntegral) $ cx_postingiterator_get ptr
         return (docid, wdf)
 
-enumerateTerms' :: Int -> ForeignPtr CTermIterator -> ForeignPtr CTermIterator -> Enumerator ByteString XapianM a
-enumerateTerms' chunksize =
+enumerateTerms
+    :: ForeignPtr CTermIterator -- current position
+    -> ForeignPtr CTermIterator -- end
+    -> XapianE Term a
+enumerateTerms b e chunksize =
+    enumerate chunksize
+              cx_termiterator_next
+              getter cx_termiterator_is_end
+              b e
+    where
+    getter ptr =
+     do term <- BS.packCString =<< cx_termiterator_get ptr
+        positions_len <- cx_termiterator_positionlist_count ptr
+        b_pos <- manage =<< cx_termiterator_positionlist_begin ptr
+        e_pos <- manage =<< cx_termiterator_positionlist_end ptr
+        if positions_len <= 0
+           then do return $ Term term []
+           else do positions <- unsafeInterleaveIO $
+                       collectPositions b_pos e_pos
+                   return $ Term term positions
+
+enumerateTerms'
+    :: ForeignPtr CTermIterator
+    -> ForeignPtr CTermIterator
+    -> XapianE ByteString a
+enumerateTerms' pos end chunksize =
     enumerate
         chunksize
         cx_termiterator_next
         (BS.packCString <=< cx_termiterator_get)
         cx_termiterator_is_end
+        pos end
+
+enumerateTermsWdf
+    :: ForeignPtr CTermIterator -- current position
+    -> ForeignPtr CTermIterator -- end
+    -> XapianE (ByteString,Int) a
+enumerateTermsWdf pos end chunksize =
+    enumerate chunksize
+              cx_termiterator_next
+              getter
+              cx_termiterator_is_end
+              pos end
+    where
+    getter ptr =
+     do term <- BS.packCString =<< cx_termiterator_get ptr
+        wdf  <- fmap fromIntegral $ cx_termiterator_get_wdf ptr
+        return (term, wdf)
+
+enumerateDocIds
+    :: ForeignPtr CMSetIterator
+    -> ForeignPtr CMSetIterator
+    -> XapianE DocumentId a
+enumerateDocIds pos end chunksize =
+    enumerate chunksize
+              cx_msetiterator_next
+              (fmap DocId . cx_msetiterator_get)
+              cx_msetiterator_is_end
+              pos end
+
+
+
 
 -- | @indexToDocument stemmer document text@ adds stemmed posting terms derived from
 -- @text@ using the stemming algorith @stemmer@ to @doc@

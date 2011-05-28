@@ -23,6 +23,9 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 
 module Search.Xapian.Types
        ( XapianM (runXapian)
+       , XapianE
+       , collectE
+       , collectE'
        
          -- * Error types
        , Error (..)
@@ -60,7 +63,8 @@ module Search.Xapian.Types
 import Search.Xapian.Internal.Types
 import Search.Xapian.Internal.FFI
 import Data.ByteString (ByteString)
-import Data.Enumerator (Enumerator)
+import Data.Enumerator (Enumerator, ($$), run_)
+import Data.Enumerator.List (consume)
 
 -- * Indexing
 -- --------------------------------------------------------------------
@@ -71,30 +75,49 @@ class Index d where
 -- * Database related types
 -- --------------------------------------------------------------------
 
+-- | Xapian Enumerator, allows for user defined chunk sizes
+type XapianE a b = Int -> Enumerator a XapianM b
+
+-- | like collectE' but with a default chunksize of 4096 (randomly chosen)
+collectE :: XapianE a [a] -> XapianM [a]
+collectE = collectE' 4096
+
+-- | collects the values from a Xapian Enumerator and returns a list.
+--   the chunksize > 0 is freely choosable
+collectE' :: Int -> XapianE a [a] -> XapianM [a]
+collectE' chunksize xe = run_ $ (xe chunksize) $$ consume
 
 class ReadableDatabase db where
-    search :: db -> Query -> QueryRange -> XapianM (MSet, [Document])
-    getDocument :: db -> DocumentId -> XapianM (Either Error Document)
-    getMetadata :: db -> ByteString -> XapianM ByteString
-    getMetadataKeys :: db -> ByteString {- prefix -} -> XapianM [ByteString]
-    getSynonyms :: db -> ByteString -> XapianM [ByteString]
-    getSynonymKeys :: db -> ByteString {- prefix -} -> XapianM [ByteString]
-    getSpellings :: db -> XapianM [(ByteString, Int)] -- spellings and frequencies
+    search          :: db -> Query -> QueryRange -> XapianM (MSet, [Document])
+    getDocument     :: db -> DocumentId -> XapianM (Either Error Document)
     suggestSpelling :: db -> ByteString -> Int -> XapianM ByteString
-    getPostings :: db -> ByteString -> Enumerator (DocumentId,Wdf) XapianM a -- when an empty term ist passed all document ids are returned
-    getDocCount :: db -> XapianM Integer
-    getAllTerms :: db -> Enumerator ByteString XapianM a
+
+    getSynonyms     :: db -> ByteString -> XapianE ByteString a
+    getSynonymKeys  :: db -> ByteString {- prefix -} -> XapianE ByteString a
+    getSpellings    :: db -> XapianE (ByteString, Int) a -- spellings and frequencies
+    getPostings     :: db -> ByteString -> XapianE (DocumentId,Wdf) a -- when an empty term ist passed all document ids are returned
+    getAllTerms     :: db -> XapianE ByteString a
+
+    getDocCount     :: db -> XapianM Integer
+    getUUID         :: db -> XapianM ByteString
+    getMetadata     :: db -> ByteString -> XapianM ByteString
+    getMetadataKeys :: db -> ByteString {- prefix -} -> XapianE ByteString a
+    
+    termExists      :: db -> ByteString -> XapianM Bool
+    termFreq        :: db -> ByteString -> XapianM Int
+    collFreq        :: db -> ByteString -> XapianM Int
+    wdfMax          :: db -> ByteString -> XapianM Wdf
 
 class WritableDatabase db where
-    addDocument :: db -> Document -> XapianM DocumentId
-    delDocumentById :: db -> DocumentId -> XapianM ()
+    addDocument       :: db -> Document -> XapianM DocumentId
+    delDocumentById   :: db -> DocumentId -> XapianM ()
     delDocumentByTerm :: db -> ByteString -> XapianM ()
-    setMetadata :: db -> ByteString -> ByteString -> XapianM ()
-    addSynonym :: db -> ByteString -> ByteString -> XapianM ()
-    delSynonym :: db -> ByteString -> ByteString -> XapianM ()
-    clearSynonyms :: db -> ByteString -> XapianM ()
-    addSpelling :: db -> ByteString -> Int -> XapianM ()
-    delSpelling :: db -> ByteString -> Int -> XapianM () -- FIXME: does not really delete spellings in some cases
+    setMetadata       :: db -> ByteString -> ByteString -> XapianM ()
+    addSynonym        :: db -> ByteString -> ByteString -> XapianM ()
+    delSynonym        :: db -> ByteString -> ByteString -> XapianM ()
+    clearSynonyms     :: db -> ByteString -> XapianM ()
+    addSpelling       :: db -> ByteString -> Int -> XapianM ()
+    delSpelling       :: db -> ByteString -> Int -> XapianM ()
 
 
 data InitDBOption

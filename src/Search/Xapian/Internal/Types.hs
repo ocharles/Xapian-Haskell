@@ -32,6 +32,7 @@ module Search.Xapian.Internal.Types
 
 import Foreign
 import Data.ByteString (ByteString)
+import Control.Applicative
 import Control.Monad
 import Control.Monad.Trans (liftIO, MonadIO)
 
@@ -55,6 +56,12 @@ instance MonadIO XapianM where
 instance Functor XapianM where
     fmap f = XapianM . fmap f . runXapian
 
+instance Applicative XapianM where
+    pure   = return
+    f <*> a =
+     do f' <- f
+        a' <- a
+        return (f' a')
 
 -- * Error types
 -- --------------------------------------------------------------------

@@ -91,17 +91,15 @@ database_has_positions (Xapian::Database *db)
 }
 
 Xapian::PositionIterator *
-database_positionlist_begin (Xapian::Database *db, unsigned int docid, const char *tname)
+database_positionlist_begin (Xapian::Database *db, unsigned int docid, std::string *term)
 {
-    return new Xapian::PositionIterator(
-            db->positionlist_begin(docid, std::string(tname)) );
+    return new Xapian::PositionIterator( db->positionlist_begin(docid, *term) );
 }
 
 Xapian::PositionIterator *
-database_positionlist_end (Xapian::Database *db, unsigned int docid, const char *tname)
+database_positionlist_end (Xapian::Database *db, unsigned int docid, std::string *term)
 {
-    return new Xapian::PositionIterator(
-            db->positionlist_end(docid, std::string(tname)) );
+    return new Xapian::PositionIterator( db->positionlist_end(docid, *term) );
 }
 
 Xapian::TermIterator *
@@ -117,17 +115,15 @@ database_allterms_end (Xapian::Database *db)
 }
 
 Xapian::TermIterator *
-database_allterms_with_prefix_begin (Xapian::Database *db, const char *prefix)
+database_allterms_with_prefix_begin (Xapian::Database *db, std::string *prefix)
 {
-    return new Xapian::TermIterator(
-            db->allterms_begin(std::string(prefix)) );
+    return new Xapian::TermIterator( db->allterms_begin(*prefix) );
 }
 
 Xapian::TermIterator *
-database_allterms_with_prefix_end (Xapian::Database *db, const char *prefix)
+database_allterms_with_prefix_end (Xapian::Database *db, std::string *prefix)
 {
-    return new Xapian::TermIterator(
-            db->allterms_end(std::string(prefix)) );
+    return new Xapian::TermIterator( db->allterms_end( *prefix) );
 }
 
 unsigned int
@@ -149,21 +145,21 @@ database_get_avlength (Xapian::Database *db)
 }
 
 unsigned int
-database_get_termfreq (Xapian::Database *db, const char *tname)
+database_get_termfreq (Xapian::Database *db, std::string *term)
 {
-    return db->get_termfreq( std::string(tname) );
+    return db->get_termfreq( *term );
 }
 
 cbool
-database_term_exists (Xapian::Database *db, const char *tname)
+database_term_exists (Xapian::Database *db, std::string *term)
 {
-    return db->term_exists( std::string(tname) );
+    return db->term_exists( *term );
 }
 
 unsigned int
-database_get_collection_freq (Xapian::Database *db, const char *tname)
+database_get_collection_freq (Xapian::Database *db, std::string *term)
 {
-    return db->get_collection_freq( std::string(tname) );
+    return db->get_collection_freq( *term );
 }
 
 unsigned int
@@ -172,16 +168,18 @@ database_get_value_freq (Xapian::Database *db, unsigned int valno)
     return db->get_value_freq( valno );
 }
 
-const char *
+std::string *
 database_get_value_lower_bound (Xapian::Database *db, unsigned int valno)
 {
-    return db->get_value_lower_bound( valno ).c_str();
+    std::string *str = new std::string(db->get_value_lower_bound( valno ));
+    return str;
 }
 
-const char *
+std::string *
 database_get_value_upper_bound (Xapian::Database *db, unsigned int valno)
 {
-    return db->get_value_upper_bound( valno ).c_str();
+    std::string *str = new std::string(db->get_value_upper_bound( valno ));
+    return str;
 }
 
 unsigned int
@@ -197,9 +195,9 @@ database_get_doclength_upper_bound (Xapian::Database *db)
 }
 
 unsigned int
-database_get_wdf_upper_bound (Xapian::Database *db, const char *term)
+database_get_wdf_upper_bound (Xapian::Database *db, std::string *term)
 {
-    return db->get_wdf_upper_bound( std::string(term) );
+    return db->get_wdf_upper_bound( *term );
 }
 
 Xapian::ValueIterator *
@@ -306,10 +304,11 @@ database_metadata_keys_end (Xapian::Database *db, std::string *prefix)
     return new Xapian::TermIterator( db->metadata_keys_end(*prefix) );
 }
 
-const char *
+std::string *
 database_get_uuid (Xapian::Database *db)
 {
-    return db->get_uuid().c_str();
+    std::string *str = new std::string (db->get_uuid());
+    return str;
 }
 
 /* Writable database interface */
@@ -394,9 +393,9 @@ database_delete_document_by_id (Xapian::WritableDatabase *db, unsigned int docid
 }
 
 void
-database_delete_document_by_term (Xapian::WritableDatabase *db, const char *unique_term)
+database_delete_document_by_term (Xapian::WritableDatabase *db, std::string *unique_term)
 {
-    db->delete_document(std::string(unique_term));
+    db->delete_document( *unique_term );
 }
 
 void

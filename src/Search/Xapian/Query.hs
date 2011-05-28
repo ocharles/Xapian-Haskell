@@ -6,17 +6,18 @@ module Search.Xapian.Query
 
        -- * Convenience functions
        , rawQuery
-       , queryAll
-       , queryAny
        , resultsFromTo
        , paging
        
        -- * Lower level
        , compileQuery
+       , describeQuery
      ) where
 
 import Foreign
+import Foreign.C.Types
 import Foreign.C.String
+import Control.Monad (forM_)
 import Data.ByteString.Char8 (pack, useAsCString, ByteString)
 
 
@@ -24,11 +25,9 @@ import Search.Xapian.Types
 import Search.Xapian.Internal.Types
 import Search.Xapian.Internal.Utils
 import Search.Xapian.Internal.FFI
-import Search.Xapian.Query.Combinators as Q
 
 
 -- * using queries with strings, utf-16, whatever
-
 class Queryable s where
     -- | @query term@ will create a verbatim Query object for @term@.
     query :: s -> Query
@@ -60,24 +59,16 @@ resultsFromTo from to = QueryRange from (from - to + 1)
 paging :: Int -> Int -> QueryRange
 paging page amount = QueryRange (amount * page) amount
 
-queryAll :: Queryable s =>  [s] -> Query
-queryAll [] = MatchAll
-queryAll xs = foldr1 Q.and $ map query xs
-
-queryAny :: Queryable s => [s] -> Query
-queryAny [] = MatchNothing
-queryAny xs = foldr1 Q.eliteSet $ map query xs
-
 -- * Low-level stuff
 
 class GetOpCode t where
-    opcode :: t -> Int
+    opcode :: t -> CInt
 
 -- TODO: write proper bindings to access opcodes, bugs incoming
 instance GetOpCode OpNullary where
-    opcode (OpValueGE _ _)    = cx_query_OP_VALUE_GE
-    opcode (OpValueLE _ _)    = cx_query_OP_VALUE_LE
-    opcode (OpValueRange _ _) = cx_query_OP_VALUE_RANGE
+    opcode (OpValueGE _ _)      = cx_query_OP_VALUE_GE
+    opcode (OpValueLE _ _)      = cx_query_OP_VALUE_LE
+    opcode (OpValueRange _ _ _) = cx_query_OP_VALUE_RANGE
 
 instance GetOpCode OpUnary where
     opcode (OpScaleWeight _) = 9
@@ -89,12 +80,14 @@ instance GetOpCode OpBinary where
     opcode OpAndMaybe = cx_query_OP_AND_MAYBE
     opcode OpAndNot   = cx_query_OP_AND_NOT
     opcode OpFilter   = cx_query_OP_FILTER
-    opcode (OpNear _) = cx_query_OP_NEAR
     opcode OpEliteSet = cx_query_OP_ELITE_SET
 
 instance GetOpCode OpMulti where
-    opcode OpSynonym    = cx_query_OP_SYNONYM
+    opcode OpSynonym = cx_query_OP_SYNONYM
+
+instance GetOpCode OpMultiFlat where
     opcode (OpPhrase _) = cx_query_OP_PHRASE
+    opcode (OpNear _)   = cx_query_OP_NEAR
 
 compileQuery :: ReadOnlyDB -> Query -> IO (ForeignPtr CQuery)
 compileQuery db@(ReadOnlyDB dbmptr) query' =
@@ -123,6 +116,8 @@ compileQuery db@(ReadOnlyDB dbmptr) query' =
                               compileBinary op cq cq'
          Multi op qs    -> do cqs <- mapM (compileQuery db) qs
                               compileMulti op cqs
+         MultiFlat op qs -> do cqs <- mapM (compileQuery db . query) qs
+                               compileMultiFlat op cqs
   where
     compileNullary op@(OpValueGE valno val) =
         useAsCString val $ \cs ->
@@ -130,23 +125,46 @@ compileQuery db@(ReadOnlyDB dbmptr) query' =
     compileNullary op@(OpValueLE valno val) =
         useAsCString val $ \cs ->
         cx_query_new_6 (opcode op) valno cs >>= manage
-    compileNullary op@(OpValueRange valno vals) =
-        undefined -- TODO
+    compileNullary op@(OpValueRange valno lower upper) =
+     do cclower <- toCCString lower
+        ccupper <- toCCString upper
+        cx_query_new_5 (opcode op) (fromIntegral valno)
+            cclower ccupper >>= manage
 
     compileUnary op@(OpScaleWeight s) q =
         withForeignPtr q $ \cq ->
         cx_query_new_4 (opcode op) cq s >>= manage
 
-    compileBinary (OpNear distance) q q' =
-     do undefined -- TODO
     compileBinary op q q' = merge (opcode op) q q'
 
     compileMulti op@(OpSynonym) qs =
-        undefined -- TODO
-    compileMulti op@(OpPhrase windowSize) qs =
-        undefined -- TODO
+     do mvec <- manage =<< cx_vector_new
+        withForeignPtr mvec $ \vec ->
+         do forM_ qs $ \q -> withForeignPtr q $ cx_vector_append vec
+            b <- cx_vector_begin vec
+            e <- cx_vector_end   vec
+            cx_query_new_3 (opcode op) b e 0 >>= manage
 
-    merge :: Int
+
+    compileMultiFlat op@(OpPhrase windowSize) qs =
+     do mvec <- manage =<< cx_vector_new
+        withForeignPtr mvec $ \vec ->
+         do forM_ qs $ \q -> withForeignPtr q $ cx_vector_append vec
+            b <- cx_vector_begin vec
+            e <- cx_vector_end   vec
+            cx_query_new_3 (opcode op) b e (fromIntegral windowSize)
+                >>= manage
+
+    compileMultiFlat op@(OpNear distance) qs =
+     do mvec <- manage =<< cx_vector_new
+        withForeignPtr mvec $ \vec ->
+         do forM_ qs $ \q -> withForeignPtr q $ cx_vector_append vec
+            b <- cx_vector_begin vec
+            e <- cx_vector_end   vec
+            cx_query_new_3 (opcode op) b e (fromIntegral distance)
+                >>= manage
+
+    merge :: CInt
           -> ForeignPtr CQuery
           -> ForeignPtr CQuery
           -> IO (ForeignPtr CQuery)

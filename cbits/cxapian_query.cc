@@ -41,10 +41,12 @@ query_new_2 (int op, const char *left, const char *right)
                               std::string(right));
 }
 
-/*
 Xapian::Query *
-query_new_3 (Xapian::Query *, int op, queryiterator *begin, queryiterator *end, unsigned int termcount);
-*/
+query_new_3 (int op, std::vector<Xapian::Query>::iterator *begin,
+        std::vector<Xapian::Query>::iterator *end, unsigned int termcount)
+{
+    return new Xapian::Query((Xapian::Query::op) op, *begin, *end, termcount);
+}
 
 Xapian::Query *
 query_new_4 (int op, Xapian::Query *subquery, double parameter)
@@ -54,13 +56,11 @@ query_new_4 (int op, Xapian::Query *subquery, double parameter)
                               parameter);
 }
 
-/*
 Xapian::Query *
-query_new_5 (Xapian::Query *, int op, unsigned int valno, const char *begin...)
-
-	Query(Query::op op_, Xapian::valueno valno,
-	      const std::string &begin, const std::string &end);
-*/
+query_new_5 (int op, unsigned int valno, std::string *lower, std::string *upper)
+{
+    return new Xapian::Query((Xapian::Query::op) op, valno, *lower, *upper);
+}
 
 Xapian::Query *
 query_new_6 (int op, unsigned int valno, const char *value)

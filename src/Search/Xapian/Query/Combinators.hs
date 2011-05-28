@@ -1,18 +1,29 @@
 module Search.Xapian.Query.Combinators
       (
       -- * Combinators
-        scale, eliteSet, or, and, xor
+        queryAll, queryAny
+      , scale, eliteSet, or, and, xor
       , andMaybe, andNot, filter, near
       , synonyms, phrase, greaterEqual
       , lowerEqual, inRange
       ) where
        
 import Prelude hiding (or, and, filter)
+import Data.ByteString (ByteString)
 import Search.Xapian.Internal.Types
+import Search.Xapian.Query
 
 -- | Most likely you want to import this module as a qualified module, i.e.
 -- 
 -- > import qualified Search.Xapian.Query.Combinators as Q
+
+queryAll :: Queryable s =>  [s] -> Query
+queryAll [] = MatchAll
+queryAll xs = foldr1 and $ map query xs
+
+queryAny :: Queryable s => [s] -> Query
+queryAny [] = MatchNothing
+queryAny xs = foldr1 eliteSet $ map query xs
 
 greaterEqual :: ValueNumber -> Value -> Query
 greaterEqual valno val = Nullary $ OpValueGE valno val
@@ -20,8 +31,8 @@ greaterEqual valno val = Nullary $ OpValueGE valno val
 lowerEqual :: ValueNumber -> Value -> Query
 lowerEqual   valno val = Nullary $ OpValueLE valno val
 
-inRange :: ValueNumber -> [Value] -> Query
-inRange valno vals = Nullary $ OpValueRange valno vals
+inRange :: ValueNumber -> Value -> Value -> Query
+inRange valno lower upper = Nullary $ OpValueRange valno lower upper
 
 --
 scale :: Double -> Query -> Query
@@ -46,9 +57,6 @@ andNot = Binary OpAndNot
 filter :: Query -> Query -> Query
 filter = Binary OpFilter
 
-near :: Int -> Query -> Query -> Query
-near distance = Binary (OpNear distance)
-
 eliteSet :: Query -> Query -> Query
 eliteSet = Binary OpEliteSet
 
@@ -56,5 +64,12 @@ eliteSet = Binary OpEliteSet
 synonyms :: [Query] -> Query
 synonyms = Multi OpSynonym
 
-phrase :: Int -> [Query] -> Query
-phrase windowSize = Multi (OpPhrase windowSize)
+
+near :: Queryable term => Int -> [term] -> Query
+near distance = MultiFlat (OpNear distance) . map (unatom . query)
+
+phrase :: Queryable term => Int -> [term] -> Query
+phrase windowSize = MultiFlat (OpPhrase windowSize) . map (unatom . query)
+
+unatom (Atom bs) = bs
+unatom _         = error "erroneous call of unatom"

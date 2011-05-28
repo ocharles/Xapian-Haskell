@@ -15,6 +15,7 @@ module Search.Xapian.Internal.Types
        , OpUnary (..)
        , OpBinary (..)
        , OpMulti (..)
+       , OpMultiFlat (..)
        , QueryPtr
 
        , DocumentPtr
@@ -114,12 +115,16 @@ data Query
     | Unary   OpUnary   Query
     | Binary  OpBinary  Query  Query
     | Multi   OpMulti  [Query]
+    | MultiFlat OpMultiFlat [ByteString]
     deriving (Show)
 
 data OpNullary
     = OpValueGE {-# UNPACK #-} !ValueNumber Value
     | OpValueLE {-# UNPACK #-} !ValueNumber Value
-    | OpValueRange {-# UNPACK #-} !ValueNumber [Value]
+    | OpValueRange {-# UNPACK #-}
+        !ValueNumber
+        Value -- lower
+        Value -- upper
     deriving (Show)
 
 data OpUnary
@@ -134,12 +139,16 @@ data OpBinary
     | OpAndMaybe 
     | OpAndNot 
     | OpFilter 
-    | OpNear Int
     deriving (Show)
 
 data OpMulti
     = OpSynonym
-    | OpPhrase {-# UNPACK #-} !Int
+    deriving (Show)
+
+-- | you can't nest OpPhrase and OpNear (yet)
+data OpMultiFlat
+    = OpPhrase {-# UNPACK #-} !Int
+    | OpNear Int
     deriving (Show)
 
 

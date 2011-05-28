@@ -540,25 +540,47 @@ foreign import ccall unsafe "mset_get_description"
 
 data CQuery
 type QueryPtr = ForeignPtr CQuery
-type Op = Int
+type Op = CInt
 
 instance Manageable CQuery where
     manage = newForeignPtr cx_query_delete
 
-foreign import ccall unsafe "OP_AND" cx_query_OP_AND :: Int
-foreign import ccall unsafe "OP_OR" cx_query_OP_OR :: Int
-foreign import ccall unsafe "OP_AND_NOT" cx_query_OP_AND_NOT :: Int
-foreign import ccall unsafe "OP_XOR" cx_query_OP_XOR :: Int
-foreign import ccall unsafe "OP_AND_MAYBE" cx_query_OP_AND_MAYBE :: Int
-foreign import ccall unsafe "OP_FILTER" cx_query_OP_FILTER :: Int
-foreign import ccall unsafe "OP_NEAR" cx_query_OP_NEAR :: Int
-foreign import ccall unsafe "OP_PHRASE" cx_query_OP_PHRASE :: Int
-foreign import ccall unsafe "OP_VALUE_RANGE" cx_query_OP_VALUE_RANGE :: Int
-foreign import ccall unsafe "OP_SCALE_WEIGHT" cx_query_OP_SCALE_WEIGHT :: Int
-foreign import ccall unsafe "OP_ELITE_SET" cx_query_OP_ELITE_SET :: Int
-foreign import ccall unsafe "OP_VALUE_GE" cx_query_OP_VALUE_GE :: Int
-foreign import ccall unsafe "OP_VALUE_LE" cx_query_OP_VALUE_LE :: Int
-foreign import ccall unsafe "OP_SYNONYM" cx_query_OP_SYNONYM :: Int
+data CQueryVector
+data CQueryIterator -- | FIXME: do we need to finalize CQueryIterators?
+
+instance Manageable CQueryVector where
+    manage = newForeignPtr cx_vector_delete
+
+foreign import ccall safe "vector_new"
+    cx_vector_new :: IO (Ptr CQueryVector)
+
+foreign import ccall safe "&vector_delete"
+    cx_vector_delete :: FunPtr (Ptr CQueryVector -> IO ())
+
+foreign import ccall safe "vector_begin"
+    cx_vector_begin :: Ptr CQueryVector -> IO (Ptr CQueryIterator)
+
+foreign import ccall safe "vector_end"
+    cx_vector_end :: Ptr CQueryVector -> IO (Ptr CQueryIterator)
+
+foreign import ccall safe "vector_append"
+    cx_vector_append :: Ptr CQueryVector -> Ptr CQuery -> IO ()
+
+
+foreign import ccall unsafe "OP_AND" cx_query_OP_AND :: CInt
+foreign import ccall unsafe "OP_OR" cx_query_OP_OR :: CInt
+foreign import ccall unsafe "OP_AND_NOT" cx_query_OP_AND_NOT :: CInt
+foreign import ccall unsafe "OP_XOR" cx_query_OP_XOR :: CInt
+foreign import ccall unsafe "OP_AND_MAYBE" cx_query_OP_AND_MAYBE :: CInt
+foreign import ccall unsafe "OP_FILTER" cx_query_OP_FILTER :: CInt
+foreign import ccall unsafe "OP_NEAR" cx_query_OP_NEAR :: CInt
+foreign import ccall unsafe "OP_PHRASE" cx_query_OP_PHRASE :: CInt
+foreign import ccall unsafe "OP_VALUE_RANGE" cx_query_OP_VALUE_RANGE :: CInt
+foreign import ccall unsafe "OP_SCALE_WEIGHT" cx_query_OP_SCALE_WEIGHT :: CInt
+foreign import ccall unsafe "OP_ELITE_SET" cx_query_OP_ELITE_SET :: CInt
+foreign import ccall unsafe "OP_VALUE_GE" cx_query_OP_VALUE_GE :: CInt
+foreign import ccall unsafe "OP_VALUE_LE" cx_query_OP_VALUE_LE :: CInt
+foreign import ccall unsafe "OP_SYNONYM" cx_query_OP_SYNONYM :: CInt
 
 foreign import ccall unsafe "query_new"
     cx_query_new :: IO (Ptr CQuery)
@@ -578,14 +600,14 @@ foreign import ccall unsafe "query_new_1"
 foreign import ccall unsafe "query_new_2"
     cx_query_new_2 :: Op -> CString -> CString -> IO (Ptr CQuery)
 
---foreign import ccall unsafe "query_new_3"
---    cx_query_new_3 :: Op -> CString -> CString -> IO (Ptr CQuery)
+foreign import ccall unsafe "query_new_3"
+    cx_query_new_3 :: Op -> Ptr CQueryIterator -> Ptr CQueryIterator -> Word32 -> IO (Ptr CQuery)
 
 foreign import ccall unsafe "query_new_4"
     cx_query_new_4 :: Op -> Ptr CQuery -> Double -> IO (Ptr CQuery)
 
---foreign import ccall unsafe "query_new_5"
---    cx_query_new_5 :: Op -> CString -> CString -> IO (Ptr CQuery)
+foreign import ccall unsafe "query_new_5"
+    cx_query_new_5 :: Op -> Word32 -> Ptr CCString -> Ptr CCString -> IO (Ptr CQuery)
 
 foreign import ccall unsafe "query_new_6"
     cx_query_new_6 :: Op -> Word32 -> CString -> IO (Ptr CQuery)

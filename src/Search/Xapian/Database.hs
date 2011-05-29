@@ -11,7 +11,7 @@ import Control.Monad (forM)
 import Control.Monad.Trans (liftIO)
 import Data.ByteString.Char8 (ByteString, pack, useAsCString)
 import Data.Either (rights)
-import Data.Enumerator (Iteratee (..), Enumerator)
+import Data.Enumerator (Iteratee (..))
 
 import Search.Xapian.Types
 import Search.Xapian.Internal.Types
@@ -41,11 +41,11 @@ instance ReadableDatabase ReadOnlyDB where
                          do forM docidlist $ getDocument db
                         return (MSet msetmptr, doclist)
 
-    getDocument (ReadOnlyDB dbmptr) docId@(DocId id') =
+    getDocument (ReadOnlyDB dbmptr) docid@(DocId id') =
         liftIO $
          withForeignPtr dbmptr $ \dbptr ->
          handleError dbptr $ \docmptr ->
-             return . Right $ Document docmptr docId
+             return . Right $ Document docmptr docid
       where
         handleError dbptr action =
           alloca $ \errorPtr ->
@@ -58,35 +58,34 @@ instance ReadableDatabase ReadOnlyDB where
     getMetadata (ReadOnlyDB dbmptr) key =
         liftIO $
         withForeignPtr dbmptr $ \dbptr ->
-         do cckey <- toCCString key
-            ccval <- cx_database_get_metadata dbptr cckey
-            fromCCString ccval
+        useAsCCString key $ \cckey ->
+        fromCCString =<< manage =<< cx_database_get_metadata dbptr cckey
 
     getMetadataKeys (ReadOnlyDB dbmptr) prefix chunksize step =
         Iteratee $
          do (b,e) <- liftIO $ withForeignPtr dbmptr $ \dbptr ->
-             do ccprefix <- toCCString prefix
-                b <- manage =<< cx_database_metadata_keys_begin dbptr ccprefix
-                e <- manage =<< cx_database_metadata_keys_end   dbptr ccprefix
-                return (b,e)
+             do useAsCCString prefix $ \ccprefix ->
+                 do b <- manage =<< cx_database_metadata_keys_begin dbptr ccprefix
+                    e <- manage =<< cx_database_metadata_keys_end   dbptr ccprefix
+                    return (b,e)
             runIteratee $ enumerateTerms' b e chunksize step
 
     getSynonyms (ReadOnlyDB dbmptr) term chunksize step =
         Iteratee $
          do (b,e) <- liftIO $ withForeignPtr dbmptr $ \dbptr ->
-             do ccterm <- toCCString term
-                b <- manage =<< cx_database_synonyms_begin dbptr ccterm
-                e <- manage =<< cx_database_synonyms_end   dbptr ccterm
-                return (b,e)
+             do useAsCCString term $ \ccterm ->
+                 do b <- manage =<< cx_database_synonyms_begin dbptr ccterm
+                    e <- manage =<< cx_database_synonyms_end   dbptr ccterm
+                    return (b,e)
             runIteratee $ enumerateTerms' b e chunksize step
 
     getSynonymKeys (ReadOnlyDB dbmptr) prefix chunksize step =
         Iteratee $
          do (b,e) <- liftIO $ withForeignPtr dbmptr $ \dbptr ->
-             do ccprefix <- toCCString prefix
-                b <- manage =<< cx_database_synonym_keys_begin dbptr ccprefix
-                e <- manage =<< cx_database_synonym_keys_end   dbptr ccprefix
-                return (b,e)
+             do useAsCCString prefix $ \ccprefix ->
+                 do b <- manage =<< cx_database_synonym_keys_begin dbptr ccprefix
+                    e <- manage =<< cx_database_synonym_keys_end   dbptr ccprefix
+                    return (b,e)
             runIteratee $ enumerateTerms' b e chunksize step
 
     getSpellings (ReadOnlyDB dbmptr) chunksize step =
@@ -100,20 +99,20 @@ instance ReadableDatabase ReadOnlyDB where
     suggestSpelling (ReadOnlyDB dbmptr) term max_edit_distance =
         liftIO $
         withForeignPtr dbmptr $ \dbptr ->
-         do ccterm <- toCCString term
-            cx_database_get_spelling_suggestion
+        useAsCCString term $ \ccterm ->
+         do cx_database_get_spelling_suggestion
                 dbptr
                 ccterm
                 (fromIntegral max_edit_distance)
-                >>= fromCCString
+                >>= manage >>= fromCCString
 
     getPostings (ReadOnlyDB dbmptr) term chunksize step =
         Iteratee $
          do (b,e) <- liftIO $ withForeignPtr dbmptr $ \dbptr ->
-             do ccterm <- toCCString term
-                b <- manage =<< cx_database_postlist_begin dbptr ccterm
-                e <- manage =<< cx_database_postlist_end   dbptr ccterm
-                return (b,e)
+             do useAsCCString term $ \ccterm ->
+                 do b <- manage =<< cx_database_postlist_begin dbptr ccterm
+                    e <- manage =<< cx_database_postlist_end   dbptr ccterm
+                    return (b,e)
             runIteratee $ enumeratePostings b e chunksize step
 
     getDocCount (ReadOnlyDB dbmptr) =
@@ -143,13 +142,15 @@ instance ReadableDatabase ReadOnlyDB where
 
     getUUID (ReadOnlyDB dbmptr) =
         liftIO $ withForeignPtr dbmptr $ \dbptr ->
-        cx_database_get_uuid dbptr >>= fromCCString
+        cx_database_get_uuid dbptr >>= manage >>= fromCCString
 
+__withDbAndTerm
+    :: (Ptr CDatabase -> Ptr StdString -> IO a)
+    -> (ReadOnlyDB    -> ByteString    -> XapianM a)
 __withDbAndTerm f (ReadOnlyDB dbmptr) term =
     liftIO $
     withForeignPtr dbmptr $ \dbptr ->
-     do ccterm <- toCCString term
-        f dbptr ccterm
+    useAsCCString term $ f dbptr
 
 instance ReadableDatabase ReadWriteDB where
   search          = __withCastedDB search
@@ -170,7 +171,9 @@ instance ReadableDatabase ReadWriteDB where
   wdfMax          = __withCastedDB wdfMax
   getUUID         = __withCastedDB getUUID
 
-
+__withCastedDB
+    :: (ReadOnlyDB  -> r)
+    -> (ReadWriteDB -> r)
 __withCastedDB f (ReadWriteDB db) = f (ReadOnlyDB $ castForeignPtr db)
 
 -- * opening databases
@@ -222,46 +225,47 @@ instance WritableDatabase ReadWriteDB where
     delDocumentByTerm (ReadWriteDB dbmptr) term =
         liftIO $
         withForeignPtr dbmptr $ \dbptr ->
-        toCCString term >>= cx_database_delete_document_by_term dbptr
+        useAsCCString term $
+        cx_database_delete_document_by_term dbptr
 
     setMetadata (ReadWriteDB dbmptr) key val =
         liftIO $
         withForeignPtr dbmptr $ \dbptr ->
-         do cckey <- toCCString key
-            ccval <- toCCString val
-            cx_database_set_metadata dbptr cckey ccval
+        useAsCCString key $ \cckey ->
+        useAsCCString val $ \ccval ->
+        cx_database_set_metadata dbptr cckey ccval
 
     addSynonym (ReadWriteDB dbmptr) term synonym =
         liftIO $
         withForeignPtr dbmptr $ \dbptr ->
-         do ccterm <- toCCString term
-            ccsyno <- toCCString synonym
-            cx_database_add_synonym dbptr ccterm ccsyno
+        useAsCCString term $ \ccterm ->
+        useAsCCString synonym $ \ccsyno ->
+        cx_database_add_synonym dbptr ccterm ccsyno
 
     delSynonym (ReadWriteDB dbmptr) term synonym =
         liftIO $
         withForeignPtr dbmptr $ \dbptr ->
-         do ccterm <- toCCString term
-            ccsyno <- toCCString synonym
-            cx_database_remove_synonym dbptr ccterm ccsyno
+        useAsCCString term $ \ccterm ->
+        useAsCCString synonym $ \ccsyno ->
+        cx_database_remove_synonym dbptr ccterm ccsyno
 
     clearSynonyms (ReadWriteDB dbmptr) prefix =
         liftIO $
         withForeignPtr dbmptr $ \dbptr ->
-         do ccprefix <- toCCString prefix
-            cx_database_clear_synonyms dbptr ccprefix
+        useAsCCString prefix $ \ccprefix ->
+        cx_database_clear_synonyms dbptr ccprefix
 
     addSpelling (ReadWriteDB dbmptr) term freqinc =
         liftIO $
         withForeignPtr dbmptr $ \dbptr ->
-         do ccterm <- toCCString term
-            cx_database_add_spelling dbptr ccterm (fromIntegral freqinc)
+        useAsCCString term $ \ccterm ->
+        cx_database_add_spelling dbptr ccterm (fromIntegral freqinc)
 
     delSpelling (ReadWriteDB dbmptr) term freqdec =
         liftIO $
         withForeignPtr dbmptr $ \dbptr ->
-         do ccterm <- toCCString term
-            cx_database_remove_spelling dbptr ccterm (fromIntegral freqdec)
+        useAsCCString term $ \ccterm ->
+        cx_database_remove_spelling dbptr ccterm (fromIntegral freqdec)
 
 
 replaceDocument :: ReadWriteDB -> DocumentId -> Document -> XapianM ()

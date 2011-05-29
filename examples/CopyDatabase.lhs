@@ -72,17 +72,16 @@
 >                 { Right doc ->
 >                   if renumber
 >                      then do addDocument dstDB doc
->                              showStatus i >> return (i+1)
+>                              showStatus i
 >                      else do replaceDocument dstDB docid doc
->                              showStatus i >> return (i+1)
+>                              showStatus i
 >                 ; Left  err ->
 >                    do liftIO $ putStrLn (show err)
->                       return (i+1)
 >                 }
 >
 >         let postingEnum = getPostings srcDB (pack "") 1024
->         runIteratee $ postingEnum $$ Enumerator.foldM iterate 1
->         return ()
+>         runIteratee $ postingEnum $$ Enumerator.foldM
+>             (\i -> (fmap $ const $ i+1) . iterate i) 1
 
 >     wrap target xapianAction =
 >      do putStr $ "Copying " ++ target ++ "..."

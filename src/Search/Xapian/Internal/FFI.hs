@@ -16,26 +16,33 @@ type CBool = CInt
 -- Helper
 -- ---------------------------------------------------------
 
-data CCString
+data StdString -- C++ string
+type CCString = ForeignPtr StdString
 
-foreign import ccall unsafe "toCCString_"
-    toCCString_ :: CString -> CUInt -> IO (Ptr CCString)
+instance Manageable StdString where
+    manage = newForeignPtr ccstring_delete
 
-toCCString :: ByteString -> IO (Ptr CCString)
+foreign import ccall safe
+    ccstring_from_cstring :: CString -> CUInt -> IO (Ptr StdString)
+
+toCCString :: ByteString -> IO CCString
 toCCString bs =
     unsafeUseAsCStringLen bs $ \(cstring,len) ->
-    toCCString_ cstring (fromIntegral len)
+    ccstring_from_cstring cstring (fromIntegral len) >>= manage
 
-foreign import ccall unsafe "fromCCString_"
-    fromCCString_ :: Ptr CCString -> IO CString
+foreign import ccall safe
+    ccstring_to_cstring :: Ptr StdString -> IO CString
 
-foreign import ccall unsafe "lengthCCString"
-    lengthCCString :: Ptr CCString -> IO CUInt
+foreign import ccall safe
+    ccstring_length :: Ptr StdString -> IO CUInt
 
-fromCCString :: Ptr CCString -> IO ByteString
-fromCCString ccstring =
- do cstring <- fromCCString_ ccstring
-    len     <- lengthCCString ccstring
+foreign import ccall safe "&"
+    ccstring_delete :: FunPtr (Ptr StdString -> IO ())
+
+fromCCString :: CCString -> IO ByteString
+fromCCString mccstring = withForeignPtr mccstring $ \ccstring ->
+ do cstring <- ccstring_to_cstring ccstring
+    len     <- ccstring_length     ccstring
     unsafePackCStringLen (cstring, fromIntegral len)
 
 -- Generic Database
@@ -77,10 +84,10 @@ foreign import ccall unsafe "database_get_description"
     cx_database_get_description :: Ptr CDatabase -> IO CString
 
 foreign import ccall unsafe "database_postlist_begin"
-    cx_database_postlist_begin :: Ptr CDatabase -> Ptr CCString -> IO (Ptr CPostingIterator)
+    cx_database_postlist_begin :: Ptr CDatabase -> Ptr StdString -> IO (Ptr CPostingIterator)
 
 foreign import ccall unsafe "database_postlist_end"
-    cx_database_postlist_end :: Ptr CDatabase -> Ptr CCString -> IO (Ptr CPostingIterator)
+    cx_database_postlist_end :: Ptr CDatabase -> Ptr StdString -> IO (Ptr CPostingIterator)
 
 foreign import ccall unsafe "database_termlist_begin"
     cx_database_termlist_begin :: Ptr CDatabase -> IO (Ptr CTermIterator)
@@ -92,10 +99,10 @@ foreign import ccall unsafe "database_has_positions"
     cx_database_has_positions :: Ptr CDatabase -> IO CBool
 
 foreign import ccall unsafe "database_positionlist_begin"
-    cx_database_positionlist_begin :: Ptr CDatabase -> Ptr CCString -> IO (Ptr CPositionIterator)
+    cx_database_positionlist_begin :: Ptr CDatabase -> Ptr StdString -> IO (Ptr CPositionIterator)
 
 foreign import ccall unsafe "database_positionlist_end"
-    cx_database_positionlist_end :: Ptr CDatabase -> Ptr CCString -> IO (Ptr CPositionIterator)
+    cx_database_positionlist_end :: Ptr CDatabase -> Ptr StdString -> IO (Ptr CPositionIterator)
 
 foreign import ccall unsafe "database_allterms_begin"
     cx_database_allterms_begin :: Ptr CDatabase -> IO (Ptr CTermIterator)
@@ -105,11 +112,11 @@ foreign import ccall unsafe "database_allterms_end"
 
 foreign import ccall unsafe "database_allterms_with_prefix_begin"
     cx_database_allterms_with_prefix_begin
-        :: Ptr CDatabase -> Ptr CCString -> IO (Ptr CTermIterator)
+        :: Ptr CDatabase -> Ptr StdString -> IO (Ptr CTermIterator)
 
 foreign import ccall unsafe "database_allterms_with_prefix_end"
     cx_database_allterms_with_prefix_end
-        :: Ptr CDatabase -> Ptr CCString -> IO (Ptr CTermIterator)
+        :: Ptr CDatabase -> Ptr StdString -> IO (Ptr CTermIterator)
 
 foreign import ccall unsafe "database_get_doccount"
     cx_database_get_doccount :: Ptr CDatabase -> IO Word32
@@ -121,13 +128,13 @@ foreign import ccall unsafe "database_get_avlength"
     cx_database_get_avlength :: Ptr CDatabase -> IO Double
 
 foreign import ccall unsafe "database_get_termfreq"
-    cx_database_get_termfreq :: Ptr CDatabase -> Ptr CCString -> IO Word32
+    cx_database_get_termfreq :: Ptr CDatabase -> Ptr StdString -> IO Word32
 
 foreign import ccall "database_term_exists"
-    cx_database_term_exists :: Ptr CDatabase -> Ptr CCString -> IO CBool
+    cx_database_term_exists :: Ptr CDatabase -> Ptr StdString -> IO CBool
 
 foreign import ccall "database_get_collection_freq"
-    cx_database_get_collection_freq :: Ptr CDatabase -> Ptr CCString -> IO Word32
+    cx_database_get_collection_freq :: Ptr CDatabase -> Ptr StdString -> IO Word32
 
 foreign import ccall unsafe "database_get_value_freq"
     cx_database_get_value_freq :: Ptr CDatabase -> Word32 -> IO Word32
@@ -139,7 +146,7 @@ foreign import ccall unsafe "database_get_doclength_lower_bound"
     cx_database_get_doclength_lower_bound :: Ptr CDatabase -> Word32 -> IO Word32
 
 foreign import ccall unsafe "database_get_wdf_upper_bound"
-    cx_database_get_wdf_upper_bound :: Ptr CDatabase -> Ptr CCString -> IO Word32
+    cx_database_get_wdf_upper_bound :: Ptr CDatabase -> Ptr StdString -> IO Word32
 
 foreign import ccall unsafe "database_valuestream_begin"
     cx_database_valuestream_begin
@@ -165,9 +172,9 @@ foreign import ccall unsafe "database_get_document"
 foreign import ccall unsafe "database_get_spelling_suggestion"
     cx_database_get_spelling_suggestion
         :: Ptr CDatabase
-        -> Ptr CCString      -- ^ word
+        -> Ptr StdString      -- ^ word
         -> Word32            -- ^ maximum edit distance
-        -> IO (Ptr CCString) -- ^ suggested word
+        -> IO (Ptr StdString) -- ^ suggested word
 
 foreign import ccall unsafe "database_spellings_begin"
     cx_database_spellings_begin :: Ptr CDatabase -> IO (Ptr CTermIterator)
@@ -176,38 +183,38 @@ foreign import ccall unsafe "database_spellings_end"
     cx_database_spellings_end :: Ptr CDatabase -> IO (Ptr CTermIterator)
 
 foreign import ccall unsafe "database_synonyms_begin"
-    cx_database_synonyms_begin :: Ptr CDatabase -> Ptr CCString -> IO (Ptr CTermIterator)
+    cx_database_synonyms_begin :: Ptr CDatabase -> Ptr StdString -> IO (Ptr CTermIterator)
 
 foreign import ccall unsafe "database_synonyms_end"
-    cx_database_synonyms_end :: Ptr CDatabase -> Ptr CCString -> IO (Ptr CTermIterator)
+    cx_database_synonyms_end :: Ptr CDatabase -> Ptr StdString -> IO (Ptr CTermIterator)
 
 foreign import ccall unsafe "database_synonym_keys_begin"
     cx_database_synonym_keys_begin
         :: Ptr CDatabase
-        -> Ptr CCString           -- ^ prefix
+        -> Ptr StdString           -- ^ prefix
         -> IO (Ptr CTermIterator)
 
 -- | see @cx_database_synonym_keys_begin@
 foreign import ccall unsafe "database_synonym_keys_end"
     cx_database_synonym_keys_end
         :: Ptr CDatabase
-        -> Ptr CCString
+        -> Ptr StdString
         -> IO (Ptr CTermIterator)
 
 foreign import ccall unsafe "database_get_metadata"
     cx_database_get_metadata
         :: Ptr CDatabase
-        -> Ptr CCString      -- ^ key
-        -> IO (Ptr CCString) -- ^ value
+        -> Ptr StdString      -- ^ key
+        -> IO (Ptr StdString) -- ^ value
 
 foreign import ccall unsafe "database_metadata_keys_begin"
-    cx_database_metadata_keys_begin :: Ptr CDatabase -> Ptr CCString -> IO (Ptr CTermIterator)
+    cx_database_metadata_keys_begin :: Ptr CDatabase -> Ptr StdString -> IO (Ptr CTermIterator)
 
 foreign import ccall unsafe "database_metadata_keys_end"
-    cx_database_metadata_keys_end :: Ptr CDatabase -> Ptr CCString -> IO (Ptr CTermIterator)
+    cx_database_metadata_keys_end :: Ptr CDatabase -> Ptr StdString -> IO (Ptr CTermIterator)
 
 foreign import ccall unsafe "database_get_uuid"
-    cx_database_get_uuid :: Ptr CDatabase -> IO (Ptr CCString)
+    cx_database_get_uuid :: Ptr CDatabase -> IO (Ptr StdString)
 
 -- Writable database
 -- ---------------------------------------------------------
@@ -272,7 +279,7 @@ foreign import ccall unsafe "database_delete_document_by_id"
     cx_database_delete_document_by_id :: Ptr CWritableDatabase -> Word32 -> IO ()
 
 foreign import ccall unsafe "database_delete_document_by_term"
-    cx_database_delete_document_by_term :: Ptr CWritableDatabase -> Ptr CCString -> IO ()
+    cx_database_delete_document_by_term :: Ptr CWritableDatabase -> Ptr StdString -> IO ()
 
 foreign import ccall unsafe "database_replace_document"
     cx_database_replace_document :: Ptr CWritableDatabase -> Word32 -> Ptr CDocument -> IO ()
@@ -280,39 +287,39 @@ foreign import ccall unsafe "database_replace_document"
 foreign import ccall unsafe "database_add_spelling"
     cx_database_add_spelling
         :: Ptr CWritableDatabase
-        -> Ptr CCString  -- ^ word
+        -> Ptr StdString  -- ^ word
         -> Word32         -- ^ frequency increase
         -> IO ()
 
 foreign import ccall unsafe "database_remove_spelling"
     cx_database_remove_spelling
         :: Ptr CWritableDatabase
-        -> Ptr CCString  -- ^ word
+        -> Ptr StdString  -- ^ word
         -> Word32         -- ^ frequency decrease
         -> IO ()
 
 foreign import ccall unsafe "database_add_synonym"
     cx_database_add_synonym
         :: Ptr CWritableDatabase
-        -> Ptr CCString  -- ^ term
-        -> Ptr CCString  -- ^ synonym
+        -> Ptr StdString  -- ^ term
+        -> Ptr StdString  -- ^ synonym
         -> IO ()
 
 foreign import ccall unsafe "database_remove_synonym"
     cx_database_remove_synonym
         :: Ptr CWritableDatabase
-        -> Ptr CCString  -- ^ term
-        -> Ptr CCString  -- ^ synonym
+        -> Ptr StdString  -- ^ term
+        -> Ptr StdString  -- ^ synonym
         -> IO ()
 
 foreign import ccall unsafe "database_clear_synonyms"
-    cx_database_clear_synonyms :: Ptr CWritableDatabase -> Ptr CCString -> IO ()
+    cx_database_clear_synonyms :: Ptr CWritableDatabase -> Ptr StdString -> IO ()
 
 foreign import ccall unsafe "database_set_metadata"
     cx_database_set_metadata
         :: Ptr CWritableDatabase
-        -> Ptr CCString  -- ^ key
-        -> Ptr CCString  -- ^ value
+        -> Ptr StdString  -- ^ key
+        -> Ptr StdString  -- ^ value
         -> IO ()
 
 foreign import ccall unsafe "database_writable_get_description"
@@ -349,10 +356,10 @@ foreign import ccall unsafe "document_clear_values"
     cx_document_clear_values :: Ptr CDocument -> IO ()
 
 foreign import ccall unsafe "document_get_data"
-    cx_document_get_data :: Ptr CDocument -> IO (Ptr CCString)
+    cx_document_get_data :: Ptr CDocument -> IO (Ptr StdString)
 
 foreign import ccall unsafe "document_set_data"
-    cx_document_set_data :: Ptr CDocument -> Ptr CCString -> IO ()
+    cx_document_set_data :: Ptr CDocument -> Ptr StdString -> IO ()
 
 foreign import ccall unsafe "document_add_posting"
     cx_document_add_posting :: Ptr CDocument
@@ -607,7 +614,7 @@ foreign import ccall unsafe "query_new_4"
     cx_query_new_4 :: Op -> Ptr CQuery -> Double -> IO (Ptr CQuery)
 
 foreign import ccall unsafe "query_new_5"
-    cx_query_new_5 :: Op -> Word32 -> Ptr CCString -> Ptr CCString -> IO (Ptr CQuery)
+    cx_query_new_5 :: Op -> Word32 -> Ptr StdString -> Ptr StdString -> IO (Ptr CQuery)
 
 foreign import ccall unsafe "query_new_6"
     cx_query_new_6 :: Op -> Word32 -> CString -> IO (Ptr CQuery)
@@ -679,28 +686,28 @@ foreign import ccall unsafe "queryparser_set_database"
 
 foreign import ccall unsafe "queryparser_parse_query_simple"
     cx_queryparser_parse_query_simple
-        :: Ptr CQueryParser -> Ptr CCString -> IO (Ptr CQuery)
+        :: Ptr CQueryParser -> Ptr StdString -> IO (Ptr CQuery)
 
 foreign import ccall unsafe "queryparser_add_prefix"
     cx_queryparser_add_prefix
         :: Ptr CQueryParser
-        -> Ptr CCString -- ^ field
-        -> Ptr CCString -- ^ prefix
+        -> Ptr StdString -- ^ field
+        -> Ptr StdString -- ^ prefix
         -> IO ()
 
 foreign import ccall unsafe "queryparser_add_boolean_prefix"
     cx_queryparser_add_boolean_prefix
         :: Ptr CQueryParser
-        -> Ptr CCString -- ^ field
-        -> Ptr CCString -- ^ field
+        -> Ptr StdString -- ^ field
+        -> Ptr StdString -- ^ field
         -> CBool -- ^ exclusive
         -> IO ()
 
 foreign import ccall unsafe "queryparser_get_corrected_query_string"
-    cx_queryparser_get_corrected_query_string :: Ptr CQueryParser -> IO (Ptr CCString)
+    cx_queryparser_get_corrected_query_string :: Ptr CQueryParser -> IO (Ptr StdString)
 
 foreign import ccall unsafe "queryparser_get_description"
-    cx_queryparser_get_description :: Ptr CQueryParser -> IO (Ptr CCString)
+    cx_queryparser_get_description :: Ptr CQueryParser -> IO (Ptr StdString)
 
 -- Stem
 -- ---------------------------------------------------------
@@ -916,10 +923,10 @@ foreign import ccall unsafe "termiterator_is_end"
                            -> IO CBool
 
 foreign import ccall unsafe "termiterator_get"
-    cx_termiterator_get :: Ptr CTermIterator -> IO (Ptr CCString)
+    cx_termiterator_get :: Ptr CTermIterator -> IO (Ptr StdString)
 
 foreign import ccall unsafe "termiterator_skip_to"
-    cx_termiterator_skip_to :: Ptr CTermIterator -> Ptr CCString -> IO ()
+    cx_termiterator_skip_to :: Ptr CTermIterator -> Ptr StdString -> IO ()
 
 foreign import ccall unsafe "termiterator_get_wdf"
     cx_termiterator_get_wdf :: Ptr CTermIterator -> IO Word32
@@ -1027,17 +1034,17 @@ foreign import ccall unsafe "termgenerator_set_flags"
 foreign import ccall unsafe "termgenerator_index_text"
     cx_termgenerator_index_text
         :: Ptr CTermGenerator
-        -> Ptr CCString -- ^text
+        -> Ptr StdString -- ^text
         -> Word32  -- ^weight
-        -> Ptr CCString -- ^prefix
+        -> Ptr StdString -- ^prefix
         -> IO ()
 
 foreign import ccall unsafe "termgenerator_index_text_wo_positions"
     cx_termgenerator_index_text_wo_positions
         :: Ptr CTermGenerator
-        -> Ptr CCString -- ^text
+        -> Ptr StdString -- ^text
         -> Word32  -- ^weight
-        -> Ptr CCString -- ^prefix
+        -> Ptr StdString -- ^prefix
         -> IO ()
 
 foreign import ccall unsafe "termgenerator_increase_termpos"

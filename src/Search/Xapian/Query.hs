@@ -101,13 +101,13 @@ compileQuery db@(ReadOnlyDB dbmptr) query' =
                        (flip withForeignPtr) $ \stemPtr ->
                        withForeignPtr dbmptr $ \dbptr ->
                         do qp <- cx_queryparser_new
-                           ccs <- toCCString bs
-                           cx_queryparser_set_database qp dbptr
-                           cx_queryparser_set_stemmer  qp stemPtr
-                           cx_queryparser_set_stemming_strategy qp
-                               cx_queryparser_STEM_SOME
-                           cx_queryparser_parse_query_simple qp ccs
-                               >>= manage
+                           useAsCCString bs $ \ccs ->
+                            do cx_queryparser_set_database qp dbptr
+                               cx_queryparser_set_stemmer  qp stemPtr
+                               cx_queryparser_set_stemming_strategy qp
+                                   cx_queryparser_STEM_SOME
+                               cx_queryparser_parse_query_simple qp ccs
+                                   >>= manage
          Nullary op -> compileNullary op
          Unary op q -> do cq <- compileQuery db q
                           compileUnary op cq
@@ -126,8 +126,8 @@ compileQuery db@(ReadOnlyDB dbmptr) query' =
         useAsCString val $ \cs ->
         cx_query_new_6 (opcode op) valno cs >>= manage
     compileNullary op@(OpValueRange valno lower upper) =
-     do cclower <- toCCString lower
-        ccupper <- toCCString upper
+        useAsCCString lower $ \cclower ->
+        useAsCCString upper $ \ccupper ->
         cx_query_new_5 (opcode op) (fromIntegral valno)
             cclower ccupper >>= manage
 
@@ -141,37 +141,40 @@ compileQuery db@(ReadOnlyDB dbmptr) query' =
      do mvec <- manage =<< cx_vector_new
         withForeignPtr mvec $ \vec ->
          do forM_ qs $ \q -> withForeignPtr q $ cx_vector_append vec
-            b <- cx_vector_begin vec
-            e <- cx_vector_end   vec
-            cx_query_new_3 (opcode op) b e 0 >>= manage
+            mb <- newForeignPtr_ =<< cx_vector_begin vec
+            me <- newForeignPtr_ =<< cx_vector_end   vec
+            withForeignPtr mb $ \b -> withForeignPtr me $ \e ->
+                cx_query_new_3 (opcode op) b e 0 >>= manage
 
 
     compileMultiFlat op@(OpPhrase windowSize) qs =
      do mvec <- manage =<< cx_vector_new
         withForeignPtr mvec $ \vec ->
          do forM_ qs $ \q -> withForeignPtr q $ cx_vector_append vec
-            b <- cx_vector_begin vec
-            e <- cx_vector_end   vec
-            cx_query_new_3 (opcode op) b e (fromIntegral windowSize)
+            mb <- newForeignPtr_ =<< cx_vector_begin vec
+            me <- newForeignPtr_ =<< cx_vector_end   vec
+            withForeignPtr mb $ \b -> withForeignPtr me $ \e ->
+                cx_query_new_3 (opcode op) b e (fromIntegral windowSize)
                 >>= manage
 
     compileMultiFlat op@(OpNear distance) qs =
      do mvec <- manage =<< cx_vector_new
         withForeignPtr mvec $ \vec ->
          do forM_ qs $ \q -> withForeignPtr q $ cx_vector_append vec
-            b <- cx_vector_begin vec
-            e <- cx_vector_end   vec
-            cx_query_new_3 (opcode op) b e (fromIntegral distance)
+            mb <- newForeignPtr_ =<< cx_vector_begin vec
+            me <- newForeignPtr_ =<< cx_vector_end   vec
+            withForeignPtr mb $ \b -> withForeignPtr me $ \e ->
+                cx_query_new_3 (opcode op) b e (fromIntegral distance)
                 >>= manage
 
     merge :: CInt
           -> ForeignPtr CQuery
           -> ForeignPtr CQuery
           -> IO (ForeignPtr CQuery)
-    merge opcode a b =
+    merge opcode_ a b =
         withForeignPtr a $ \queryA ->
         withForeignPtr b $ \queryB ->
-            cx_query_new_1 opcode queryA queryB >>= manage
+            cx_query_new_1 opcode_ queryA queryB >>= manage
 
 -- * Helper functions
 

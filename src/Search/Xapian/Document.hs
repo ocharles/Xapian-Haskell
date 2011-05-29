@@ -5,6 +5,7 @@ module Search.Xapian.Document
      , addTerm, getTerms, delTerm, clearTerms
      , addPosting, delPosting
      , getValue, setValue, delValue, clearValues
+     , getValues, setValues
      , indexText
      ) where
 
@@ -32,14 +33,14 @@ emptyDocument =
 getData :: Document -> XapianM ByteString
 getData =
     withDocumentPtr $ \ptr ->
-    cx_document_get_data ptr >>= fromCCString
+    cx_document_get_data ptr >>= manage >>= fromCCString
         
 
 setData :: ByteString -> Document -> XapianM ()
 setData dat =
     withDocumentPtr $ \ptr ->
-     do ccstring <- toCCString dat
-        cx_document_set_data ptr ccstring
+    useAsCCString dat $ \ccdat ->
+    cx_document_set_data ptr ccdat
 
 getTerms :: Document -> XapianM [Term]
 getTerms =

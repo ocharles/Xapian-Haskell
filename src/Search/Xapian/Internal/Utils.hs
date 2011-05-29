@@ -16,6 +16,8 @@ module Search.Xapian.Internal.Utils
      , enumerateDocIds
      , enumeratePostings
 
+     , useAsCCString
+
        -- * Stemmer related
      , createStemmer
      , stemWord
@@ -23,16 +25,10 @@ module Search.Xapian.Internal.Utils
      ) where
 
 import Foreign
-import Foreign.C.String
-import Blaze.ByteString.Builder as Blaze
-import Data.Monoid
 import qualified Data.ByteString as BS
 import Data.ByteString.Char8 (pack, ByteString, packCString, useAsCString)
-import Data.IntMap (IntMap)
-import qualified Data.IntMap as IntMap
 import Control.Monad ((<=<))
 import Control.Monad.Trans (liftIO)
-import qualified Data.Enumerator as Enumerator
 import Data.Enumerator (Enumerator, Step (..), Iteratee (..), Stream (..))
 
 import System.IO.Unsafe (unsafeInterleaveIO)
@@ -119,7 +115,7 @@ collectTerms b e =
             b e
     where
     getter ptr =
-     do term <- fromCCString =<< cx_termiterator_get ptr
+     do term <- fromCCString =<< manage =<< cx_termiterator_get ptr
         positions_len <- cx_termiterator_positionlist_count ptr
         b_pos <- manage =<< cx_termiterator_positionlist_begin ptr
         e_pos <- manage =<< cx_termiterator_positionlist_end ptr
@@ -135,7 +131,7 @@ collectTerms'
     -> IO [ByteString]
 collectTerms' =
     collect cx_termiterator_next
-            (fromCCString <=< cx_termiterator_get)
+            (fromCCString <=< manage <=< cx_termiterator_get)
             cx_termiterator_is_end
 
 collectTermsWdf
@@ -148,7 +144,7 @@ collectTermsWdf =
             cx_termiterator_is_end
     where
     getter ptr =
-     do term <- fromCCString =<< cx_termiterator_get ptr
+     do term <- fromCCString =<< manage =<< cx_termiterator_get ptr
         wdf  <- fmap fromIntegral $ cx_termiterator_get_wdf ptr
         return (term, wdf)
 
@@ -235,7 +231,7 @@ enumerateTerms b e chunksize =
               b e
     where
     getter ptr =
-     do term <- fromCCString =<< cx_termiterator_get ptr
+     do term <- fromCCString =<< manage =<< cx_termiterator_get ptr
         positions_len <- cx_termiterator_positionlist_count ptr
         b_pos <- manage =<< cx_termiterator_positionlist_begin ptr
         e_pos <- manage =<< cx_termiterator_positionlist_end ptr
@@ -253,7 +249,7 @@ enumerateTerms' pos end chunksize =
     enumerate
         chunksize
         cx_termiterator_next
-        (fromCCString <=< cx_termiterator_get)
+        (fromCCString <=< manage <=< cx_termiterator_get)
         cx_termiterator_is_end
         pos end
 
@@ -269,7 +265,7 @@ enumerateTermsWdf pos end chunksize =
               pos end
     where
     getter ptr =
-     do term <- fromCCString =<< cx_termiterator_get ptr
+     do term <- fromCCString =<< manage =<< cx_termiterator_get ptr
         wdf  <- fmap fromIntegral $ cx_termiterator_get_wdf ptr
         return (term, wdf)
 
@@ -294,18 +290,18 @@ indexToDocument
     -> Maybe Stemmer  -- ^ The stemming algorithm to use
     -> ByteString     -- ^ The text to stem and index
     -> IO ()
-indexToDocument docPtr mStemmer text =
+indexToDocument docptr mStemmer text =
  do termgenFPtr <- manage =<< cx_termgenerator_new
     withForeignPtr termgenFPtr $ \termgen ->
      do maybeIO mStemmer $ \stemmer ->
          do stemFPtr <- createStemmer stemmer
             withForeignPtr stemFPtr $ \stemPtr ->
                 cx_termgenerator_set_stemmer termgen stemPtr
-        cctext   <- toCCString text
-        ccprefix <- toCCString BS.empty
         let weight = 1
-        cx_termgenerator_set_document termgen docPtr
-        cx_termgenerator_index_text termgen cctext weight ccprefix
+        useAsCCString text $ \cctext ->
+            useAsCCString BS.empty $ \ccprefix ->
+             do cx_termgenerator_set_document termgen docptr
+                cx_termgenerator_index_text termgen cctext weight ccprefix
 
 maybeIO :: Maybe a -> (a -> IO b) -> IO ()
 maybeIO Nothing  _ = return ()
@@ -317,6 +313,8 @@ stemWord stemFPtr word =
     useAsCString word $ \cword ->
     cx_stem_word stemPtr cword >>= packCString
 
+useAsCCString :: ByteString -> (Ptr StdString -> IO a) -> IO a
+useAsCCString bs io = (toCCString bs >>=) $ flip withForeignPtr io
 
 createStemmer :: Stemmer -> IO StemPtr
 createStemmer stemmer =

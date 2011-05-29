@@ -6,13 +6,16 @@
 extern "C" {
 
 std::string *
-toCCString_ (const char *source, unsigned int length);
+ccstring_from_cstring (const char *source, unsigned int length);
 
 const char *
-fromCCString_ (std::string *source);
+ccstring_to_cstring (std::string *source);
+
+void
+ccstring_delete (std::string *);
 
 unsigned int
-lengthCCString (std::string *source);
+ccstring_length (std::string *source);
 
 }
 

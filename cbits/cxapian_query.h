@@ -37,6 +37,12 @@ vector_delete (std::vector<Xapian::Query> *self)
     delete self;
 }
 
+void
+vector_iterator_delete (std::vector<Xapian::Query>::iterator *self)
+{
+    delete self;
+}
+
 std::vector<Xapian::Query>::iterator *
 vector_begin (std::vector<Xapian::Query> *self)
 {
@@ -67,13 +73,13 @@ void
 query_delete (Xapian::Query *);
 
 Xapian::Query * // wqf defaults to 1, termpos defaults to 0
-query_new_0 (const char *tname, unsigned int wqf, unsigned int termpos);
+query_new_0 (std::string *term, unsigned int wqf, unsigned int termpos);
 
 Xapian::Query *
 query_new_1 (int op, Xapian::Query *left, Xapian::Query *right);
 
 Xapian::Query *
-query_new_2 (int op, const char *left, const char *right);
+query_new_2 (int op, std::string *left, std::string *right);
 
 Xapian::Query *
 query_new_3 (int op, std::vector<Xapian::Query>::iterator *begin,
@@ -86,7 +92,7 @@ Xapian::Query *
 query_new_5 (int op, unsigned int valno, std::string *lower, std::string *upper);
 
 Xapian::Query *
-query_new_6 (int op, unsigned int valno, const char *value);
+query_new_6 (int op, unsigned int valno, std::string *value);
 
 /*
 Xapian::Query *
@@ -111,12 +117,12 @@ query_get_terms_end (Xapian::Query *);
 cbool
 query_empty (Xapian::Query *);
 
-const char *
+std::string *
 query_serialise (Xapian::Query *);
 
 /*query_unserialise*/
 
-const char *
+std::string *
 query_get_description (Xapian::Query *);
 
 }

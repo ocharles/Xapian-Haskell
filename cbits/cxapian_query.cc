@@ -20,25 +20,21 @@ query_delete (Xapian::Query *q)
 }
 
 Xapian::Query *
-query_new_0 (const char *tname, unsigned int wqf, unsigned int termpos)
+query_new_0 (std::string *term, unsigned int wqf, unsigned int termpos)
 {
-    return new Xapian::Query( std::string(tname), wqf, termpos );
+    return new Xapian::Query( *term, wqf, termpos );
 }
 
 Xapian::Query *
 query_new_1 (int op, Xapian::Query *left, Xapian::Query *right)
 {
-    return new Xapian::Query((Xapian::Query::op) op,
-                              Xapian::Query(*left),
-                              Xapian::Query(*right));
+    return new Xapian::Query((Xapian::Query::op) op, *left, *right);
 }
 
 Xapian::Query *
-query_new_2 (int op, const char *left, const char *right)
+query_new_2 (int op, std::string *left, std::string *right)
 {
-    return new Xapian::Query((Xapian::Query::op) op,
-                              std::string(left),
-                              std::string(right));
+    return new Xapian::Query((Xapian::Query::op) op, *left, *right);
 }
 
 Xapian::Query *
@@ -63,11 +59,11 @@ query_new_5 (int op, unsigned int valno, std::string *lower, std::string *upper)
 }
 
 Xapian::Query *
-query_new_6 (int op, unsigned int valno, const char *value)
+query_new_6 (int op, unsigned int valno, std::string *value)
 {
     return new Xapian::Query((Xapian::Query::op)op,
                               (Xapian::valueno) valno,
-                              std::string(value));
+                              *value);
 }
 
 /*
@@ -111,16 +107,18 @@ query_empty (Xapian::Query *q)
     return q->empty();
 }
 
-const char *
+std::string *
 query_serialise (Xapian::Query *q)
 {
-    return q->serialise().c_str();
+    std::string *str = new std::string( q->serialise() );
+    return str;
 }
 
 /*query_unserialise*/
 
-const char *
+std::string *
 query_get_description (Xapian::Query *q)
 {
-    return q->get_description().c_str();
+    std::string *str = new std::string( q->get_description() );
+    return str;
 }

@@ -18,7 +18,9 @@ import Foreign
 import Foreign.C.Types
 import Foreign.C.String
 import Control.Monad (forM_)
-import Data.ByteString.Char8 (pack, useAsCString, ByteString)
+import Data.ByteString.Char8 (useAsCString, ByteString)
+import qualified Data.Text as Text
+import qualified Data.Text.Encoding as TextE
 
 
 import Search.Xapian.Types
@@ -33,7 +35,7 @@ class Queryable s where
     query :: s -> Query
 
 instance Queryable String where
-    query = Atom . pack
+    query = Atom . TextE.encodeUtf8 . Text.pack
 
 instance Queryable ByteString where
     query = Atom
@@ -71,7 +73,7 @@ instance GetOpCode OpNullary where
     opcode (OpValueRange _ _ _) = cx_query_OP_VALUE_RANGE
 
 instance GetOpCode OpUnary where
-    opcode (OpScaleWeight _) = 9
+    opcode (OpScaleWeight _) = cx_query_OP_SCALE_WEIGHT
 
 instance GetOpCode OpBinary where
     opcode OpOr       = cx_query_OP_OR
@@ -94,8 +96,8 @@ compileQuery db@(ReadOnlyDB dbmptr) query' =
     case query' of
          MatchAll   -> cx_query_match_all >>= manage
          MatchNothing -> cx_query_match_nothing >>= manage
-         Atom bs    -> useAsCString bs $ \cs ->
-                       cx_query_new_0 cs 1 0 >>= manage
+         Atom bs    -> useAsCCString bs $ \ccs ->
+                       cx_query_new_0 ccs 1 0 >>= manage
          Parsed stemmer bs
                     -> (createStemmer stemmer >>=) $
                        (flip withForeignPtr) $ \stemPtr ->
@@ -120,11 +122,11 @@ compileQuery db@(ReadOnlyDB dbmptr) query' =
                                compileMultiFlat op cqs
   where
     compileNullary op@(OpValueGE valno val) =
-        useAsCString val $ \cs ->
-        cx_query_new_6 (opcode op) valno cs >>= manage
+        useAsCCString val $ \ccs ->
+        cx_query_new_6 (opcode op) valno ccs >>= manage
     compileNullary op@(OpValueLE valno val) =
-        useAsCString val $ \cs ->
-        cx_query_new_6 (opcode op) valno cs >>= manage
+        useAsCCString val $ \ccs ->
+        cx_query_new_6 (opcode op) valno ccs >>= manage
     compileNullary op@(OpValueRange valno lower upper) =
         useAsCCString lower $ \cclower ->
         useAsCCString upper $ \ccupper ->
@@ -151,8 +153,8 @@ compileQuery db@(ReadOnlyDB dbmptr) query' =
      do mvec <- manage =<< cx_vector_new
         withForeignPtr mvec $ \vec ->
          do forM_ qs $ \q -> withForeignPtr q $ cx_vector_append vec
-            mb <- newForeignPtr_ =<< cx_vector_begin vec
-            me <- newForeignPtr_ =<< cx_vector_end   vec
+            mb <- manage =<< cx_vector_begin vec
+            me <- manage =<< cx_vector_end   vec
             withForeignPtr mb $ \b -> withForeignPtr me $ \e ->
                 cx_query_new_3 (opcode op) b e (fromIntegral windowSize)
                 >>= manage
@@ -183,7 +185,7 @@ compileQuery db@(ReadOnlyDB dbmptr) query' =
 -- of @query@. Note, this is not really meant for human consumption, but
 -- may help for debugging.
 --
-describeQuery :: QueryPtr -> IO String
+describeQuery :: QueryPtr -> IO ByteString
 describeQuery q =
   withForeignPtr q $ \query' ->
-  peekCString =<< cx_query_get_description query'
+  fromCCString =<< manage =<< cx_query_get_description query'

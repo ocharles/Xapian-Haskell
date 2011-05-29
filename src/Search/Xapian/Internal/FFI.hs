@@ -558,11 +558,17 @@ data CQueryIterator -- | FIXME: do we need to finalize CQueryIterators?
 instance Manageable CQueryVector where
     manage = newForeignPtr cx_vector_delete
 
+instance Manageable CQueryIterator where
+    manage = newForeignPtr cx_vector_iterator_delete
+
 foreign import ccall safe "vector_new"
     cx_vector_new :: IO (Ptr CQueryVector)
 
 foreign import ccall safe "&vector_delete"
     cx_vector_delete :: FunPtr (Ptr CQueryVector -> IO ())
+
+foreign import ccall safe "&vector_iterator_delete"
+    cx_vector_iterator_delete :: FunPtr (Ptr CQueryIterator -> IO ())
 
 foreign import ccall safe "vector_begin"
     cx_vector_begin :: Ptr CQueryVector -> IO (Ptr CQueryIterator)
@@ -599,13 +605,13 @@ foreign import ccall unsafe "&query_delete"
     cx_query_delete :: FunPtr (Ptr CQuery -> IO ())
 
 foreign import ccall unsafe "query_new_0"
-    cx_query_new_0 :: CString -> Word32 -> Word32 -> IO (Ptr CQuery)
+    cx_query_new_0 :: Ptr StdString -> Word32 -> Word32 -> IO (Ptr CQuery)
 
 foreign import ccall unsafe "query_new_1"
     cx_query_new_1 :: Op -> Ptr CQuery -> Ptr CQuery -> IO (Ptr CQuery)
 
 foreign import ccall unsafe "query_new_2"
-    cx_query_new_2 :: Op -> CString -> CString -> IO (Ptr CQuery)
+    cx_query_new_2 :: Op -> Ptr StdString -> Ptr StdString -> IO (Ptr CQuery)
 
 foreign import ccall unsafe "query_new_3"
     cx_query_new_3 :: Op -> Ptr CQueryIterator -> Ptr CQueryIterator -> Word32 -> IO (Ptr CQuery)
@@ -617,7 +623,7 @@ foreign import ccall unsafe "query_new_5"
     cx_query_new_5 :: Op -> Word32 -> Ptr StdString -> Ptr StdString -> IO (Ptr CQuery)
 
 foreign import ccall unsafe "query_new_6"
-    cx_query_new_6 :: Op -> Word32 -> CString -> IO (Ptr CQuery)
+    cx_query_new_6 :: Op -> Word32 -> Ptr StdString -> IO (Ptr CQuery)
 
 -- foreign import ccall unsafe "query_new_7"
 
@@ -634,7 +640,7 @@ foreign import ccall unsafe "query_empty"
     cx_query_empty :: Ptr CQuery -> IO CBool
  
 foreign import ccall unsafe "query_serialise"
-    cx_query_serialise :: Ptr CQuery -> IO CString
+    cx_query_serialise :: Ptr CQuery -> IO (Ptr StdString)
 
 foreign import ccall unsafe "query_get_terms_begin"
     cx_query_get_terms_begin :: Ptr CQuery -> IO (Ptr CTermIterator)
@@ -643,7 +649,7 @@ foreign import ccall unsafe "query_get_terms_end"
     cx_query_get_terms_end :: Ptr CQuery -> IO (Ptr CTermIterator)
 
 foreign import ccall unsafe "query_get_description"
-    cx_query_get_description :: Ptr CQuery -> IO CString
+    cx_query_get_description :: Ptr CQuery -> IO (Ptr StdString)
 
 -- QueryParser
 -- ---------------------------------------------------------

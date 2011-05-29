@@ -50,6 +50,7 @@ library
                       Search.Xapian.Internal.Utils
   build-depends:      base,
                       bytestring,
+                      text,
                       containers,
                       enumerator,
                       mtl >= 2.0

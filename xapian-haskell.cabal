@@ -49,7 +49,6 @@ library
                       Search.Xapian.Internal.Types,
                       Search.Xapian.Internal.Utils
   build-depends:      base,
-                      blaze-builder,
                       bytestring,
                       containers,
                       enumerator,

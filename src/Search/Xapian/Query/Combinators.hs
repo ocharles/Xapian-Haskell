@@ -71,5 +71,6 @@ near distance = MultiFlat (OpNear distance) . map (unatom . query)
 phrase :: Queryable term => Int -> [term] -> Query
 phrase windowSize = MultiFlat (OpPhrase windowSize) . map (unatom . query)
 
+unatom :: Query -> ByteString
 unatom (Atom bs) = bs
 unatom _         = error "erroneous call of unatom"

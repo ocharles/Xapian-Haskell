@@ -10,7 +10,7 @@ database_new ()
 Xapian::Database *
 database_new_from_path (const char *path, const char **error)
 {
-    Xapian::Database *db;
+    Xapian::Database *db = NULL;
     try {
         db = new Xapian::Database(std::string(path));
         return db;
@@ -332,7 +332,7 @@ database_writable_new ()
 Xapian::WritableDatabase *
 database_writable_new_from_path (const char *path, int action, const char **error)
 {
-    Xapian::WritableDatabase *db;
+    Xapian::WritableDatabase *db = NULL;
     try {
         db = new Xapian::WritableDatabase( std::string(path), action );
         return db;

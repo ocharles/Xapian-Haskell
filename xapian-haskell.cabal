@@ -1,0 +1,78 @@
+name:           Xapian-Haskell
+version:        0.0.1
+license:        OtherLicense
+license-file:   LICENSE
+author:         Oliver Charles <oliver.g.charles@googlemail.com>
+maintainer:     Long Huynh Huu <long.upcase@googlemail.com>
+cabal-version:  >= 1.8
+build-type:     Simple
+description:    Haskell bindings for the Xapian search engine
+synopsis:       Haskell bindings for the Xapian search engine
+category:       Search, Database
+
+extra-source-files: examples/SimpleIndex.hs
+                    examples/SimpleSearch.hs
+                    examples/Metadata.hs
+                    cbits/cxapian_database.h
+                    cbits/cxapian_document.h
+                    cbits/cxapian_enquire.h
+                    cbits/cxapian_mset.h
+                    cbits/cxapian_msetiterator.h
+                    cbits/cxapian_positioniterator.h
+                    cbits/cxapian_postingiterator.h
+                    cbits/cxapian_query.h
+                    cbits/cxapian_stem.h
+                    cbits/cxapian_stopper.h
+                    cbits/cxapian_termgenerator.h
+                    cbits/cxapian_termiterator.h
+                    cbits/cxapian_types.h
+                    cbits/cxapian_valueiterator.h
+                    cbits/cxapian_queryparser.h
+                    cbits/ccstring.h
+                    cbits/Makefile
+
+source-repository HEAD
+  type: git
+  location: git://github.com/exit91/Xapian-Haskell.git
+
+library
+  hs-source-dirs:     src/
+  exposed-modules:    Search.Xapian.Internal.FFI
+                      Search.Xapian.Database,
+                      Search.Xapian.Document,
+                      Search.Xapian.Types,
+                      Search.Xapian.Stem,
+                      Search.Xapian.Query,
+                      Search.Xapian.Query.Combinators,
+                      Search.Xapian.MSet,
+                      Search.Xapian,
+                      Search.Xapian.Internal.Types,
+                      Search.Xapian.Internal.Utils
+  build-depends:      base,
+                      bytestring,
+                      text,
+                      containers,
+                      enumerator,
+                      mtl >= 2.0
+  ghc-options:          -Wall -funbox-strict-fields -O
+  ghc-prof-options:     -Wall -funbox-strict-fields -O -prof -auto-all
+  extensions:         EmptyDataDecls,
+                      ForeignFunctionInterface,
+                      TypeSynonymInstances
+  c-sources:          cbits/cxapian_database.cc
+                      cbits/cxapian_document.cc
+                      cbits/cxapian_enquire.cc
+                      cbits/cxapian_mset.cc
+                      cbits/cxapian_msetiterator.cc
+                      cbits/cxapian_positioniterator.cc
+                      cbits/cxapian_postingiterator.cc
+                      cbits/cxapian_query.cc
+                      cbits/cxapian_stem.cc
+                      cbits/cxapian_stopper.cc
+                      cbits/cxapian_termgenerator.cc
+                      cbits/cxapian_termiterator.cc
+                      cbits/cxapian_valueiterator.cc
+                      cbits/cxapian_queryparser.cc
+                      cbits/ccstring.cc
+  cc-options:         -Wall -c
+  extra-libraries:    xapian
